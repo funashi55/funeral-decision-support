@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コンセプト｜段取りに追われる時間を、故人を想う時間へ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f4efe6;
+  --paper-deep: #ebe3d4;
+  --ink: #1d1b18;
+  --ink-soft: #5b554c;
+  --ink-faint: #8f877a;
+  --line: #d6ccba;
+  --sumi: #2a2824;
+  --ember: #b5532c;        /* 推奨・灯り */
+  --ember-soft: #f1d9c9;
+  --moss: #4f6b4a;         /* 安心・予算を抑える選択肢 */
+  --moss-soft: #dfe7d6;
+  --decision: #8c8172;     /* 決めごと */
+  --farewell: #b5532c;     /* 別れの時間 */
+
+  --font-mincho: "Shippori Mincho", "Hiragino Mincho ProN", serif;
+  --font-gothic: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
+
+  --text-base: clamp(0.95rem, 0.9rem + 0.25vw, 1.05rem);
+  --text-hero: clamp(2rem, 0.9rem + 4.2vw, 4.6rem);
+  --text-h2: clamp(1.7rem, 1.2rem + 2vw, 2.8rem);
+  --space-section: clamp(5rem, 3.5rem + 6vw, 10rem);
+  --wrap: min(1160px, 92vw);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-gothic);
+  font-size: var(--text-base);
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+}
+/* 和紙の質感 */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.24 0 0 0 0.18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+main, header, footer { position: relative; z-index: 1; }
+.wrap { width: var(--wrap); margin-inline: auto; }
+.mincho { font-family: var(--font-mincho); }
+.eyebrow {
+  font-size: 0.78rem; letter-spacing: 0.3em; color: var(--ink-faint);
+  display: flex; align-items: center; gap: 0.9rem;
+}
+.eyebrow::before { content: ""; width: 2.2rem; height: 1px; background: var(--ink-faint); }
+section { padding-block: var(--space-section) 0; }
+h2 {
+  font-family: var(--font-mincho); font-weight: 700;
+  font-size: var(--text-h2); line-height: 1.45; margin-top: 1.2rem;
+}
+.lead { color: var(--ink-soft); max-width: 40em; margin-top: 1.4rem; }
+.note { font-size: 0.75rem; color: var(--ink-faint); }
+
+/* ---------- Header ---------- */
+.site-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-block: 1.6rem; font-size: 0.8rem; color: var(--ink-soft);
+}
+.mark { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-mincho); font-weight: 700; color: var(--ink); }
+.mark svg { width: 22px; height: 22px; }
+
+/* ---------- Hero ---------- */
+.hero { padding-top: clamp(3rem, 8vw, 7rem); display: grid; grid-template-columns: 1.6fr 0.4fr; gap: 3rem; align-items: end; }
+.hero h1 {
+  font-family: var(--font-mincho); font-weight: 800;
+  font-size: var(--text-hero); line-height: 1.28; letter-spacing: 0.01em;
+}
+.hero h1 .accent { color: var(--ember); }
+.nw { display: inline-block; }
+h2, .problem h3 { word-break: keep-all; overflow-wrap: anywhere; }
+.hero p.sub { margin-top: 2rem; color: var(--ink-soft); max-width: 30em; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
+.tag {
+  font-size: 0.75rem; padding: 0.3rem 0.8rem; border: 1px solid var(--line);
+  border-radius: 999px; background: color-mix(in oklab, var(--paper) 70%, white);
+}
+/* 縦書きの添え書き */
+.hero-aside {
+  justify-self: end; display: flex; gap: 2rem; align-items: flex-start;
+}
+.tategaki {
+  writing-mode: vertical-rl; font-family: var(--font-mincho);
+  font-size: clamp(1rem, 0.8rem + 0.6vw, 1.35rem); line-height: 2.2; color: var(--ink-soft);
+  height: 22rem;
+}
+.tategaki em { font-style: normal; color: var(--ember); }
+.flame { width: 74px; }
+.flame path { transform-origin: 50% 90%; animation: sway 4.5s var(--ease) infinite alternate; }
+@keyframes sway { from { transform: rotate(-2.5deg) scaleY(0.97); } to { transform: rotate(2.5deg) scaleY(1.03); } }
+
+/* ---------- 時間の帯（before / after） ---------- */
+.timebands { margin-top: 5rem; border-top: 1px solid var(--ink); padding-top: 2rem; }
+.timebands-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.legend { display: flex; gap: 1.4rem; font-size: 0.8rem; color: var(--ink-soft); }
+.legend span::before { content: ""; display: inline-block; width: 0.8rem; height: 0.8rem; margin-right: 0.4rem; vertical-align: -0.1rem; }
+.legend .l-dec::before { background: var(--decision); }
+.legend .l-far::before { background: var(--farewell); }
+.band { display: grid; grid-template-columns: 9rem 1fr; gap: 1.2rem; align-items: center; margin-top: 1.6rem; }
+.band-label { font-size: 0.85rem; line-height: 1.5; }
+.band-label b { display: block; font-family: var(--font-mincho); font-size: 1.05rem; }
+.bar { display: flex; height: 3.2rem; overflow: hidden; border-radius: 2px; }
+.bar div { display: flex; align-items: center; padding-inline: 0.9rem; font-size: 0.78rem; color: #fff; white-space: nowrap; transform-origin: left; }
+.bar .dec { background: repeating-linear-gradient(135deg, var(--decision) 0 8px, #978c7d 8px 16px); }
+.bar .far { background: var(--farewell); }
+.days { display: grid; grid-template-columns: 9rem 1fr; gap: 1.2rem; margin-top: 0.6rem; }
+.days ol { list-style: none; display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-faint); }
+
+/* ---------- 課題 ---------- */
+.problems { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.5rem; margin-top: 3.5rem; }
+.problem {
+  background: color-mix(in oklab, var(--paper) 55%, white);
+  border: 1px solid var(--line); padding: 2rem; position: relative;
+}
+.problem:nth-child(1) { grid-column: 1 / span 7; }
+.problem:nth-child(2) { grid-column: 8 / span 5; margin-top: 4rem; }
+.problem:nth-child(3) { grid-column: 3 / span 8; }
+.problem .who { font-size: 0.75rem; letter-spacing: 0.2em; color: var(--ember); }
+.problem h3 { font-family: var(--font-mincho); font-size: 1.45rem; line-height: 1.6; margin-top: 0.6rem; }
+.problem p { color: var(--ink-soft); margin-top: 0.8rem; font-size: 0.92rem; }
+.problem .num {
+  position: absolute; top: -1.6rem; right: 1.2rem;
+  font-family: var(--font-mincho); font-size: 3.2rem; color: var(--line); font-weight: 800;
+}
+.voice {
+  margin-top: 4rem; padding: 2.4rem 0 2.4rem 2rem; border-left: 3px solid var(--ember);
+  font-family: var(--font-mincho); font-size: clamp(1.15rem, 1rem + 0.8vw, 1.6rem); line-height: 2;
+  max-width: 46em;
+}
+.voice cite { display: block; margin-top: 1rem; font-family: var(--font-gothic); font-style: normal; font-size: 0.8rem; color: var(--ink-faint); }
+
+/* ---------- 足りないもの ---------- */
+.gap-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 2rem; align-items: center; margin-top: 3.5rem; }
+.head-box {
+  border: 1px dashed var(--ink-faint); border-radius: 50% 50% 46% 54% / 55% 48% 52% 45%;
+  aspect-ratio: 1.1; display: grid; place-items: center; align-content: center; text-align: center; padding: 2.5rem;
+  position: relative;
+}
+.head-box ul { list-style: none; font-family: var(--font-mincho); font-size: clamp(0.95rem, 0.8rem + 0.4vw, 1.1rem); line-height: 2.3; }
+.head-box .cap { position: absolute; bottom: -2rem; left: 0; right: 0; font-size: 0.8rem; color: var(--ink-faint); }
+.arrow-big { font-family: var(--font-mincho); font-size: 0.9rem; color: var(--ember); text-align: center; }
+.arrow-big svg { display: block; margin: 0.5rem auto 0; }
+.tool-box { background: var(--sumi); color: var(--paper); padding: 2.4rem; }
+.tool-box h3 { font-family: var(--font-mincho); font-size: 1.3rem; }
+.tool-box ol { margin-top: 1.2rem; padding-left: 1.2rem; display: grid; gap: 0.8rem; font-size: 0.92rem; }
+.tool-box li::marker { color: var(--ember); font-family: var(--font-mincho); }
+
+/* ---------- 仕組み ---------- */
+.flow { margin-top: 3.5rem; }
+.flow svg { width: 100%; height: auto; display: block; }
+.flow text { font-family: var(--font-gothic); }
+
+/* ---------- 担当者の画面 ---------- */
+.screens { display: grid; grid-template-columns: 1.55fr 0.75fr; gap: 3rem; margin-top: 3.5rem; align-items: start; }
+.device {
+  background: #fbf9f5; border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 30px 60px -30px rgba(40, 30, 20, 0.35), 0 2px 0 rgba(255,255,255,0.8) inset;
+  overflow: hidden;
+}
+.device-bar { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; color: var(--ink-soft); }
+.rec { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--ember); }
+.rec::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ember); animation: blink 1.6s infinite; }
+@keyframes blink { 50% { opacity: 0.25; } }
+.staff-ui { display: grid; grid-template-columns: 1fr 1.15fr; min-height: 30rem; }
+.transcript { padding: 1.2rem; border-right: 1px solid var(--line); font-size: 0.82rem; display: grid; gap: 0.8rem; align-content: start; }
+.pane-title { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--ink-faint); }
+.utt { line-height: 1.7; }
+.utt b { font-size: 0.7rem; color: var(--ink-faint); display: block; font-weight: 500; }
+.utt mark { background: var(--ember-soft); color: inherit; padding: 0 0.15rem; }
+.facts { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.chip { font-size: 0.7rem; padding: 0.15rem 0.55rem; border-radius: 4px; background: var(--paper-deep); }
+.chip.hold { background: transparent; border: 1px dashed var(--ink-faint); }
+.advice { padding: 1.2rem; display: grid; gap: 0.9rem; align-content: start; background: linear-gradient(180deg, #fbf9f5, #f6efe6); }
+.card {
+  background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem;
+  font-size: 0.82rem; line-height: 1.75; transition: transform 300ms var(--ease), box-shadow 300ms var(--ease);
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -14px rgba(40,30,20,0.4); }
+.card.primary { border-left: 3px solid var(--ember); }
+.card h4 { font-family: var(--font-mincho); font-size: 1rem; line-height: 1.6; }
+.card .why { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dotted var(--line); font-size: 0.72rem; color: var(--ink-soft); }
+.card .why q { color: var(--ink); }
+.badge { display: inline-block; font-size: 0.66rem; padding: 0.05rem 0.5rem; border-radius: 3px; margin-right: 0.3rem; }
+.badge.ember { background: var(--ember-soft); color: var(--ember); }
+.badge.moss { background: var(--moss-soft); color: var(--moss); }
+.later { font-size: 0.75rem; color: var(--ink-soft); display: grid; gap: 0.3rem; }
+.later li { list-style: none; display: flex; justify-content: space-between; border-bottom: 1px dotted var(--line); padding-block: 0.2rem; }
+
+/* スマホ */
+.phone {
+  width: 100%; max-width: 300px; justify-self: center;
+  border: 10px solid var(--sumi); border-radius: 36px; background: #fbf9f5; overflow: hidden;
+  box-shadow: 0 40px 70px -35px rgba(40,30,20,0.55);
+}
+.phone-top { background: var(--sumi); color: var(--paper); padding: 0.9rem 1rem 1rem; font-size: 0.72rem; }
+.phone-top b { display: block; font-family: var(--font-mincho); font-size: 1rem; margin-top: 0.2rem; }
+.phone-body { padding: 0.9rem; display: grid; gap: 0.7rem; font-size: 0.78rem; line-height: 1.7; }
+.msg { padding: 0.6rem 0.8rem; border-radius: 12px; max-width: 88%; }
+.msg.me { justify-self: end; background: var(--paper-deep); border-bottom-right-radius: 3px; }
+.msg.ai { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 3px; }
+.msg.handoff { background: var(--moss-soft); color: var(--moss); font-size: 0.72rem; justify-self: center; text-align: center; border-radius: 6px; }
+.screen-caption h3 { font-family: var(--font-mincho); font-size: 1.15rem; margin-top: 1.4rem; }
+.screen-caption p { font-size: 0.85rem; color: var(--ink-soft); margin-top: 0.4rem; }
+
+/* ---------- 守る線 ---------- */
+.promises { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--ink); margin-top: 3.5rem; }
+.promise { padding: 2rem 2rem 2rem 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 3.2rem 1fr; gap: 1rem; }
+.promise:nth-child(odd) { border-right: 1px solid var(--line); }
+.promise:nth-child(even) { padding-left: 2rem; }
+.promise .kanji { font-family: var(--font-mincho); font-size: 2.2rem; line-height: 1; color: var(--moss); }
+.promise h3 { font-family: var(--font-mincho); font-size: 1.15rem; }
+.promise p { font-size: 0.88rem; color: var(--ink-soft); margin-top: 0.4rem; }
+
+/* ---------- Claude の使い方 ---------- */
+.dark { background: var(--sumi); color: var(--paper); margin-top: var(--space-section); padding-block: var(--space-section); }
+.dark .eyebrow { color: #a59c8d; }
+.dark .eyebrow::before { background: #a59c8d; }
+.dark .lead { color: #c9c0b0; }
+.layers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: #4a453e; margin-top: 3.5rem; border: 1px solid #4a453e; }
+.layer { background: var(--sumi); padding: 1.6rem 1.3rem; display: grid; grid-template-rows: auto auto 1fr; gap: 0.7rem; transition: background 300ms var(--ease); }
+.layer:hover { background: #34312c; }
+.layer .step { font-family: var(--font-mincho); color: var(--ember); font-size: 0.85rem; }
+.layer h3 { font-family: var(--font-mincho); font-size: 1.05rem; line-height: 1.6; }
+.layer .tech { font-size: 0.75rem; color: #e7c7b4; border-top: 1px solid #4a453e; padding-top: 0.7rem; }
+.layer p { font-size: 0.8rem; color: #b8af9f; }
+
+/* ---------- 使い続ける ---------- */
+.loop { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 4rem; align-items: center; margin-top: 3.5rem; }
+.loop svg { width: 100%; height: auto; }
+.loop svg text { font-family: var(--font-gothic); }
+.loop-text p + p { margin-top: 1rem; }
+.loop-text strong { font-family: var(--font-mincho); font-size: 1.15rem; }
+
+/* ---------- Closing ---------- */
+.closing { text-align: center; padding-block: var(--space-section); }
+.closing p.big { font-family: var(--font-mincho); font-size: clamp(1.6rem, 1rem + 2.6vw, 3.2rem); line-height: 1.7; font-weight: 700; }
+.closing p.big span { color: var(--ember); }
+footer { border-top: 1px solid var(--line); padding-block: 2rem; font-size: 0.75rem; color: var(--ink-faint); }
+footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+
+/* ---------- reveal ---------- */
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity 900ms var(--ease), transform 900ms var(--ease); }
+.reveal.is-in { opacity: 1; transform: none; }
+.bar div { transform: scaleX(0); transition: transform 1400ms var(--ease); }
+.timebands.is-in .bar div { transform: scaleX(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .bar div { opacity: 1; transform: none; transition: none; }
+  .flame path, .rec::before { animation: none; }
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .site-header > span { display: none; }
+  .tategaki { height: auto; max-height: 20rem; }
+  .hero, .screens, .loop { grid-template-columns: 1fr; }
+  .hero-aside { justify-self: start; }
+  .tategaki { height: 14rem; }
+  .problem:nth-child(n) { grid-column: 1 / -1; margin-top: 0; }
+  .gap-grid { grid-template-columns: 1fr; }
+  .arrow-big svg { transform: rotate(90deg); }
+  .staff-ui { grid-template-columns: 1fr; }
+  .transcript { border-right: 0; border-bottom: 1px solid var(--line); }
+  .layers { grid-template-columns: 1fr; }
+  .promises { grid-template-columns: 1fr; }
+  .promise:nth-child(n) { border-right: 0; padding-left: 0; }
+  .band, .days { grid-template-columns: 1fr; }
+  .days > span { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="wrap site-header">
+  <div class="mark">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c2.5 4 5 6.5 5 10.5A5 5 0 0 1 7 12.5C7 9.5 9 8 9 5c1.5 1.5 2.3 3 2.5 4.5C12.5 7 12.6 4.5 12 2Z" fill="#b5532c"/></svg>
+    （作品名 未定）
+  </div>
+  <span>Built with Claude: Japan 2026 ／ テーマ1「あなたにしかない深さを。」</span>
+</header>
+
+<main>
+  <!-- ========== HERO ========== -->
+  <section class="wrap" aria-labelledby="hero-heading" style="padding-top:0">
+    <div class="hero">
+      <div class="reveal">
+        <p class="eyebrow">葬儀担当者のための、となりに座るベテラン</p>
+        <h1 id="hero-heading" style="margin-top:1.6rem"><span class="nw">段取りに追われる</span><span class="nw">時間を、</span><br><span class="nw"><span class="accent">故人を想う時間</span>へ。</span></h1>
+        <p class="sub">ベテラン葬儀担当者が積み上げてきた「こういう時は、こうするといい」。その判断を、経験の浅い担当者の打合せにも届けます。遺族が決めることに追われる数日間を、別れのための時間に戻すための道具です。</p>
+        <div class="hero-tags">
+          <span class="tag">打合せをその場で支える</span>
+          <span class="tag">ベテランの知見を受け継ぐ</span>
+          <span class="tag">遺族がいつでも確かめられる</span>
+        </div>
+      </div>
+      <div class="hero-aside reveal" aria-hidden="true">
+        <svg class="flame" viewBox="0 0 80 200">
+          <path d="M40 20c10 22 22 36 22 60a22 22 0 0 1-44 0c0-16 9-24 9-40 7 8 10 16 11 24 4-12 5-28 2-44Z" fill="#b5532c" opacity=".9"/>
+          <path d="M40 70c5 10 10 16 10 26a10 10 0 0 1-20 0c0-8 5-12 6-20 2 4 3 8 4 12 1-6 1-12 0-18Z" fill="#f1d9c9"/>
+          <rect x="30" y="110" width="20" height="80" rx="2" fill="#2a2824"/>
+        </svg>
+        <p class="tategaki">悲しみの中で、<br>決めることばかりが<br>押し寄せてくる。<br><em>本当に話したいのは、<br>あの人のことなのに。</em></p>
+      </div>
+    </div>
+
+    <!-- 時間の帯 -->
+    <div class="timebands reveal" id="timebands">
+      <div class="timebands-head">
+        <p class="mincho" style="font-size:1.15rem;font-weight:700">逝去から火葬まで、遺族の時間は何に使われているか</p>
+        <div class="legend"><span class="l-dec">段取りの決めごと</span><span class="l-far">故人を想う・別れの時間</span></div>
+      </div>
+      <div class="band">
+        <div class="band-label"><b>いま</b>経験次第の打合せ</div>
+        <div class="bar" role="img" aria-label="いま：時間の大半が決めごとに使われ、別れの時間はわずか">
+          <div class="dec" style="width:82%">プラン・費用・日程・寺・火葬場・親族への連絡…</div>
+          <div class="far" style="width:18%">別れ</div>
+        </div>
+      </div>
+      <div class="band">
+        <div class="band-label"><b>これから</b>となりにベテラン</div>
+        <div class="bar" role="img" aria-label="これから：決めごとが短くなり、別れの時間が増える">
+          <div class="dec" style="width:42%">今日決めることだけ</div>
+          <div class="far" style="width:58%">故人らしさ・どんなお別れにしたいか</div>
+        </div>
+      </div>
+      <div class="days">
+        <span></span>
+        <ol><li>逝去・お迎え</li><li>打合せ</li><li>通夜</li><li>葬儀・告別式</li><li>火葬</li></ol>
+      </div>
+      <p class="note" style="margin-top:1rem">※ 比率は目指す姿のイメージです。実際の数値は葬儀社への聞き取りで補います。</p>
+    </div>
+  </section>
+
+  <!-- ========== 課題 ========== -->
+  <section class="wrap" aria-labelledby="problem-heading">
+    <p class="eyebrow reveal">01　現場で見てきたこと</p>
+    <h2 id="problem-heading" class="reveal">同じ打合せの中で、<br>三つのことが同時に起きている。</h2>
+
+    <div class="problems">
+      <article class="problem reveal">
+        <span class="num" aria-hidden="true">一</span>
+        <p class="who">遺族</p>
+        <h3>悲しみの中で、数日のうちに<br>重い決定を重ねなければならない</h3>
+        <p>遺体を長く保てないため、葬儀は短い期間で進みます。プランと費用の内訳、日程と寺・火葬場の調整、親族への連絡。金額も小さくないので、迷い、悩み込んでしまう。故人らしさやお別れの形に、時間を使えていません。</p>
+      </article>
+      <article class="problem reveal">
+        <span class="num" aria-hidden="true">二</span>
+        <p class="who">葬儀担当者</p>
+        <h3>一件ごとに事情が違い、<br>打合せの質が経験で決まる</h3>
+        <p>ベテランと新人の差が出るのは、遺族の様子を読むこと、段取りの組み立て、要望と予算の調整。どれも、ベテランの頭の中にしかありません。</p>
+      </article>
+      <article class="problem reveal">
+        <span class="num" aria-hidden="true">三</span>
+        <p class="who">打合せのあと</p>
+        <h3>担当者が何家族も抱え、<br>遺族は確認も検討も進められない</h3>
+        <p>家族ごとの事情や決まったことは、担当者の記憶と紙の打合せシートにしか残っていません。「明日は何時にどこへ」「花を変えたらいくら」。聞きたいことがあっても、担当者がつかまるまで待つしかありません。</p>
+      </article>
+    </div>
+
+    <blockquote class="voice reveal">
+      本来は、故人らしさや、どういうお別れをしたいかに時間をじっくりかけてほしい。けれど実際は、親族や日程の調整、金額のことで考え悩んでしまっている。
+      <cite>— 作者（葬儀社勤務の経験あり、家業も葬儀関係）</cite>
+    </blockquote>
+  </section>
+
+  <!-- ========== 足りないもの ========== -->
+  <section class="wrap" aria-labelledby="gap-heading">
+    <p class="eyebrow reveal">02　足りないもの</p>
+    <h2 id="gap-heading" class="reveal">ベテランの判断は、<br>言葉にも、道具にもなっていない。</h2>
+
+    <div class="gap-grid">
+      <div class="head-box reveal">
+        <ul>
+          <li>今日決めなくていいことは、明日に回す</li>
+          <li>この家族には、まず安いプランから見せる</li>
+          <li>この宗派なら、寺への連絡を先に</li>
+          <li>呼ばれなかった親族が、後で揉める</li>
+        </ul>
+        <p class="cap">ベテランの頭の中にある「こういう時は、こうする」</p>
+      </div>
+      <div class="arrow-big reveal">道具にする
+        <svg width="80" height="20" viewBox="0 0 80 20" aria-hidden="true"><path d="M0 10h74M66 3l8 7-8 7" stroke="#b5532c" stroke-width="1.5" fill="none"/></svg>
+      </div>
+      <div class="tool-box reveal">
+        <h3>足りないのは、二つ。</h3>
+        <ol>
+          <li><strong>ベテランの判断を、新人が打合せのその場で使える形にしたもの</strong><br>会話を聞き取り、根拠つきで推奨を示す担当者の画面</li>
+          <li><strong>その家族の記録を、遺族がいつでも確かめられる窓口</strong><br>スマホで確認・相談・検討ができ、確定は担当者が行う</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 仕組み ========== -->
+  <section class="wrap" aria-labelledby="flow-heading">
+    <p class="eyebrow reveal">03　しくみ</p>
+    <h2 id="flow-heading" class="reveal">打合せの会話から、<br>担当者と遺族の両方に届く。</h2>
+
+    <figure class="flow reveal">
+      <svg viewBox="0 0 1160 420" role="img" aria-labelledby="flow-title">
+        <title id="flow-title">打合せの会話が家族の記録になり、担当者の画面と遺族の窓口に届く流れ</title>
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5b554c"/></marker>
+          <marker id="ahe" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b5532c"/></marker>
+        </defs>
+        <!-- 打合せ -->
+        <g>
+          <rect x="10" y="150" width="210" height="120" rx="4" fill="#fbf9f5" stroke="#d6ccba"/>
+          <text x="115" y="192" text-anchor="middle" font-size="15" fill="#1d1b18" font-weight="700">打合せの会話</text>
+          <text x="115" y="218" text-anchor="middle" font-size="12" fill="#5b554c">遺族の同意を得て録音</text>
+          <text x="115" y="238" text-anchor="middle" font-size="12" fill="#5b554c">音声は残さず要点だけ</text>
+        </g>
+        <path d="M220 210H330" stroke="#5b554c" stroke-width="1.5" marker-end="url(#ah)"/>
+        <text x="275" y="198" text-anchor="middle" font-size="11" fill="#8f877a">文字起こし</text>
+
+        <!-- 記録 -->
+        <g>
+          <rect x="335" y="120" width="250" height="180" rx="4" fill="#2a2824"/>
+          <text x="460" y="160" text-anchor="middle" font-size="15" fill="#f4efe6" font-weight="700">その家族の記録</text>
+          <text x="460" y="192" text-anchor="middle" font-size="12" fill="#c9c0b0">決まったこと ／ 保留中のこと</text>
+          <text x="460" y="214" text-anchor="middle" font-size="12" fill="#c9c0b0">家族の事情 ／ 推奨とその根拠</text>
+          <text x="460" y="236" text-anchor="middle" font-size="12" fill="#c9c0b0">遺族からの相談</text>
+          <text x="460" y="276" text-anchor="middle" font-size="11" fill="#e7c7b4">Haiku が会話から拾い上げる</text>
+        </g>
+
+        <!-- 知見 -->
+        <g>
+          <rect x="335" y="10" width="250" height="70" rx="35" fill="#f1d9c9" stroke="#b5532c"/>
+          <text x="460" y="40" text-anchor="middle" font-size="14" fill="#b5532c" font-weight="700">ベテランの知見（会社ごと）</text>
+          <text x="460" y="61" text-anchor="middle" font-size="11" fill="#8a4a2c">聞き取りから作る Skill</text>
+        </g>
+        <path d="M460 80V118" stroke="#b5532c" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#ahe)"/>
+
+        <!-- 担当者 -->
+        <path d="M585 170C680 170 690 95 780 95" stroke="#b5532c" stroke-width="1.5" fill="none" marker-end="url(#ahe)"/>
+        <g>
+          <rect x="785" y="30" width="360" height="140" rx="4" fill="#fbf9f5" stroke="#b5532c"/>
+          <text x="805" y="62" font-size="15" fill="#1d1b18" font-weight="700">担当者の画面</text>
+          <text x="805" y="90" font-size="12" fill="#5b554c">・ベテラン流の推奨を、根拠つきで（Opus）</text>
+          <text x="805" y="112" font-size="12" fill="#5b554c">・高いプランへの誘導を判定役が検査</text>
+          <text x="805" y="134" font-size="12" fill="#5b554c">・何家族分もの進み具合と相談の一覧</text>
+          <text x="805" y="156" font-size="12" fill="#5b554c">・遺族の検討内容を確認して、確定する</text>
+        </g>
+
+        <!-- 遺族 -->
+        <path d="M585 250C680 250 690 325 780 325" stroke="#5b554c" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <g>
+          <rect x="785" y="250" width="360" height="150" rx="4" fill="#fbf9f5" stroke="#4f6b4a"/>
+          <text x="805" y="282" font-size="15" fill="#1d1b18" font-weight="700">遺族の窓口（スマホ）</text>
+          <text x="805" y="310" font-size="12" fill="#5b554c">・日程、持ち物、金額、しきたりをいつでも確認</text>
+          <text x="805" y="332" font-size="12" fill="#5b554c">・保留中の選択肢を家族で検討できる</text>
+          <text x="805" y="354" font-size="12" fill="#5b554c">・できるのは確認・相談・検討まで（Managed Agents）</text>
+          <text x="805" y="376" font-size="12" fill="#4f6b4a">・決めたいことは担当者へ回す</text>
+        </g>
+        <!-- 遺族→担当者 -->
+        <path d="M1110 250V172" stroke="#4f6b4a" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#ah)"/>
+        <text x="1100" y="216" text-anchor="end" font-size="11" fill="#4f6b4a">確定の依頼</text>
+      </svg>
+    </figure>
+  </section>
+
+  <!-- ========== 画面 ========== -->
+  <section class="wrap" aria-labelledby="screen-heading">
+    <p class="eyebrow reveal">04　画面のイメージ</p>
+    <h2 id="screen-heading" class="reveal">新人の打合せの隣で、<br>ベテランがそっと耳打ちする。</h2>
+
+    <div class="screens">
+      <figure class="reveal">
+        <div class="device" role="img" aria-label="担当者の画面：左に会話の文字起こしと拾い上げた事実、右にベテラン流の推奨と根拠">
+          <div class="device-bar"><span>山田家 打合せ ／ 担当：新人 佐藤</span><span class="rec">聞き取り中 18:42</span></div>
+          <div class="staff-ui">
+            <div class="transcript">
+              <p class="pane-title">会話</p>
+              <p class="utt"><b>喪主（長女）</b>母は<mark>浄土真宗</mark>で、お寺さんとは長いお付き合いがあって…</p>
+              <p class="utt"><b>喪主（長女）</b>正直、<mark>費用はできるだけ抑えたい</mark>んです。でも叔父が何て言うか…</p>
+              <p class="utt"><b>喪主の夫</b>叔父さんは<mark>明日の夕方に新潟から</mark>着くそうです。</p>
+              <p class="utt"><b>担当者</b>祭壇のプランは三つございまして、まず一番上のものから…</p>
+              <div>
+                <p class="pane-title" style="margin-top:0.6rem">拾い上げた事実</p>
+                <div class="facts">
+                  <span class="chip">宗派：浄土真宗</span><span class="chip">予算：抑えたい</span>
+                  <span class="chip">叔父 明日夕方着</span><span class="chip hold">保留：祭壇プラン</span><span class="chip hold">保留：通夜の日</span>
+                </div>
+              </div>
+            </div>
+            <div class="advice">
+              <p class="pane-title">となりのベテランから</p>
+              <article class="card primary">
+                <span class="badge ember">いま伝える</span>
+                <h4>祭壇は、標準プランから先に見せましょう。</h4>
+                <p>予算を抑えたい気持ちを、喪主は親族の前では言い出しにくいものです。上から説明すると、断りづらくなります。</p>
+                <p class="why">根拠：<q>費用はできるだけ抑えたい</q>（喪主）／知見「予算の話は上から見せない」</p>
+              </article>
+              <article class="card">
+                <span class="badge moss">予算を抑える選択肢</span>
+                <h4>一日葬も、選択肢として添えておく。</h4>
+                <p class="why">根拠：知見「遠方の親族がいる場合でも、一日葬で十分に送れることが多い」</p>
+              </article>
+              <article class="card">
+                <span class="badge ember">段取り</span>
+                <h4>通夜は叔父さんの到着後、明日の19時を軸に。今日決めるのは日程と火葬場だけで大丈夫です。</h4>
+                <p class="why">根拠：<q>明日の夕方に新潟から</q>／知見「浄土真宗はお寺への連絡を最初に」</p>
+              </article>
+              <div>
+                <p class="pane-title">明日でよいこと</p>
+                <ul class="later"><li>返礼品の数<span>明日 昼</span></li><li>遺影の写真<span>明日 夕方</span></li><li>料理の人数<span>通夜の前</span></li></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="screen-caption">
+          <h3>担当者の画面</h3>
+          <p>会話から事実と保留を拾い上げ、ベテラン流の推奨を根拠つきで出します。推奨は担当者にだけ見え、遺族に伝えるかどうかは担当者が決めます。</p>
+        </figcaption>
+      </figure>
+
+      <figure class="reveal">
+        <div class="phone" role="img" aria-label="遺族のスマホ画面：明日の集合時間の確認と、花のプラン変更の相談">
+          <div class="phone-top">山田家 ご葬儀のご案内<b>故 山田 和子 様</b></div>
+          <div class="phone-body">
+            <p class="msg me">明日は何時にどこへ行けばいいですか？</p>
+            <p class="msg ai">明日の通夜は19時からです。ご家族は<strong>17時30分</strong>に式場へお越しください。数珠と、喪主様は会葬礼状の確認をお願いします。</p>
+            <p class="msg me">叔父が花をもう少し豪華にしたいと…いくら変わりますか？</p>
+            <p class="msg ai">生花を一つ上のランクにすると、<strong>約3万円</strong>増えます。今のままでも祭壇の両脇は十分に整います。ご家族で相談してみてください。</p>
+            <p class="msg handoff">変更のご希望は担当の佐藤へお伝えしました。<br>明朝、佐藤から確認のご連絡をします。</p>
+          </div>
+        </div>
+        <figcaption class="screen-caption">
+          <h3>遺族の窓口</h3>
+          <p>夜中でも、聞きたいことをその場で確かめられます。決めたいことは担当者へ回り、確定は担当者が行います。</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ========== 守る線 ========== -->
+  <section class="wrap" aria-labelledby="promise-heading">
+    <p class="eyebrow reveal">05　安心して使うための約束</p>
+    <h2 id="promise-heading" class="reveal">弱っている人の隣で使う道具だから、<br>守る線を、仕組みにする。</h2>
+    <div class="promises">
+      <div class="promise reveal"><span class="kanji" aria-hidden="true">廉</span><div><h3>高いプランへ誘導しない</h3><p>推奨には必ず予算を抑える選択肢を含めます。出す前に判定役が検査し、外れていれば出し直します。</p></div></div>
+      <div class="promise reveal"><span class="kanji" aria-hidden="true">拠</span><div><h3>推奨には根拠を添える</h3><p>会話のどの発言と、どの知見に基づくかを示します。納得できない推奨は、使わなくて構いません。</p></div></div>
+      <div class="promise reveal"><span class="kanji" aria-hidden="true">人</span><div><h3>確定は人が行う</h3><p>遺族の窓口でできるのは確認・相談・検討まで。変更や確定は、担当者が内容を確かめてから行います。</p></div></div>
+      <div class="promise reveal"><span class="kanji" aria-hidden="true">秘</span><div><h3>録音は同意制、音声は残さない</h3><p>開始前に遺族の同意を取り、要点の記録だけを残します。窓口は推測できない URL と確認コードで開きます。</p></div></div>
+    </div>
+  </section>
+
+  <!-- ========== Claude ========== -->
+  <section class="dark" aria-labelledby="claude-heading">
+    <div class="wrap">
+      <p class="eyebrow reveal">06　Claude の使い方</p>
+      <h2 id="claude-heading" class="reveal">役割ごとに、Claude の使い方を変える。</h2>
+      <p class="lead reveal">速さが要る場面、判断の質が要る場面、権限を絞りたい場面。目的に合わせて、モデルと機能を使い分けます。</p>
+      <div class="layers">
+        <article class="layer reveal"><span class="step">一　受け継ぐ</span><h3>ベテランの話を、知見に変える</h3><p>聞き取りの記録を、テーマ別のサブエージェントが並行して読み、「こういう時はこうする＋元の発言」に抽出します。</p><span class="tech">Claude Code ／ サブエージェント ／ Skills</span></article>
+        <article class="layer reveal"><span class="step">二　聞き取る</span><h3>会話から、事実と保留を拾う</h3><p>打合せのテンポに遅れないよう、軽く速いモデルで少しずつ拾い上げます。</p><span class="tech">Haiku 5.5</span></article>
+        <article class="layer reveal"><span class="step">三　耳打ちする</span><h3>ベテラン流の推奨を出す</h3><p>会社ごとの知見 Skill を読み込み、根拠を必ず添えて推奨します。</p><span class="tech">Opus 5.5 ＋ 知見 Skill</span></article>
+        <article class="layer reveal"><span class="step">四　確かめる</span><h3>守る線を外していないか検査</h3><p>高いプランへの誘導がないか、安い選択肢を示したか。開発中もフックで同じ検査を回します。</p><span class="tech">判定役 ／ Claude Code フック</span></article>
+        <article class="layer reveal"><span class="step">五　寄り添う</span><h3>遺族の窓口を、家族ごとに</h3><p>使える道具は「記録を読む」「検討メモを残す」「担当者に回す」の三つだけ。確定の権限を持たせません。</p><span class="tech">Managed Agents</span></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 使い続ける ========== -->
+  <section class="wrap" aria-labelledby="loop-heading">
+    <p class="eyebrow reveal">07　ハッカソンのあとも</p>
+    <h2 id="loop-heading" class="reveal">使うほど、その会社の知見が厚くなる。</h2>
+    <div class="loop">
+      <svg viewBox="0 0 400 400" role="img" aria-label="聞き取り、打合せで使う、施行後に振り返る、知見を更新する、の循環" class="reveal">
+        <circle cx="200" cy="200" r="140" fill="none" stroke="#d6ccba" stroke-width="1.5" stroke-dasharray="3 6"/>
+        <circle cx="200" cy="200" r="62" fill="#2a2824"/>
+        <text x="200" y="195" text-anchor="middle" font-size="14" fill="#f4efe6" font-weight="700">会社の知見</text>
+        <text x="200" y="217" text-anchor="middle" font-size="11" fill="#e7c7b4">Skill</text>
+        <g font-size="13" fill="#1d1b18" text-anchor="middle">
+          <circle cx="200" cy="60" r="7" fill="#b5532c"/><text x="200" y="38">ベテランに聞き取る</text>
+          <circle cx="340" cy="200" r="7" fill="#b5532c"/><text x="340" y="232">打合せで使う</text>
+          <circle cx="200" cy="340" r="7" fill="#b5532c"/><text x="200" y="372">施行後に振り返る</text>
+          <circle cx="60" cy="200" r="7" fill="#b5532c"/><text x="60" y="232">知見を更新する</text>
+        </g>
+      </svg>
+      <div class="loop-text reveal">
+        <p><strong>最初に使うのは、作者の家業の葬儀社です。</strong></p>
+        <p>知見は、親族のベテランへの聞き取りと作者自身の現場経験から作ります。だから道具には、その会社の流儀がそのまま入ります。</p>
+        <p>施行のあと、担当者は「推奨は役に立ったか、違う判断をしたか」を一言残します。その記録で知見が更新され、ベテランが引退した後も、判断は会社に残り続けます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap closing" aria-label="結び">
+    <p class="big reveal">決めることは、短く。<br><span>別れは、ゆっくり。</span></p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Built with Claude: Japan 2026 提出作品（コンセプト）</span>
+    <span>画面・人物・金額はすべて架空のイメージです</span>
+  </div>
+</footer>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>
+</body>
+</html>

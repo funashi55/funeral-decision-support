@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UX 試作｜担当者のタブレット × 遺族のスマホ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #efebe4; --surface: #fff; --surface-2: #fbfaf7; --surface-3: #f3f0ea;
+  --ink: #16140f; --ink-2: #4a463e; --ink-3: #8a8478; --line: #e7e2d8; --line-2: #d9d2c4;
+  --accent: #c2410c; --accent-2: #ea7a3b; --accent-soft: #fdeee4;
+  --safe: #3f6b4f; --safe-soft: #e6f0e8; --warn: #9a6b00; --warn-soft: #fbf1d6;
+  --night: #121110;
+  --font: "Inter", "Noto Sans JP", system-ui, sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --r-lg: 18px; --r-md: 12px; --r-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-feature-settings: "palt"; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 操作パネル ---------- */
+.director { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: .9rem 1.6rem; background: var(--night); color: #f1ebe1; font-size: .82rem; }
+.director b { font-weight: 700; }
+.director .sp { flex: 1; }
+.d-btn { padding: .45rem .95rem; border-radius: 999px; background: #2b2824; color: #f1ebe1; font-weight: 600; }
+.d-btn.primary { background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #fff; }
+.d-btn:hover { filter: brightness(1.15); }
+.progress { width: 180px; height: 4px; border-radius: 99px; background: #2b2824; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--accent-2); transition: width 400ms var(--ease); }
+.note { color: #a59c8d; font-size: .72rem; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 2rem; padding: 1.6rem; align-items: start; max-width: 1640px; margin: 0 auto; }
+.device-label { font-size: .72rem; letter-spacing: .14em; color: var(--ink-3); font-weight: 600; margin-bottom: .6rem; }
+
+/* ---------- タブレット ---------- */
+.tablet { background: var(--surface-2); border: 10px solid #1c1a17; border-radius: 28px; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(40,30,20,.5); height: 780px; display: grid; grid-template-rows: auto 1fr; }
+.t-top { display: flex; align-items: center; gap: .8rem; padding: .7rem 1rem; background: var(--surface); border-bottom: 1px solid var(--line); font-size: .8rem; }
+.t-top .family { font-weight: 700; font-size: .95rem; }
+.t-top .meta { color: var(--ink-3); }
+.t-top .sp { flex: 1; }
+.rec { display: inline-flex; align-items: center; gap: .45rem; padding: .3rem .75rem; border-radius: 999px; background: var(--surface-3); font-weight: 600; font-size: .76rem; color: var(--ink-2); }
+.rec .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.rec.on { background: var(--accent-soft); color: var(--accent); }
+.rec.on .dot { background: var(--accent); animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+.consent { font-size: .7rem; color: var(--safe); background: var(--safe-soft); padding: .25rem .6rem; border-radius: 999px; font-weight: 600; }
+.seg { display: inline-flex; background: var(--surface-3); border-radius: 999px; padding: 3px; font-size: .74rem; }
+.seg button { padding: .25rem .7rem; border-radius: 999px; color: var(--ink-3); font-weight: 600; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.icon-btn { padding: .35rem .75rem; border-radius: 999px; border: 1px solid var(--line-2); font-size: .74rem; font-weight: 600; background: var(--surface); }
+.icon-btn:hover { border-color: var(--ink-3); }
+
+.t-body { display: grid; grid-template-columns: 1fr 1.05fr 1.15fr; min-height: 0; }
+.col { min-height: 0; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+.col:last-child { border-right: 0; }
+.col-head { display: flex; justify-content: space-between; align-items: baseline; padding: .8rem 1rem .5rem; }
+.col-head h2 { font-size: .78rem; letter-spacing: .1em; color: var(--ink-3); font-weight: 700; }
+.col-head .count { font-size: .72rem; color: var(--ink-3); }
+.scroll { overflow-y: auto; padding: 0 1rem 1rem; flex: 1; scroll-behavior: smooth; }
+
+/* 文字起こし */
+.utt { padding: .55rem 0; border-bottom: 1px dashed var(--line); font-size: .84rem; line-height: 1.75; animation: rise 500ms var(--ease); }
+.utt .who { display: flex; justify-content: space-between; font-size: .68rem; color: var(--ink-3); }
+.utt.staff { color: var(--ink-2); }
+.utt mark { background: var(--accent-soft); color: inherit; border-radius: 3px; padding: 0 .15rem; cursor: pointer; }
+.utt mark:hover { outline: 1px solid var(--accent); }
+.typing { font-size: .74rem; color: var(--ink-3); padding: .6rem 0; display: none; }
+.typing.on { display: block; }
+.typing span { display: inline-block; animation: blink 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: .2s; } .typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 50% { opacity: .2; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.facts { padding: .7rem 1rem; border-top: 1px solid var(--line); background: var(--surface); }
+.facts h3 { font-size: .68rem; color: var(--ink-3); letter-spacing: .1em; margin-bottom: .45rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .3rem; min-height: 1.6rem; }
+.chip { font-size: .72rem; padding: .15rem .55rem; border-radius: 6px; background: var(--surface-3); color: var(--ink-2); animation: rise 400ms var(--ease); }
+
+/* 決めることボード */
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; padding: 0 1rem .6rem; }
+.sum { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: .45rem .6rem; }
+.sum b { display: block; font-family: Inter, sans-serif; font-size: 1.25rem; line-height: 1.1; }
+.sum span { font-size: .66rem; color: var(--ink-3); }
+.sum.today b { color: var(--accent); }
+.group { margin-top: .7rem; }
+.group h3 { font-size: .7rem; font-weight: 700; color: var(--ink-2); margin-bottom: .35rem; display: flex; justify-content: space-between; }
+.item { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .5rem; padding: .55rem .7rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); margin-bottom: .35rem; font-size: .8rem; transition: border-color 300ms, background 300ms; }
+.item .val { display: block; font-size: .72rem; color: var(--ink-3); }
+.item.changed { animation: flash 1.2s var(--ease); }
+@keyframes flash { 0% { background: var(--accent-soft); } 100% { background: var(--surface); } }
+.state { font-size: .66rem; font-weight: 700; padding: .12rem .5rem; border-radius: 4px; white-space: nowrap; }
+.state.cand { background: var(--warn-soft); color: var(--warn); }
+.state.done { background: var(--safe-soft); color: var(--safe); }
+.state.later { background: var(--surface-3); color: var(--ink-3); }
+.confirm { font-size: .7rem; font-weight: 700; padding: .25rem .6rem; border-radius: 999px; background: var(--ink); color: #fff; }
+.confirm:hover { transform: translateY(-1px); }
+.item.done { background: var(--surface-3); }
+.request { border-color: var(--safe); background: var(--safe-soft); }
+
+/* 推奨 */
+.reco { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: .85rem 1rem; margin-bottom: .6rem; animation: rise 600ms var(--ease); transition: opacity 300ms, transform 300ms var(--ease); }
+.reco.top { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); box-shadow: 0 10px 24px -16px rgba(194,65,12,.6); }
+.reco.top::before { content: ""; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--accent); }
+.tag { display: inline-block; font-size: .64rem; font-weight: 700; padding: .05rem .5rem; border-radius: 4px; }
+.tag.a { background: var(--accent-soft); color: var(--accent); }
+.tag.s { background: var(--safe-soft); color: var(--safe); }
+.tag.n { background: var(--surface-3); color: var(--ink-2); }
+.reco h4 { font-size: 1rem; line-height: 1.5; margin-top: .35rem; }
+.reco p { font-size: .78rem; color: var(--ink-2); margin-top: .25rem; line-height: 1.7; }
+.reco details { margin-top: .5rem; font-size: .72rem; color: var(--ink-3); }
+.reco summary { cursor: pointer; list-style: none; }
+.reco summary::-webkit-details-marker { display: none; }
+.reco summary::before { content: "▸ "; } .reco details[open] summary::before { content: "▾ "; }
+.reco blockquote { margin-top: .4rem; padding: .5rem .7rem; border-left: 2px solid var(--accent-2); background: var(--surface-2); color: var(--ink-2); line-height: 1.7; }
+.reco .acts { display: flex; gap: .4rem; margin-top: .6rem; align-items: center; }
+.reco .acts button { font-size: .7rem; font-weight: 600; padding: .25rem .7rem; border-radius: 999px; border: 1px solid var(--line-2); }
+.reco .acts button.use { background: var(--ink); color: #fff; border-color: var(--ink); }
+.reco .guard { margin-left: auto; font-size: .64rem; color: var(--safe); }
+.reco.used { opacity: .55; }
+.empty { font-size: .8rem; color: var(--ink-3); padding: 1rem 0; line-height: 1.8; }
+
+/* ---------- スマホ ---------- */
+.phone { width: 360px; height: 780px; border: 10px solid #1c1a17; border-radius: 44px; background: var(--surface-2); overflow: hidden; display: grid; grid-template-rows: auto auto 1fr auto; box-shadow: 0 40px 80px -40px rgba(40,30,20,.6); }
+.p-head { background: var(--night); color: #f3ede3; padding: 1.2rem 1rem .8rem; }
+.p-head small { font-size: .66rem; color: #a59c8d; }
+.p-head .name { font-size: 1rem; font-weight: 700; margin-top: .1rem; }
+.p-head .row { display: flex; justify-content: space-between; align-items: center; margin-top: .6rem; }
+.countdown { font-size: .74rem; background: #2b2824; padding: .25rem .6rem; border-radius: 999px; }
+.countdown b { color: var(--accent-2); }
+.a11y { display: flex; gap: .3rem; }
+.a11y button { font-size: .66rem; padding: .2rem .5rem; border-radius: 999px; background: #2b2824; color: #f3ede3; }
+.pins { padding: .7rem .8rem .2rem; display: grid; gap: .45rem; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.pin { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.pin summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: .55rem .75rem; font-size: .8rem; font-weight: 700; }
+.pin summary::-webkit-details-marker { display: none; }
+.pin summary .n { font-family: Inter, sans-serif; font-size: .72rem; font-weight: 700; padding: 0 .45rem; border-radius: 999px; }
+.pin.done summary .n { background: var(--safe-soft); color: var(--safe); }
+.pin.todo summary .n { background: var(--warn-soft); color: var(--warn); }
+.pin ul { list-style: none; padding: 0 .75rem .6rem; display: grid; gap: .3rem; font-size: .76rem; max-height: 150px; overflow-y: auto; }
+.pin li { display: flex; justify-content: space-between; gap: .5rem; border-top: 1px dashed var(--line); padding-top: .3rem; }
+.pin li span:last-child { color: var(--ink-3); text-align: right; }
+.pin li.new { animation: flash 1.6s var(--ease); }
+.pin .waiting { color: var(--safe); }
+.chat { overflow-y: auto; padding: .8rem; display: flex; flex-direction: column; gap: .55rem; font-size: .8rem; line-height: 1.7; }
+.bub { max-width: 86%; padding: .55rem .75rem; border-radius: 14px; animation: rise 400ms var(--ease); }
+.bub.me { align-self: flex-end; background: var(--surface-3); border-bottom-right-radius: 4px; }
+.bub.ai { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bub .src { display: block; margin-top: .3rem; font-size: .64rem; color: var(--ink-3); }
+.bub.sys { align-self: center; text-align: center; font-size: .7rem; background: var(--safe-soft); color: var(--safe); border-radius: 8px; max-width: 94%; }
+.bub .btns { display: flex; gap: .35rem; margin-top: .45rem; flex-wrap: wrap; }
+.bub .btns button { font-size: .7rem; font-weight: 600; padding: .25rem .65rem; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-2); }
+.bub .btns button.go { background: var(--ink); color: #fff; border-color: var(--ink); }
+.p-input { border-top: 1px solid var(--line); background: var(--surface); padding: .55rem .6rem .8rem; }
+.quick { display: flex; gap: .3rem; overflow-x: auto; padding-bottom: .45rem; scrollbar-width: none; }
+.quick button { flex: none; font-size: .7rem; padding: .3rem .7rem; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface-2); white-space: nowrap; }
+.quick button:hover { border-color: var(--accent); color: var(--accent); }
+.field { display: flex; gap: .4rem; }
+.field input { flex: 1; border: 1px solid var(--line-2); border-radius: 999px; padding: .5rem .8rem; font: inherit; font-size: .8rem; background: var(--surface-2); }
+.field button { width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: #fff; }
+.phone > * { min-width: 0; }
+.phone.big { font-size: 1.12em; }
+.phone.big .chat, .phone.big .pin ul { font-size: .92rem; }
+
+.caption { font-size: .72rem; color: var(--ink-3); margin-top: .6rem; line-height: 1.7; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@media (max-width: 1180px) { .stage { grid-template-columns: 1fr; } .phone { margin: 0 auto; } }
+</style>
+</head>
+<body>
+
+<header class="director">
+  <b>UX 試作</b><span class="note">山田家の打合せを再生すると、担当者のタブレットと遺族のスマホが連動します（人物・金額・会話はすべて架空）</span>
+  <span class="sp"></span>
+  <span class="progress" aria-hidden="true"><i id="prog"></i></span>
+  <button class="d-btn primary" id="play">▶ 打合せを再生</button>
+  <button class="d-btn" id="step">1行すすめる</button>
+  <button class="d-btn" id="reset">最初から</button>
+</header>
+
+<main class="stage">
+  <!-- ============ 担当者のタブレット ============ -->
+  <section aria-labelledby="tablet-label">
+    <p class="device-label" id="tablet-label">担当者のタブレット（打合せ中）</p>
+    <div class="tablet">
+      <div class="t-top">
+        <span class="family">山田家</span><span class="meta">故 山田 和子 様 ／ 担当：佐藤（2年目）</span>
+        <span class="sp"></span>
+        <span class="consent" id="consent">録音の同意 未取得</span>
+        <span class="rec" id="rec"><span class="dot"></span><span id="recText">待機中</span></span>
+        <div class="seg" role="group" aria-label="入力の方法">
+          <button aria-pressed="true" id="modeRec">録音</button><button aria-pressed="false" id="modeMemo">メモ入力</button>
+        </div>
+        <button class="icon-btn" id="share">遺族に共有 QR</button>
+      </div>
+
+      <div class="t-body">
+        <!-- 会話 -->
+        <div class="col">
+          <div class="col-head"><h2>会話</h2><span class="count" id="uttCount">0 発話</span></div>
+          <div class="scroll" id="transcript" aria-live="polite">
+            <p class="empty" id="tEmpty">「打合せを再生」を押すと、会話が文字になって流れます。<br>色のついた言葉は AI が拾った事実です。タップすると直せます。</p>
+            <p class="typing" id="typing">聞き取り中<span>・</span><span>・</span><span>・</span></p>
+          </div>
+          <div class="facts"><h3>拾い上げた事実</h3><div class="chips" id="facts"></div></div>
+        </div>
+
+        <!-- 決めることボード -->
+        <div class="col">
+          <div class="col-head"><h2>決めることボード</h2><span class="count">全 32 項目</span></div>
+          <div class="summary">
+            <div class="sum today"><b id="sToday">0</b><span>今日決める</span></div>
+            <div class="sum"><b id="sLater">0</b><span>明日以降でよい</span></div>
+            <div class="sum"><b id="sDone">0</b><span>確定済み</span></div>
+          </div>
+          <div class="scroll" id="board"></div>
+        </div>
+
+        <!-- 推奨 -->
+        <div class="col">
+          <div class="col-head"><h2>となりのベテランから</h2><span class="count">同時に3枚まで</span></div>
+          <div class="scroll" id="recos" aria-live="polite">
+            <p class="empty" id="rEmpty">判断が必要な事実が出てくると、ここに推奨が届きます。<br>伝えるかどうかは担当者が決めます。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">担当者は遺族と向き合って話しているので、画面は「一瞬見て分かる」ことを優先しています。推奨の見出しは1行、同時に3枚まで。確定できるのは担当者だけです。</p>
+  </section>
+
+  <!-- ============ 遺族のスマホ ============ -->
+  <section aria-labelledby="phone-label">
+    <p class="device-label" id="phone-label">遺族のスマホ（QR で開く）</p>
+    <div class="phone" id="phone">
+      <div class="p-head">
+        <small>ご葬儀のご案内</small>
+        <p class="name">故 山田 和子 様</p>
+        <div class="row">
+          <span class="countdown" id="countdown">日程を調整中です</span>
+          <span class="a11y"><button id="bigText" aria-pressed="false">文字 大</button><button id="speak">読み上げ</button></span>
+        </div>
+      </div>
+      <div class="pins">
+        <details class="pin done" open><summary>決まったこと <span class="n" id="pDoneN">0</span></summary><ul id="pDone"><li><span>まだありません</span><span></span></li></ul></details>
+        <details class="pin todo"><summary>これから決めること <span class="n" id="pTodoN">0</span></summary><ul id="pTodo"><li><span>打合せのあとに表示されます</span><span></span></li></ul></details>
+      </div>
+      <div class="chat" id="chat" aria-live="polite">
+        <p class="bub ai">山田様、このたびはご愁傷さまでございます。ここでは、決まったことやこれからのご予定を、いつでもご確認いただけます。分からないことがあれば、遠慮なくお尋ねください。</p>
+      </div>
+      <div class="p-input">
+        <div class="quick" id="quick">
+          <button data-q="time">明日は何時にどこへ？</button>
+          <button data-q="items">持ち物は？</button>
+          <button data-q="cost">金額の内訳</button>
+          <button data-q="flower">花を変えたい</button>
+          <button data-q="manner">お布施の目安は？</button>
+        </div>
+        <form class="field" id="form"><input id="input" placeholder="気になることを入力" aria-label="質問を入力"><button aria-label="送信">↑</button></form>
+      </div>
+    </div>
+    <p class="caption">「決まったこと」はいつでも最上部に。回答には記録の出典を添え、評価や推奨はしません。変更の希望は担当者の確認を経て確定します。</p>
+  </section>
+</main>
+
+<script>
+/* ===== シナリオ（架空） ===== */
+const SCRIPT = [
+  { who: '担当者', staff: true, text: '本日の打合せの内容を、ご家族があとで確かめられるよう記録してもよろしいでしょうか。音声は残さず、要点だけを残します。', consent: true },
+  { who: '喪主（長女）', text: 'はい、お願いします。', },
+  { who: '喪主（長女）', text: '母は{浄土真宗}で、{光明寺}さんとは長いお付き合いがあって…', facts: ['宗派：浄土真宗', '菩提寺：光明寺'], board: [['temple', 'today', '候補：光明寺へ連絡（日程の確認）']], reco: 'temple' },
+  { who: '喪主（長女）', text: '正直、{費用はできるだけ抑えたい}んです。でも叔父が何て言うか…', facts: ['予算：抑えたい', '叔父の意向が気がかり'], reco: 'budget' },
+  { who: '喪主の夫', text: '叔父さんは{明日の夕方に新潟から}着くそうです。', facts: ['叔父 明日夕方着'], board: [['wake', 'today', '候補：明日 19:00（叔父の到着後）'], ['crem', 'today', '候補：明後日 11:00 市営斎場（空き確認中）']], reco: 'schedule' },
+  { who: '担当者', staff: true, text: '祭壇のプランは三つございまして、まず一番上のものから…' },
+  { who: '喪主（長女）', text: '母は{紫が好き}で、{釣りが趣味}だったんです。', facts: ['好きな色：紫', '趣味：釣り'], board: [['flower', 'later', '紫を中心に（明日 昼まで）']], reco: 'memory' },
+];
+const BOARD_BASE = [
+  ['wake', 'today', '通夜の日時', '未定'], ['crem', 'today', '火葬の日時・斎場', '未定'], ['temple', 'today', '寺への連絡', '未定'],
+  ['plan', 'today', '祭壇のプラン', '未定'], ['flower', 'later', '生花の色・飾り', '未定'], ['gift', 'later', '返礼品の数', '明日 昼まで'],
+  ['photo', 'later', '遺影の写真', '明日 夕方まで'], ['meal', 'later', '料理の人数', '通夜の前まで'],
+];
+const RECOS = {
+  temple: { tag: ['n', '段取り'], h: '浄土真宗なので、まず光明寺さんに日程を確認しましょう。', p: '寺の都合で通夜の日が決まることが多いため、火葬場より先に。', q: '「真宗さんは、まずお寺。日を決めてから斎場を押さえる」', src: '「母は浄土真宗で、光明寺さんと…」', top: false },
+  budget: { tag: ['a', 'いま伝える'], h: '祭壇は、標準プランから先に見せましょう。', p: '予算の本音は、親族の前では言い出しにくいもの。一日葬も選択肢として添えておく。', q: '「上から見せると、遺族は断れん。真ん中から見せて、上下を添える」', src: '「費用はできるだけ抑えたい」（喪主）', top: true, safe: '予算を抑える選択肢あり' },
+  schedule: { tag: ['a', 'いま伝える'], h: '今日決めるのは「日程の候補」だけで大丈夫です。', p: '通夜は叔父さん到着後の明日19時を候補に。斎場と寺の確認が取れてから確定します。返礼品・遺影・料理は明日でよい。', q: '「初日は日程だけ決めれば十分。あとは寝てもらう」', src: '「明日の夕方に新潟から」（喪主の夫）', top: true },
+  memory: { tag: ['n', '故人らしさ'], h: '紫の花と、釣り道具の飾りを提案できます。', p: '標準プランの範囲で生花の色を変えられます（追加費用なし）。思い出の品は家族に持参をお願いする。', q: '「好きだったものを聞けたら、そこから話を広げる。そこが一番大事な時間」', src: '「紫が好きで、釣りが趣味だった」', top: false, safe: '追加費用なし' },
+};
+
+/* ===== 状態 ===== */
+const initialState = () => ({
+  step: 0, consent: false, utts: [], facts: [],
+  board: BOARD_BASE.map(([id, group, label, value]) => ({ id, group, label, value, status: group === 'today' ? 'open' : 'later' })),
+  recos: [], familyDone: [], familyTodo: [], requests: [],
+});
+let state = initialState();
+let timer = null;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hl = (t) => esc(t).replace(/\{(.+?)\}/g, '<mark title="タップして修正">$1</mark>');
+const nowLabel = () => `18:${String(30 + state.step * 2).padStart(2, '0')}`;
+
+/* ===== 1行すすめる ===== */
+function advance() {
+  if (state.step >= SCRIPT.length) { stop(); return; }
+  const line = SCRIPT[state.step];
+  const board = (line.board || []).reduce((acc, [id, group, value]) =>
+    acc.map((it) => (it.id === id ? { ...it, group, value, status: group === 'today' ? 'cand' : 'later', changed: true } : { ...it, changed: false })),
+    state.board.map((it) => ({ ...it, changed: false })));
+  const recos = line.reco
+    ? [...[{ ...RECOS[line.reco], id: line.reco }, ...state.recos].slice(0, 3)].sort((a, b) => Number(!!b.top) - Number(!!a.top))
+    : state.recos;
+  state = {
+    ...state, step: state.step + 1, consent: state.consent || !!line.consent,
+    utts: [...state.utts, { ...line, time: nowLabel() }],
+    facts: [...state.facts, ...(line.facts || [])],
+    board, recos,
+  };
+  render();
+  if (state.step >= SCRIPT.length) { stop(); finishMeeting(); }
+}
+
+function finishMeeting() {
+  setTimeout(() => sysMsg('打合せの内容が反映されました。「決まったこと」と「これから決めること」から、いつでもご確認いただけます。'), 600);
+}
+
+function play() {
+  if (timer) { stop(); return; }
+  $('typing').classList.add('on');
+  $('play').textContent = '❚❚ 一時停止';
+  advance();
+  timer = setInterval(advance, 2600);
+}
+function stop() { clearInterval(timer); timer = null; $('play').textContent = '▶ 打合せを再生'; $('typing').classList.remove('on'); }
+
+/* ===== 担当者の確定 ===== */
+function confirmItem(id) {
+  const item = state.board.find((it) => it.id === id);
+  if (!item) return;
+  const value = item.value.replace(/^候補：/, '').replace(/（.+?）$/, '');
+  state = {
+    ...state,
+    board: state.board.map((it) => (it.id === id ? { ...it, status: 'done', value, changed: true } : { ...it, changed: false })),
+    familyDone: [{ label: item.label, value, time: nowLabel(), fresh: true }, ...state.familyDone.map((d) => ({ ...d, fresh: false }))],
+    requests: state.requests.filter((r) => r.id !== id),
+  };
+  render();
+  sysMsg(`担当の佐藤が「${item.label}」を確定しました：${value}`);
+}
+
+function useReco(id, used) {
+  state = { ...state, recos: state.recos.map((r) => (r.id === id ? { ...r, used } : r)) };
+  render();
+}
+
+/* ===== 描画 ===== */
+function render() {
+  $('prog').style.width = `${(state.step / SCRIPT.length) * 100}%`;
+  $('consent').textContent = state.consent ? '録音の同意 取得済み' : '録音の同意 未取得';
+  $('rec').classList.toggle('on', state.consent && state.step < SCRIPT.length);
+  $('recText').textContent = state.step >= SCRIPT.length ? '打合せ終了' : state.consent ? `聞き取り中 ${String(state.step * 2).padStart(2, '0')}:00` : '待機中';
+  $('uttCount').textContent = `${state.utts.length} 発話`;
+  $('tEmpty').style.display = state.utts.length ? 'none' : 'block';
+
+  const tr = $('transcript');
+  tr.querySelectorAll('.utt').forEach((n) => n.remove());
+  state.utts.forEach((u) => {
+    const el = document.createElement('div');
+    el.className = `utt${u.staff ? ' staff' : ''}`;
+    el.innerHTML = `<span class="who"><span>${esc(u.who)}</span><span>${u.time}</span></span>${hl(u.text)}`;
+    tr.insertBefore(el, $('typing'));
+  });
+  tr.scrollTop = tr.scrollHeight;
+  $('facts').innerHTML = state.facts.map((f) => `<span class="chip">${esc(f)}</span>`).join('');
+
+  const groups = [['today', '今日決める'], ['later', '明日以降でよい']];
+  const doneItems = state.board.filter((it) => it.status === 'done');
+  $('board').innerHTML = groups.map(([g, title]) => {
+    const items = state.board.filter((it) => it.group === g && it.status !== 'done');
+    return `<div class="group"><h3>${title}<span>${items.length}</span></h3>${items.map(itemHtml).join('')}</div>`;
+  }).join('') + (doneItems.length ? `<div class="group"><h3>確定済み<span>${doneItems.length}</span></h3>${doneItems.map(itemHtml).join('')}</div>` : '');
+  $('sToday').textContent = state.board.filter((it) => it.group === 'today' && it.status !== 'done').length;
+  $('sLater').textContent = state.board.filter((it) => it.group === 'later' && it.status !== 'done').length;
+  $('sDone').textContent = doneItems.length;
+
+  $('rEmpty').style.display = state.recos.length ? 'none' : 'block';
+  const rc = $('recos');
+  rc.querySelectorAll('.reco').forEach((n) => n.remove());
+  state.recos.forEach((r, i) => {
+    const el = document.createElement('article');
+    el.className = `reco${i === 0 && r.top ? ' top' : ''}${r.used ? ' used' : ''}`;
+    el.innerHTML = `<span class="tag ${r.tag[0]}">${r.tag[1]}</span>${r.safe ? ` <span class="tag s">${r.safe}</span>` : ''}
+      <h4>${esc(r.h)}</h4><p>${esc(r.p)}</p>
+      <details><summary>根拠を見る</summary><blockquote>ベテランの言葉：${esc(r.q)}<br>会話：${esc(r.src)}</blockquote></details>
+      <div class="acts">${r.used ? `<span class="guard">${r.used === 'use' ? '伝えた' : '使わなかった'}（知見の改善に使われます）</span>` :
+        `<button class="use" data-use="${r.id}">伝えた</button><button data-skip="${r.id}">使わない</button><span class="guard">✓ 誘導チェック済み</span>`}</div>`;
+    rc.appendChild(el);
+  });
+
+  renderFamily();
+}
+
+function itemHtml(it) {
+  const req = state.requests.find((r) => r.id === it.id);
+  const stateTag = it.status === 'done' ? '<span class="state done">確定</span>'
+    : it.status === 'cand' ? `<button class="confirm" data-confirm="${it.id}">確定する</button>`
+    : it.status === 'later' ? '<span class="state later">あとで</span>' : '<span class="state cand">未定</span>';
+  const reqLine = req ? `<span class="val" style="color:var(--safe)">遺族から相談：${esc(req.text)}</span>` : '';
+  return `<div class="item${it.status === 'done' ? ' done' : ''}${it.changed ? ' changed' : ''}${req ? ' request' : ''}"><span>${esc(it.label)}<span class="val">${esc(it.value)}</span>${reqLine}</span>${req ? `<button class="confirm" data-confirm="${it.id}">確定する</button>` : stateTag}</div>`;
+}
+
+function renderFamily() {
+  const done = state.familyDone;
+  $('pDoneN').textContent = done.length;
+  $('pDone').innerHTML = done.length ? done.map((d) => `<li class="${d.fresh ? 'new' : ''}"><span>${esc(d.label)}</span><span>${esc(d.value)}</span></li>`).join('') : '<li><span>まだありません</span><span></span></li>';
+  const todo = state.step >= SCRIPT.length ? state.board.filter((it) => it.status !== 'done') : [];
+  $('pTodoN').textContent = todo.length;
+  $('pTodo').innerHTML = todo.length ? todo.map((it) => {
+    const req = state.requests.find((r) => r.id === it.id);
+    return `<li><span>${esc(it.label)}</span><span>${req ? '<span class="waiting">担当者の確認待ち</span>' : esc(it.value.replace(/^候補：/, '候補 '))}</span></li>`;
+  }).join('') : '<li><span>打合せのあとに表示されます</span><span></span></li>';
+  const wake = done.find((d) => d.label === '通夜の日時');
+  $('countdown').innerHTML = wake ? `通夜まで <b>約22時間</b>` : '日程を調整中です';
+}
+
+/* ===== 遺族のチャット ===== */
+function bubble(cls, html) {
+  const el = document.createElement('p');
+  el.className = `bub ${cls}`;
+  el.innerHTML = html;
+  $('chat').appendChild(el);
+  $('chat').scrollTop = $('chat').scrollHeight;
+  return el;
+}
+const sysMsg = (t) => bubble('sys', esc(t));
+
+const ANSWERS = {
+  time: () => {
+    const wake = state.familyDone.find((d) => d.label === '通夜の日時');
+    return wake ? `通夜は<strong>${esc(wake.value)}</strong>からです。ご家族は<strong>開始の1時間30分前</strong>に式場へお越しください。<span class="src">記録より：${wake.time} 担当 佐藤が確定</span>`
+      : `通夜の日時は<strong>まだ確定していません</strong>。いまは「明日 19:00」を候補に、お寺と斎場の確認を進めています。確定したら、ここでお知らせします。<span class="src">記録より：打合せ中の候補</span>`;
+  },
+  items: () => '数珠をお持ちください。喪主様は、会葬礼状の文面の確認があります。遺影に使うお写真は、明日の夕方までにご用意いただければ大丈夫です。<span class="src">記録より：これから決めること</span>',
+  cost: () => '現在の見積もりは、標準プランを前提にしています。項目ごとの金額は担当者が明日までにお送りします。ご不明な点は、担当者にそのままお伝えできます。<span class="src">記録より：見積もり作成中</span>',
+  manner: () => 'お布施の金額は、お寺やご関係によって異なるため、こちらでは目安をお答えしていません。光明寺さんへの確認の仕方は、担当の佐藤がご案内できます。<div class="btns"><button class="go" data-ask="manner">担当者に聞く</button></div>',
+  flower: () => '生花の色は、標準プランのまま変えられます（追加費用はかかりません）。紫を中心にする案が、打合せで挙がっています。<div class="btns"><button class="go" data-req="flower">紫中心でお願いしたい</button><button data-req-cancel>もう少し考える</button></div><span class="src">記録より：生花の色・飾り（明日 昼まで）</span>',
+};
+
+function ask(key, label) {
+  bubble('me', esc(label));
+  setTimeout(() => bubble('ai', (ANSWERS[key] || (() => 'その点は、担当者に確認してお答えします。少しお時間をください。'))()), 700);
+}
+
+function requestChange(id, text) {
+  if (state.requests.some((r) => r.id === id)) return;
+  state = { ...state, requests: [...state.requests, { id, text }] };
+  render();
+  sysMsg('担当の佐藤に伝えました。内容を確認のうえ、確定のご連絡をします。');
+}
+
+/* ===== イベント ===== */
+$('play').addEventListener('click', play);
+$('step').addEventListener('click', () => { stop(); advance(); });
+$('reset').addEventListener('click', () => {
+  stop(); state = initialState();
+  $('chat').innerHTML = '<p class="bub ai">山田様、このたびはご愁傷さまでございます。ここでは、決まったことやこれからのご予定を、いつでもご確認いただけます。分からないことがあれば、遠慮なくお尋ねください。</p>';
+  render();
+});
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  if (t.dataset.confirm) confirmItem(t.dataset.confirm);
+  if (t.dataset.use) useReco(t.dataset.use, 'use');
+  if (t.dataset.skip) useReco(t.dataset.skip, 'skip');
+  if (t.dataset.q) ask(t.dataset.q, t.textContent);
+  if (t.dataset.req) requestChange(t.dataset.req, '紫中心の生花にしたい');
+  if (t.hasAttribute('data-req-cancel')) bubble('ai', 'もちろんです。ご家族でゆっくり話し合ってください。明日のお昼までに決めていただければ大丈夫です。');
+  if (t.dataset.ask === 'manner') requestChange('temple', 'お布施の相談をしたい');
+  if (t.dataset.ask === 'other') sysMsg('担当の佐藤にお伝えしました。手が空き次第ご連絡します。');
+});
+$('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const v = $('input').value.trim();
+  if (!v) return;
+  $('input').value = '';
+  const key = /何時|集合|どこ/.test(v) ? 'time' : /持ち物/.test(v) ? 'items' : /花/.test(v) ? 'flower' : /布施/.test(v) ? 'manner' : /金額|費用|いくら/.test(v) ? 'cost' : null;
+  if (key) { ask(key, v); return; }
+  bubble('me', esc(v));
+  setTimeout(() => bubble('ai', 'お気持ち、お察しいたします。ここでお答えしきれないことは、担当の佐藤にお伝えできます。<div class="btns"><button class="go" data-ask="other">担当者に伝える</button></div>'), 700);
+});
+$('modeRec').addEventListener('click', () => { $('modeRec').setAttribute('aria-pressed', 'true'); $('modeMemo').setAttribute('aria-pressed', 'false'); });
+$('modeMemo').addEventListener('click', () => { $('modeMemo').setAttribute('aria-pressed', 'true'); $('modeRec').setAttribute('aria-pressed', 'false'); });
+$('bigText').addEventListener('click', (e) => {
+  const on = $('phone').classList.toggle('big');
+  e.currentTarget.setAttribute('aria-pressed', String(on));
+});
+$('speak').addEventListener('click', () => {
+  const last = [...$('chat').querySelectorAll('.bub.ai')].pop();
+  if (!last || !('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(last.textContent);
+  u.lang = 'ja-JP';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+});
+$('share').addEventListener('click', () => sysMsg('担当者の画面から、このページの QR コードが表示されました（試作）。'));
+
+render();
+</script>
+</body>
+</html>
