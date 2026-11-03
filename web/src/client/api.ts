@@ -1,5 +1,6 @@
 import type { CaseState } from "../engine/case";
 import type { FarewellResult } from "../engine/farewell";
+import type { FamilyView } from "../engine/familyView";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -22,4 +23,7 @@ export const api = {
   farewell: (caseId: string) => post<FarewellResult>(`/api/cases/${caseId}/farewell`),
   confirm: (caseId: string, decisionId: string, value: string) => post<CaseState>(`/api/cases/${caseId}/decisions`, { decisionId, value }),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
+  acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),
+  sendFamilyRequest: (token: string, body: { kind: "change" | "question"; decisionId: string | null; text: string }) =>
+    post<FamilyView>(`/api/family/${encodeURIComponent(token)}/requests`, body),
 };

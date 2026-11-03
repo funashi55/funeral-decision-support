@@ -6,6 +6,7 @@ import { impactedBy } from "../../domain/decisions";
 import type { FarewellResult } from "../../engine/farewell";
 import { DEMO_SCRIPT } from "../../engine/fixtures/demoScript";
 import { DecisionBoard } from "./DecisionBoard";
+import { FamilyInbox } from "./FamilyInbox";
 import { FarewellPanel } from "./FarewellPanel";
 import { Transcript } from "./Transcript";
 import s from "./staff.module.css";
@@ -22,6 +23,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const [farewellLoading, setFarewellLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [impacted, setImpacted] = useState<ReadonlySet<string>>(new Set());
+  const [inboxOpen, setInboxOpen] = useState(false);
   /** 次に流す台本の行（描画には使わない。表示は案件の発話数から導く） */
   const step = useRef(0);
   useEffect(() => {
@@ -86,6 +88,14 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     }
   };
 
+  const acknowledge = async (requestId: string, reply: string | null): Promise<void> => {
+    try {
+      await api.acknowledge(caseId, requestId, reply);
+    } catch (e) {
+      setError(message(e));
+    }
+  };
+
   const reset = async (): Promise<void> => {
     setPlaying(false);
     step.current = 0;
@@ -97,6 +107,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
 
   if (!state) return <p className={s.empty} style={{ padding: "2rem" }}>読み込み中…</p>;
   const finished = state.utterances.length >= DEMO_SCRIPT.length;
+  const openRequests = state.requests.filter((r) => r.status === "open").length;
   const recording = playing || (state.utterances.length > 0 && !finished);
 
   return (
@@ -112,6 +123,10 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
         <button type="button" className={s.btn} onClick={() => void advance()} disabled={playing || finished}>
           1行すすめる
         </button>
+        <button type="button" className={`${s.btn} ${s.inboxBtn}`} onClick={() => setInboxOpen((o) => !o)} aria-expanded={inboxOpen}>
+          ご家族の窓口
+          {openRequests > 0 && <span className={s.badge} aria-label={`未対応 ${openRequests} 件`}>{openRequests}</span>}
+        </button>
         <button type="button" className={s.btn} onClick={() => void reset()}>
           最初から
         </button>
@@ -121,6 +136,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
         <DecisionBoard state={state} impacted={impacted} onConfirm={(id, v) => void confirm(id, v)} />
         <FarewellPanel state={state} result={farewell} loading={farewellLoading} error={error} onRun={() => void runFarewell()} />
       </div>
+      {inboxOpen && <FamilyInbox state={state} onClose={() => setInboxOpen(false)} onAcknowledge={acknowledge} />}
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { DEMO_CASE } from "../engine/fixtures/demoCase";
 
 export interface CaseStore {
   get(caseId: string): CaseState | undefined;
+  /** 遺族の窓口の合言葉から案件を引く */
+  findByToken(token: string): CaseState | undefined;
   save(state: CaseState): CaseState;
   reset(caseId: string): CaseState | undefined;
   subscribe(caseId: string, listener: (state: CaseState) => void): () => void;
@@ -27,6 +29,7 @@ function createMemoryStore(): CaseStore {
   };
   return {
     get: (caseId) => cases.get(caseId),
+    findByToken: (token) => [...cases.values()].find((c) => c.familyToken === token),
     save: (state) => {
       cases.set(state.caseId, state);
       notify(state);
@@ -48,6 +51,12 @@ function createMemoryStore(): CaseStore {
   };
 }
 
-const globalForStore = globalThis as unknown as { __caseStore?: CaseStore };
-export const store: CaseStore = globalForStore.__caseStore ?? createMemoryStore();
-globalForStore.__caseStore = store;
+/**
+ * 開発中の再読み込みでも案件を失わないよう globalThis に置く。
+ * 案件の形を変えたら版を上げる（古い形のまま残った保存場所を使わないように）
+ */
+const STORE_VERSION = 2;
+const STORE_KEY = `__caseStore_v${STORE_VERSION}`;
+const globalForStore = globalThis as unknown as Record<string, CaseStore | undefined>;
+export const store: CaseStore = globalForStore[STORE_KEY] ?? createMemoryStore();
+globalForStore[STORE_KEY] = store;

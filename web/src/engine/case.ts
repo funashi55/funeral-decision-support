@@ -27,6 +27,23 @@ export interface FamilyCircumstance {
   readonly utteranceIds: readonly string[];
 }
 
+export type RequestKind = "change" | "question";
+export type RequestStatus = "open" | "acknowledged";
+
+/** 遺族の窓口から担当者へ届く、変更の希望や質問 */
+export interface FamilyRequest {
+  readonly id: string;
+  readonly kind: RequestKind;
+  /** どの決定についてか（決定に紐づかない質問は null） */
+  readonly decisionId: string | null;
+  readonly text: string;
+  /** 送られた時刻（UNIX ミリ秒） */
+  readonly sentAt: number;
+  readonly status: RequestStatus;
+  /** 担当者からの返事。遺族の窓口に表示する */
+  readonly staffReply: string | null;
+}
+
 export interface CaseState {
   readonly caseId: string;
   readonly familyName: string;
@@ -34,4 +51,7 @@ export interface CaseState {
   readonly utterances: readonly Utterance[];
   readonly circumstances: readonly FamilyCircumstance[];
   readonly decisions: Readonly<Record<string, DecisionState>>;
+  readonly requests: readonly FamilyRequest[];
+  /** 遺族の窓口を開くための合言葉（共有リンクに含める） */
+  readonly familyToken: string;
 }

@@ -19,4 +19,6 @@ export const DEMO_CASE: CaseState = {
     { id: "C4", text: "費用はできるだけ抑えたい", utteranceIds: ["U5"] },
   ],
   decisions: {},
+  requests: [],
+  familyToken: "yamada-k7m2q9",
 };
