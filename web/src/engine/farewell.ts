@@ -9,12 +9,13 @@ import { z } from "zod";
 import { FAREWELL_OPTIONS, getFarewellOption, type FarewellOptionId } from "../domain/farewell";
 import { getCatalogItem } from "../domain/pricing";
 import { yukanReferences, type Reference } from "../domain/similarFamilies";
-import { getDecision } from "../domain/decisions";
+import { DECISIONS, getDecision } from "../domain/decisions";
 import { loadKnowledge, rulesFor, type Rule } from "../knowledge/rules";
 import type { CaseState } from "./case";
 import { checkBudgetOption, checkText, type GuardViolation } from "./guard";
 
 const FAREWELL_DECISIONS = ["laying_in_style", "embalming", "resting_place", "cremation_date", "face_viewing"] as const;
+const DECISION_IDS = DECISIONS.map((d) => d.id) as [string, ...string[]];
 const OPTION_IDS = FAREWELL_OPTIONS.map((o) => o.id) as [FarewellOptionId, ...FarewellOptionId[]];
 
 export const FarewellDraftSchema = z.object({
@@ -33,7 +34,9 @@ export const FarewellDraftSchema = z.object({
   referenceIds: z.array(z.string()).describe("担当者に見せる似た家族の参考値の ID。家族の事情に近いものだけ"),
   timeAdvice: z.string().describe("火葬までの時間の使い方についての助言。数字は書かない"),
   questionsToAsk: z.array(z.string()).describe("担当者が家族に尋ねるとよい問い。最大3つ"),
-  cautions: z.array(z.object({ decisionId: z.string(), message: z.string() })).describe("取り返しのつかない見落としの注意"),
+  cautions: z
+    .array(z.object({ decisionId: z.enum(DECISION_IDS).describe("決定項目の ID（お別れの選択肢の ID ではない）"), message: z.string() }))
+    .describe("取り返しのつかない見落としの注意。なければ空"),
 });
 
 export type FarewellDraft = z.infer<typeof FarewellDraftSchema>;
@@ -119,7 +122,7 @@ export function validateDraft(draft: FarewellDraft, ctx: FarewellContext): Guard
   const shown = draft.options.filter((o) => o.fit !== "not_now");
   problems.push(...checkBudgetOption(shown.map((o) => ({ id: o.optionId, lowCost: getFarewellOption(o.optionId).catalogItemId === null }))));
 
-  const unknown = (kind: string, id: string): GuardViolation => ({ rule: "numbers_in_text", message: `材料にない${kind}の ID を使っています: ${id}` });
+  const unknown = (kind: string, id: string): GuardViolation => ({ rule: "unknown_reference", message: `材料にない${kind}の ID を使っています: ${id}` });
   for (const o of draft.options) {
     for (const id of o.utteranceIds) if (!ctx.utteranceIds.has(id)) problems.push(unknown("発言", id));
     for (const id of o.ruleIds) if (!ctx.rules.has(id)) problems.push(unknown("知見", id));

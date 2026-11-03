@@ -3,7 +3,7 @@
  * ここで落ちた推奨は表示しない。
  */
 
-export type GuardRule = "fear_appeal" | "numbers_in_text" | "no_budget_option" | "majority_pressure" | "pressure_language";
+export type GuardRule = "fear_appeal" | "numbers_in_text" | "no_budget_option" | "majority_pressure" | "pressure_language" | "unknown_reference";
 
 export interface GuardViolation {
   readonly rule: GuardRule;
