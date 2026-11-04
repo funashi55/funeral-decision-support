@@ -83,23 +83,47 @@ export const FAREWELL_SYSTEM = `あなたは葬儀社のベテラン担当者と
 守ること：
 - 家族の言葉から、家族が望むお別れの形を読み取る。断定しない
 - 有料の選択肢を勧めるために、遺体の変化（菌・匂い・変色など）を持ち出して不安をあおらない
+- 家族が罪悪感や後悔を口にしたとき（「何もしてあげられなかった」など）、その気持ちを有料の選択肢の理由にしない。故人のつらそうだった姿を持ち出さず、「やっておけばよかった」と後悔を先回りしない。まず気持ちを受け止め、望むかを尋ねる
 - 「皆さん選ばれています」のように多数派に合わせるよう促さない。似た家族の選び方は参考として ID で示すだけ
 - 費用のかからない通常の納棺を必ず選択肢として評価する
 - 金額・割合・件数の数字を文章に書かない（サーバーが正しい値を差し込む）
 - 根拠にした発言と知見の ID を必ず添える。材料にない ID を作らない
 - あなたの出力は担当者だけが見る。家族への伝え方は担当者が決める`;
 
-export interface EnrichedOption {
+/** 選択肢の事実（モデルが書かない部分）。推奨を出せないときも、これだけは並べられる */
+export interface OptionFacts {
   readonly id: FarewellOptionId;
   readonly label: string;
-  readonly fit: FarewellDraft["options"][number]["fit"];
-  readonly reason: string;
   readonly canDo: readonly string[];
   readonly cannotDo: readonly string[];
   readonly reversible: boolean;
   readonly deadline: string;
   /** null はプランに含まれる */
   readonly price: { readonly amount: number; readonly unit: string } | null;
+}
+
+export function optionFacts(id: FarewellOptionId): OptionFacts {
+  const option = getFarewellOption(id);
+  const item = option.catalogItemId ? getCatalogItem(option.catalogItemId) : null;
+  return {
+    id: option.id,
+    label: option.label,
+    canDo: option.canDo,
+    cannotDo: option.cannotDo,
+    reversible: option.reversible,
+    deadline: option.deadline,
+    price: item ? { amount: item.unitPrice, unit: item.unit } : null,
+  };
+}
+
+/** 費用のかからない選択肢を先頭にした、すべての選択肢の事実 */
+export function allOptionFacts(): OptionFacts[] {
+  return [...OPTION_IDS].map(optionFacts).sort((a, b) => Number(a.price !== null) - Number(b.price !== null));
+}
+
+export interface EnrichedOption extends OptionFacts {
+  readonly fit: FarewellDraft["options"][number]["fit"];
+  readonly reason: string;
   readonly evidence: { readonly utteranceIds: readonly string[]; readonly rules: readonly Rule[] };
 }
 
@@ -143,22 +167,14 @@ export function enrichDraft(draft: FarewellDraft, ctx: FarewellContext, referenc
   const fitOrder = { suits: 0, consider: 1, not_now: 2 } as const;
   const options = [...draft.options]
     .sort((a, b) => fitOrder[a.fit] - fitOrder[b.fit])
-    .map((o): EnrichedOption => {
-      const option = getFarewellOption(o.optionId);
-      const item = option.catalogItemId ? getCatalogItem(option.catalogItemId) : null;
-      return {
-        id: option.id,
-        label: option.label,
+    .map(
+      (o): EnrichedOption => ({
+        ...optionFacts(o.optionId),
         fit: o.fit,
         reason: o.reason,
-        canDo: option.canDo,
-        cannotDo: option.cannotDo,
-        reversible: option.reversible,
-        deadline: option.deadline,
-        price: item ? { amount: item.unitPrice, unit: item.unit } : null,
         evidence: { utteranceIds: o.utteranceIds, rules: o.ruleIds.map((id) => ctx.rules.get(id) as Rule) },
-      };
-    });
+      }),
+    );
   return {
     familyWish: draft.familyWish,
     options,
@@ -175,7 +191,13 @@ export type JudgeDraft = (recommendation: FarewellRecommendation) => Promise<Gua
 
 export type FarewellResult =
   | { readonly ok: true; readonly recommendation: FarewellRecommendation; readonly attempts: number; readonly rejected: readonly GuardViolation[] }
-  | { readonly ok: false; readonly violations: readonly GuardViolation[]; readonly attempts: number };
+  | {
+      readonly ok: false;
+      readonly violations: readonly GuardViolation[];
+      readonly attempts: number;
+      /** 推奨の代わりに並べる、選択肢の事実だけ（モデルの文章を含まない） */
+      readonly facts: readonly OptionFacts[];
+    };
 
 /** 生成 → 機械検査 → 判定役。落ちたら指摘を添えて1回だけ出し直す */
 export async function recommendFarewell(state: CaseState, generate: GenerateDraft, judge: JudgeDraft): Promise<FarewellResult> {
@@ -193,5 +215,5 @@ export async function recommendFarewell(state: CaseState, generate: GenerateDraf
     rejected = [...rejected, ...violations];
     prompt = `${ctx.prompt}\n\n# 前回の案は次の理由で出せませんでした。直してください\n${violations.map((v) => `- ${v.message}${v.quote ? `（「${v.quote}」）` : ""}`).join("\n")}`;
   }
-  return { ok: false, violations: rejected, attempts: 2 };
+  return { ok: false, violations: rejected, attempts: 2, facts: allOptionFacts() };
 }

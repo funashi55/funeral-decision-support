@@ -11,17 +11,63 @@ export interface GuardViolation {
   readonly quote?: string;
 }
 
-/** 遺体の変化を持ち出して不安をあおる語 */
-const FEAR_WORDS = ["菌", "腐", "匂い", "臭い", "におい", "変色", "傷む", "傷んで", "悪化", "崩れ", "体液", "かわいそう", "保証できない"] as const;
+/**
+ * 遺体の変化を持ち出して不安をあおる言い回し。
+ * 単語だけで止めると「病状が悪化して入院」「泣き崩れ」「花の匂い」まで止まるため、
+ * お体・お顔と変化の語の組み合わせで見る
+ */
+const FEAR_PATTERNS = [
+  /菌/,
+  /腐/,
+  /体液/,
+  /変色/,
+  /臭/,
+  /かわいそう/,
+  /保証(?:でき|いたしかね|しかね)/,
+  /傷み|傷んで|傷む/,
+  /きれいな(?:お顔の|お姿の)?うちに/,
+  /(?:匂い|におい)が(?:出|して|強|気に|こも)/,
+  /(?:お体|お顔|ご遺体|お肌|お姿|状態)[^。、]{0,6}(?:崩れ|色が変わ|悪化|もたな|むくみ|黒ず|変わってしま)/,
+] as const;
 
 /** 多数派に合わせるよう促す言い回し */
-const MAJORITY_PATTERNS = [/皆さん(?:選ばれ|され)/, /ほとんどの(?:方|家族)が/, /普通は/, /一般的には.*(?:選ば|され)/, /多くの方が選ば/] as const;
+const MAJORITY_PATTERNS = [
+  /(?:皆さん|みなさん|皆様)(?:が)?(?:選ばれ|され)/,
+  /ほとんどの(?:方|ご家族|家族)が/,
+  /多くの(?:方|ご家族|家族)が/,
+  /大半の/,
+  /半数(?:以上)?の/,
+  /普通は/,
+  /当たり前/,
+  /一般的には.*(?:選ば|され)/,
+] as const;
 
 /** 決断を急がせる・断りづらくする言い回し */
-const PRESSURE_PATTERNS = [/今(?:しか|だけ)/, /後悔(?:しますよ|しないように)/, /せっかくなら/, /最後(?:だから|ですから)/, /ケチ/, /見栄え/] as const;
+const PRESSURE_PATTERNS = [
+  /今(?:しか|だけ)/,
+  /今日中に決め/,
+  /間に合いません/,
+  /後悔(?:しますよ|しないように|されます)/,
+  /悔やまれ/,
+  /せっかくなら/,
+  /最後(?:だから|ですから|くらい)/,
+  /最後の親孝行/,
+  /(?:親戚|親族|周り|世間)の(?:方の|方々の)?目/,
+  /世間体/,
+  /ケチ/,
+  /見栄え/,
+] as const;
 
-/** 金額・割合・件数の表記（数字はサーバー側で差し込むため、モデルの文章に入っていてはいけない） */
-const NUMBER_PATTERN = /[0-9０-９]+(?:[,，][0-9０-９]{3})*\s*(?:円|万|%|％|割|件|人に1人)/;
+/**
+ * 金額・割合・件数の表記（数字はサーバー側で差し込むため、モデルの文章に入っていてはいけない）。
+ * 日数や時刻（3日後、2時間）は止めない
+ */
+const NUMBER_PATTERNS = [
+  /[0-9０-９][0-9０-９,，.．]*\s*(?:円|万|%|％|割|件|人に[1１一]人)/,
+  /[〇一二三四五六七八九十百千万]+円/,
+  /[一二三四五六七八九十]割/,
+  /[一二三四五六七八九十百]+人に一人/,
+] as const;
 
 function findQuote(text: string, index: number, length: number): string {
   const start = Math.max(0, index - 12);
@@ -31,9 +77,9 @@ function findQuote(text: string, index: number, length: number): string {
 /** モデルが書いた文章を検査する */
 export function checkText(text: string): GuardViolation[] {
   const violations: GuardViolation[] = [];
-  for (const word of FEAR_WORDS) {
-    const i = text.indexOf(word);
-    if (i >= 0) violations.push({ rule: "fear_appeal", message: `不安をあおる語「${word}」が含まれています`, quote: findQuote(text, i, word.length) });
+  for (const pattern of FEAR_PATTERNS) {
+    const m = pattern.exec(text);
+    if (m) violations.push({ rule: "fear_appeal", message: `不安をあおる言い回し「${m[0]}」が含まれています`, quote: findQuote(text, m.index, m[0].length) });
   }
   for (const pattern of MAJORITY_PATTERNS) {
     const m = pattern.exec(text);
@@ -43,8 +89,12 @@ export function checkText(text: string): GuardViolation[] {
     const m = pattern.exec(text);
     if (m) violations.push({ rule: "pressure_language", message: "決断を急がせる、断りづらくする言い回しです", quote: findQuote(text, m.index, m[0].length) });
   }
-  const n = NUMBER_PATTERN.exec(text);
-  if (n) violations.push({ rule: "numbers_in_text", message: "金額や割合を文章に書いています（数字は集計表と価格表から差し込みます）", quote: findQuote(text, n.index, n[0].length) });
+  for (const pattern of NUMBER_PATTERNS) {
+    const m = pattern.exec(text);
+    if (!m) continue;
+    violations.push({ rule: "numbers_in_text", message: "金額や割合を文章に書いています（数字は集計表と価格表から差し込みます）", quote: findQuote(text, m.index, m[0].length) });
+    break;
+  }
   return violations;
 }
 

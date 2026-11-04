@@ -34,7 +34,7 @@ export const FAREWELL_OPTIONS: readonly FarewellOption[] = [
     id: "yukan",
     label: "湯灌",
     summary: "納棺の前に、お体を洗い清めて身支度を整えます。",
-    canDo: ["ご家族が手を添えて、お体を清めることに加われる", "長い闘病のあとに、さっぱりした姿で送り出せる"],
+    canDo: ["ご家族が手を添えて、お体を清めることに加われる", "お風呂に入ったあとのような、さっぱりした姿で送り出せる"],
     cannotDo: ["納棺のあとからは行えない", "通常の納棺より時間がかかる（目安は2時間ほど）"],
     reversible: false,
     deadline: "納棺の前までに",

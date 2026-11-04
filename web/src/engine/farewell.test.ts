@@ -45,7 +45,7 @@ describe("お別れの仕方の推奨", () => {
     const generate = vi.fn().mockResolvedValueOnce(bad).mockResolvedValueOnce(goodDraft);
     const result = await recommendFarewell(DEMO_CASE, generate, async () => []);
     expect(result).toMatchObject({ ok: true, attempts: 2 });
-    expect(generate.mock.calls[1][1]).toContain("不安をあおる語「菌」");
+    expect(generate.mock.calls[1][1]).toContain("不安をあおる言い回し「菌」");
   });
 
   test("2回とも守る線を外したら、推奨を出さない", async () => {
@@ -74,5 +74,14 @@ describe("お別れの仕方の推奨", () => {
   test("判定役が止めた案も出さない", async () => {
     const result = await recommendFarewell(DEMO_CASE, async () => goodDraft, async () => [{ rule: "pressure_language", message: "断りづらい" }]);
     expect(result).toMatchObject({ ok: false, attempts: 2 });
+  });
+
+  test("推奨を出せないときは、モデルの文章を含まない事実だけを、費用のかからないものから返す", async () => {
+    const result = await recommendFarewell(DEMO_CASE, async () => goodDraft, async () => [{ rule: "fear_appeal", message: "止めた" }]);
+    if (result.ok) throw new Error("推奨が出てしまった");
+    expect(result.facts.map((f) => f.id)).toEqual(expect.arrayContaining(["standard_laying", "yukan", "embalming", "extend_resting"]));
+    expect(result.facts[0]?.price).toBeNull();
+    const json = JSON.stringify(result.facts);
+    for (const o of goodDraft.options) expect(json).not.toContain(o.reason);
   });
 });
