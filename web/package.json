@@ -11,7 +11,10 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "redteam": "tsx --env-file=.env.local redteam/run.ts"
+    "redteam": "tsx --env-file=.env.local redteam/run.ts",
+    "knowledge": "tsx scripts/knowledge.ts",
+    "compare:knowledge": "tsx --env-file=.env.local redteam/knowledge-compare.ts",
+    "altar:check": "tsx --env-file=.env.local scripts/altar-check.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",

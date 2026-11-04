@@ -164,3 +164,6 @@
 .lines .tag { margin-left: 0.35rem; }
 .orderList { list-style: none; }
 .shareActions { display: flex; gap: 0.4rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.altar { margin: 0 0 0.9rem; }
+.altar img { width: 100%; height: auto; border-radius: var(--r-md); display: block; }
+.altar figcaption { display: block; margin-top: 0.35rem; }

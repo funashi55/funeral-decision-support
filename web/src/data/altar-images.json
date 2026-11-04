@@ -1,0 +1,40 @@
+{
+  "model": "claude-opus-5-5",
+  "images": [
+    {
+      "id": "white",
+      "passed": true,
+      "problems": [],
+      "checkedAt": "2026-11-04T07:01:36.923Z",
+      "note": "元の画像"
+    },
+    {
+      "id": "pink",
+      "passed": true,
+      "problems": [],
+      "checkedAt": "2026-11-04T07:01:39.513Z",
+      "note": ""
+    },
+    {
+      "id": "purple",
+      "passed": true,
+      "problems": [],
+      "checkedAt": "2026-11-04T07:01:38.828Z",
+      "note": ""
+    },
+    {
+      "id": "yellow",
+      "passed": true,
+      "problems": [],
+      "checkedAt": "2026-11-04T07:01:39.157Z",
+      "note": ""
+    },
+    {
+      "id": "blue",
+      "passed": true,
+      "problems": [],
+      "checkedAt": "2026-11-04T07:01:39.091Z",
+      "note": ""
+    }
+  ]
+}

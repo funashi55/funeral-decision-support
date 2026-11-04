@@ -1,4 +1,5 @@
 import type { FamilyDecided } from "../../engine/familyView";
+import { AltarPreview } from "../AltarPreview";
 import s from "./family.module.css";
 
 interface DecidedListProps {
@@ -22,6 +23,7 @@ export function DecidedList({ decided, onAskChange }: DecidedListProps) {
               <span className={s.phase}>{d.phase}</span>
               <span className={s.decidedLabel}>{d.label}</span>
               <strong className={s.decidedValue}>{d.value}</strong>
+              {d.id === "flower_color" && <AltarPreview flowerColor={d.value} className={s.altar} captionClassName={s.note} />}
               <span className={s.decidedFoot}>
                 <span className={d.changeable ? s.changeOk : s.changeAsk}>{d.changeable ? "あとから変えられます" : "変える場合は早めにご相談ください"}</span>
                 <button type="button" className={s.linkBtn} onClick={() => onAskChange(d.id)}>

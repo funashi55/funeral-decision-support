@@ -5,6 +5,7 @@ import { yen } from "../../domain/pricing";
 import type { CaseState } from "../../engine/case";
 import { allowsPrices } from "../../engine/phase";
 import { buildPlanProposals } from "../../engine/plans";
+import { AltarPreview } from "../AltarPreview";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
 import s from "./staff.module.css";
 
@@ -32,6 +33,7 @@ export function PlansPanel({ state, phase, onFeedback }: PlansPanelProps) {
   const proposals = buildPlanProposals(state);
   return (
     <div className={s.scroll}>
+      <AltarPreview flowerColor={state.decisions.flower_color?.value} className={s.altar} captionClassName={s.count} />
       <p className={s.empty}>価格の上下ではなく、ご家族の気持ちの幅として並べています。費用を抑える案から順に示します。</p>
       {proposals.map((p) => (
         <article key={p.range} className={s.option} data-testid={`plan-${p.range}`}>

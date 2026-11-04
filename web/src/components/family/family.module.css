@@ -104,3 +104,5 @@
 .notes { margin-top: 1rem; padding: 0.9rem 1rem; border-radius: var(--r-md); background: color-mix(in oklab, var(--accent-soft) 55%, var(--surface)); }
 .notes h3 { font-size: 0.78rem; letter-spacing: 0.1em; color: var(--ink-2); margin-bottom: 0.35rem; }
 .notes ul { padding-left: 1.1rem; font-size: 0.88rem; line-height: 1.8; }
+.altar { margin-top: 0.6rem; }
+.altar img { width: 100%; height: auto; border-radius: var(--r-sm); display: block; }
