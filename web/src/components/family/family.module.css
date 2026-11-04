@@ -93,3 +93,14 @@
 .reply b { font-size: 0.72rem; color: var(--safe); }
 
 .footer { margin-top: 2.4rem; font-size: 0.72rem; color: var(--ink-3); line-height: 1.8; }
+
+/* 窓口に尋ねる */
+.chat { list-style: none; display: grid; gap: 0.6rem; margin: 0.9rem 0; }
+.chat li { max-width: 86%; padding: 0.7rem 0.9rem; border-radius: var(--r-md); font-size: 0.92rem; line-height: 1.85; animation: rise 420ms var(--ease); }
+.chat small { display: block; margin-top: 0.3rem; font-size: 0.7rem; color: var(--safe); }
+.chatFamily { justify-self: end; background: var(--ink); color: #fff; border-bottom-right-radius: 4px; }
+.chatGuide { justify-self: start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.askForm { display: grid; gap: 0.7rem; margin-top: 0.8rem; }
+.notes { margin-top: 1rem; padding: 0.9rem 1rem; border-radius: var(--r-md); background: color-mix(in oklab, var(--accent-soft) 55%, var(--surface)); }
+.notes h3 { font-size: 0.78rem; letter-spacing: 0.1em; color: var(--ink-2); margin-bottom: 0.35rem; }
+.notes ul { padding-left: 1.1rem; font-size: 0.88rem; line-height: 1.8; }

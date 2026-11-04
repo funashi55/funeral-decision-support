@@ -1,5 +1,9 @@
+"use client";
+import { useState } from "react";
 import { DECISIONS, PHASE_LABEL, type DecisionItem } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
+import type { OversightAlert } from "../../engine/oversight";
+import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
 import s from "./staff.module.css";
 
 interface DecisionBoardProps {
@@ -7,9 +11,44 @@ interface DecisionBoardProps {
   /** 直前に変わった決定の影響を受け、見直しが必要な項目 */
   readonly impacted: ReadonlySet<string>;
   readonly onConfirm: (decisionId: string, value: string) => void;
+  readonly oversights: readonly OversightAlert[];
+  readonly onFeedback: FeedbackHandler;
 }
 
-function Item({ item, state, impacted, onConfirm }: { item: DecisionItem } & DecisionBoardProps) {
+/** 候補を確定する。言い間違いや聞き取りの誤りは、直してから確定できる */
+function ConfirmControl({ item, value, onConfirm }: { item: DecisionItem; value: string; onConfirm: DecisionBoardProps["onConfirm"] }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  if (editing) {
+    return (
+      <form
+        className={s.editForm}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (draft.trim()) onConfirm(item.id, draft.trim());
+          setEditing(false);
+        }}
+      >
+        <input aria-label={`${item.label}の内容`} value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={200} autoFocus />
+        <button type="submit" className={s.confirm}>
+          確定
+        </button>
+      </form>
+    );
+  }
+  return (
+    <span className={s.confirmRow}>
+      <button type="button" className={s.linkBtn} onClick={() => setEditing(true)}>
+        直す
+      </button>
+      <button type="button" className={s.confirm} onClick={() => onConfirm(item.id, value)}>
+        確定する
+      </button>
+    </span>
+  );
+}
+
+function Item({ item, state, impacted, onConfirm }: { item: DecisionItem } & Pick<DecisionBoardProps, "state" | "impacted" | "onConfirm">) {
   const d = state.decisions[item.id];
   const className = [s.item, impacted.has(item.id) ? s.itemImpacted : ""].join(" ");
   return (
@@ -21,9 +60,7 @@ function Item({ item, state, impacted, onConfirm }: { item: DecisionItem } & Dec
       {d?.status === "confirmed" ? (
         <span className={`${s.state} ${s.stateDone}`}>確定</span>
       ) : d ? (
-        <button type="button" className={s.confirm} onClick={() => onConfirm(item.id, d.value)}>
-          確定する
-        </button>
+        <ConfirmControl item={item} value={d.value} onConfirm={onConfirm} />
       ) : (
         <span className={`${s.state} ${s.stateOpen}`}>{item.urgency === "today" ? "今日" : "あとで"}</span>
       )}
@@ -58,13 +95,34 @@ export function DecisionBoard(props: DecisionBoardProps) {
         </div>
       </div>
       <div className={s.scroll}>
+        {props.oversights.length > 0 && (
+          <div className={s.group} data-testid="oversights">
+            <h3>
+              見落とし注意<span>{props.oversights.length}</span>
+            </h3>
+            {props.oversights.map((a) => (
+              <div key={a.id} className={`${s.advice} ${s.caution}`}>
+                <h3>{a.decisionLabel}</h3>
+                <p>{a.message}</p>
+                <div className={s.meta2}>
+                  {a.utteranceIds.length > 0 && (
+                    <span className={s.tag}>
+                      きっかけ：「{state.utterances.find((u) => u.id === a.utteranceIds.at(-1))?.text.slice(0, 18)}…」
+                    </span>
+                  )}
+                  <FeedbackButtons state={state} target={`oversight:${a.id}`} onFeedback={props.onFeedback} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {touched.length > 0 && (
           <div className={s.group}>
             <h3>
               会話で出てきた項目<span>{touched.length}</span>
             </h3>
             {touched.map((item) => (
-              <Item key={item.id} item={item} {...props} />
+              <Item key={item.id} item={item} state={state} impacted={props.impacted} onConfirm={props.onConfirm} />
             ))}
           </div>
         )}

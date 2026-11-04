@@ -1,0 +1,102 @@
+"use client";
+import { useState } from "react";
+import { PHASE_LABEL, type Phase } from "../../domain/decisions";
+import { yen } from "../../domain/pricing";
+import type { CaseState } from "../../engine/case";
+import { allowsPrices } from "../../engine/phase";
+import { buildPlanProposals } from "../../engine/plans";
+import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
+import s from "./staff.module.css";
+
+interface PlansPanelProps {
+  readonly state: CaseState;
+  readonly phase: Phase;
+  readonly onFeedback: FeedbackHandler;
+}
+
+/** 3つの幅の案。金額はすべて価格表から計算し、含まれないものを先に見せる */
+export function PlansPanel({ state, phase, onFeedback }: PlansPanelProps) {
+  const [showAnyway, setShowAnyway] = useState(false);
+  if (!allowsPrices(phase) && !showAnyway) {
+    return (
+      <div className={s.scroll}>
+        <p className={s.empty}>
+          今は「{PHASE_LABEL[phase]}」の段階です。費用の話は、ご家族の気持ちとお別れの仕方を伺ってからにします。
+        </p>
+        <button type="button" className={s.btn} onClick={() => setShowAnyway(true)}>
+          それでも案を見る（担当者の準備用）
+        </button>
+      </div>
+    );
+  }
+  const proposals = buildPlanProposals(state);
+  return (
+    <div className={s.scroll}>
+      <p className={s.empty}>価格の上下ではなく、ご家族の気持ちの幅として並べています。費用を抑える案から順に示します。</p>
+      {proposals.map((p) => (
+        <article key={p.range} className={s.option} data-testid={`plan-${p.range}`}>
+          <div className={s.optionHead}>
+            <h3>
+              <span className={`${s.fit} ${s.fitConsider}`}>{p.rangeLabel}</span>
+              {p.planLabel}
+            </h3>
+            <span className={s.price}>{yen(p.estimate.total)}</span>
+          </div>
+          <div className={s.can}>
+            <div>
+              <b>プランに含まれるもの</b>
+              <ul>
+                {p.includes.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <b>含まれないもの（必要なら追加）</b>
+              <ul>
+                {p.estimate.notIncluded.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <table className={s.lines}>
+            <tbody>
+              {p.estimate.lines.map((l) => (
+                <tr key={l.label}>
+                  <th scope="row">
+                    {l.label}
+                    {l.returnable && <span className={s.tag}>返品できる</span>}
+                  </th>
+                  <td>{l.quantity > 1 ? `${yen(l.unitPrice)} × ${l.quantity}` : ""}</td>
+                  <td>{yen(l.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {p.additions.length > 0 && (
+            <details className={s.evidence}>
+              <summary>見積もりに足した理由</summary>
+              <ul>
+                {p.additions.map((a) => (
+                  <li key={a.label}>
+                    {a.label}：{a.why}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          <div className={s.meta2}>
+            {p.pendingCounts.map((x) => (
+              <span key={x} className={`${s.tag} ${s.tagWarn}`}>
+                {x}
+              </span>
+            ))}
+            <FeedbackButtons state={state} target={`plan:${p.range}`} onFeedback={onFeedback} />
+          </div>
+        </article>
+      ))}
+      <p className={s.empty}>お布施は葬儀社の見積もりに含まれません。金額は架空の価格表によるものです。</p>
+    </div>
+  );
+}

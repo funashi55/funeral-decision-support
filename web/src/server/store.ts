@@ -55,7 +55,7 @@ function createMemoryStore(): CaseStore {
  * 開発中の再読み込みでも案件を失わないよう globalThis に置く。
  * 案件の形を変えたら版を上げる（古い形のまま残った保存場所を使わないように）
  */
-const STORE_VERSION = 2;
+const STORE_VERSION = 4;
 const STORE_KEY = `__caseStore_v${STORE_VERSION}`;
 const globalForStore = globalThis as unknown as Record<string, CaseStore | undefined>;
 export const store: CaseStore = globalForStore[STORE_KEY] ?? createMemoryStore();

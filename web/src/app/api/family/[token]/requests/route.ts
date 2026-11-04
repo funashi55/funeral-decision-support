@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { toFamilyView } from "../../../../../engine/familyView";
 import { addFamilyRequest, REQUEST_TEXT_MAX } from "../../../../../engine/requests";
+import { appendAudit } from "../../../../../engine/audit";
+import { resolveFamily } from "../../../../../server/family";
 import { store } from "../../../../../server/store";
-import { fail, handleError, ok } from "../../../../../server/http";
+import { handleError, ok } from "../../../../../server/http";
 
 const BodySchema = z.object({
   kind: z.enum(["change", "question"]),
@@ -14,10 +16,13 @@ const BodySchema = z.object({
 export async function POST(req: Request, ctx: RouteContext<"/api/family/[token]/requests">): Promise<Response> {
   try {
     const { token } = await ctx.params;
-    const state = store.findByToken(token);
-    if (!state) return fail("このリンクは使えません。担当者にお問い合わせください", 404);
+    const state = resolveFamily(req, token);
+    if (state instanceof Response) return state;
     const body = BodySchema.parse(await req.json());
-    const next = store.save(addFamilyRequest(state, { ...body, sentAt: Date.now() }));
+    const added = addFamilyRequest(state, { ...body, sentAt: Date.now() });
+    const request = added.requests[added.requests.length - 1];
+    const summary = body.kind === "change" ? "遺族から変更の希望が届いた" : "遺族から質問が届いた";
+    const next = store.save(appendAudit(added, { at: Date.now(), actor: "family", kind: "family_request", summary, refs: [request?.id ?? "", ...(body.decisionId ? [body.decisionId] : [])] }));
     return ok(toFamilyView(next), 201);
   } catch (error) {
     return handleError(error);

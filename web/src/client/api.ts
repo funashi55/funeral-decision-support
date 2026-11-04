@@ -24,6 +24,11 @@ export const api = {
   confirm: (caseId: string, decisionId: string, value: string) => post<CaseState>(`/api/cases/${caseId}/decisions`, { decisionId, value }),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
   acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),
+  editUtterance: (caseId: string, utteranceId: string, text: string) =>
+    call<CaseState>(`/api/cases/${caseId}/utterances/${utteranceId}`, { method: "PATCH", body: JSON.stringify({ text }) }),
+  feedback: (caseId: string, target: string, verdict: "told" | "unused") => post<CaseState>(`/api/cases/${caseId}/feedback`, { target, verdict }),
+  familyLink: (caseId: string, action: "revoke" | "reissue") => post<CaseState>(`/api/cases/${caseId}/family-link`, { action }),
+  familyChat: (token: string, text: string) => post<FamilyView>(`/api/family/${encodeURIComponent(token)}/chat`, { text }),
   sendFamilyRequest: (token: string, body: { kind: "change" | "question"; decisionId: string | null; text: string }) =>
     post<FamilyView>(`/api/family/${encodeURIComponent(token)}/requests`, body),
 };

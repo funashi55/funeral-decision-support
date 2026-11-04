@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { appendAudit } from "../../../../../engine/audit";
 import { confirmDecision } from "../../../../../engine/extract";
 import { store } from "../../../../../server/store";
 import { fail, handleError, ok } from "../../../../../server/http";
@@ -12,7 +13,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     const state = store.get(caseId);
     if (!state) return fail("案件が見つかりません", 404);
     const { decisionId, value } = BodySchema.parse(await req.json());
-    return ok(store.save(confirmDecision(state, decisionId, value)));
+    const next = confirmDecision(state, decisionId, value);
+    return ok(store.save(appendAudit(next, { at: Date.now(), actor: "staff", kind: "confirm", summary: `確定：${value}`, refs: [decisionId] })));
   } catch (error) {
     return handleError(error);
   }

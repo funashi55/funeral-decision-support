@@ -44,6 +44,54 @@ export interface FamilyRequest {
   readonly staffReply: string | null;
 }
 
+export type AuditKind =
+  | "confirm" // 担当者が確定した
+  | "recommend" // 推奨を出した（判定役を通った）
+  | "withheld" // 守る線に2回落ちて推奨を出さなかった
+  | "rejected_draft" // 1回目の案を止めた
+  | "feedback" // 担当者が「伝えた／使わない」を記録した
+  | "family_request" // 遺族の窓口から届いた
+  | "request_reply" // 担当者が返事をした
+  | "family_chat_handoff" // 窓口の対話が担当者に回した
+  | "export"; // 基幹システム向けに書き出した
+
+/** 監査ログ。誰が・いつ・何をしたかを残す（AI の判定の結果も含む） */
+export interface AuditEntry {
+  readonly at: number;
+  readonly actor: "staff" | "ai" | "family";
+  readonly kind: AuditKind;
+  readonly summary: string;
+  /** 関わる決定・選択肢・知見などの ID */
+  readonly refs: readonly string[];
+}
+
+export type FeedbackVerdict = "told" | "unused";
+
+/** 推奨の各要素を、担当者が家族に伝えたか・使わなかったか（知見の改善に使う） */
+export interface Feedback {
+  /** 例：farewell:yukan、oversight:obituary_unnotified */
+  readonly target: string;
+  readonly verdict: FeedbackVerdict;
+  readonly at: number;
+}
+
+/** 遺族の窓口での、家族と案内役のやりとり（家族のもの。担当者の画面には担当者に回したものだけが届く） */
+export interface ChatTurn {
+  readonly id: string;
+  readonly role: "family" | "assistant";
+  readonly text: string;
+  readonly at: number;
+  /** この返事のときに担当者へ回したか */
+  readonly handedOff: boolean;
+}
+
+/** 家族が窓口に残した検討メモ（家族が自分たちで考えるためのもの） */
+export interface FamilyNote {
+  readonly id: string;
+  readonly text: string;
+  readonly at: number;
+}
+
 export interface CaseState {
   readonly caseId: string;
   readonly familyName: string;
@@ -54,4 +102,10 @@ export interface CaseState {
   readonly requests: readonly FamilyRequest[];
   /** 遺族の窓口を開くための合言葉（共有リンクに含める） */
   readonly familyToken: string;
+  /** 遺族の窓口を止めたか（共有リンクの失効） */
+  readonly familyLinkRevoked: boolean;
+  readonly feedback: readonly Feedback[];
+  readonly familyChat: readonly ChatTurn[];
+  readonly familyNotes: readonly FamilyNote[];
+  readonly audit: readonly AuditEntry[];
 }

@@ -4,7 +4,7 @@
  * AI の候補・会話の書き起こし・推奨は渡さない（遺族の窓口は評価や推奨をしない）。
  */
 import { PHASE_LABEL, blockersOf, decisionOrder, getDecision } from "../domain/decisions";
-import type { CaseState, FamilyRequest } from "./case";
+import type { CaseState, ChatTurn, FamilyNote, FamilyRequest } from "./case";
 
 /**
  * 担当者が確かめる項目で、遺族に「決めること」として見せないもの。
@@ -49,6 +49,10 @@ export interface FamilyView {
   /** 「これから決めること」に並べきれなかった件数 */
   readonly moreUpcoming: number;
   readonly requests: readonly FamilyRequestView[];
+  /** 窓口の案内役とのやりとり（ご家族のもの） */
+  readonly chat: readonly ChatTurn[];
+  /** ご家族の検討メモ */
+  readonly notes: readonly FamilyNote[];
 }
 
 export function toFamilyView(state: CaseState): FamilyView {
@@ -76,5 +80,13 @@ export function toFamilyView(state: CaseState): FamilyView {
     staffReply: r.staffReply,
   }));
 
-  return { familyName: state.familyName, decided, upcoming, moreUpcoming: open.length - upcoming.length, requests };
+  return {
+    familyName: state.familyName,
+    decided,
+    upcoming,
+    moreUpcoming: open.length - upcoming.length,
+    requests,
+    chat: state.familyChat,
+    notes: state.familyNotes,
+  };
 }

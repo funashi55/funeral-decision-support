@@ -5,6 +5,7 @@
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { MODEL_REASONING, ModelOutputError, ModelRefusedError, getClient } from "./client";
+import type { ChatModel } from "./familyChat";
 import { FarewellDraftSchema, type FarewellDraft, type FarewellRecommendation } from "./farewell";
 import type { GuardRule, GuardViolation } from "./guard";
 
@@ -63,3 +64,16 @@ export async function judgeRecommendation(recommendation: FarewellRecommendation
   });
   return unwrap(response as ParsedResponse<z.infer<typeof JudgeSchema>>).violations;
 }
+
+/** 遺族の窓口の案内役。返事の速さを優先して effort は low */
+export const familyChatModel: ChatModel = async ({ system, messages, tools }) => {
+  const response = await getClient().messages.create({
+    model: MODEL_REASONING,
+    max_tokens: 2000,
+    system,
+    tools,
+    output_config: { effort: "low" },
+    messages,
+  });
+  return { content: response.content, stop_reason: response.stop_reason };
+};

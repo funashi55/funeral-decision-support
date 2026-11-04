@@ -13,7 +13,9 @@ export const DEMO_SCRIPT: readonly ScriptLine[] = [
   { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "お風呂が好きな人だったので、入院中ずっと入りたがっていたんです。" },
   { speaker: "staff", speakerLabel: "担当者", text: "そうでしたか。ご葬儀には、どなたに来ていただきたいですか。" },
   { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "家族と、母の妹たちくらいで、家族葬にしたいと思っています。" },
+  { speaker: "family", speakerLabel: "喪主の夫", text: "お寺は、妻の実家の菩提寺なんですが、市外なんです。" },
   { speaker: "family", speakerLabel: "喪主の夫", text: "孫が東京にいて、着くのは3日後になりそうです。" },
   { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "孫には、ちゃんと顔を見てお別れさせてあげたいです。おばあちゃん子だったので。" },
   { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "正直、費用はできるだけ抑えたいんですけど…" },
+  { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "あと、新聞のお悔やみ欄にも出したほうがいいんでしょうか。" },
 ];

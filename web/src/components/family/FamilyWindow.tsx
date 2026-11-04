@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { useFamilyStream } from "../../client/useFamilyStream";
 import type { FamilyView } from "../../engine/familyView";
+import { AskBox } from "./AskBox";
 import { DecidedList } from "./DecidedList";
 import { RequestComposer, type ComposerDraft } from "./RequestComposer";
 import { SentList } from "./SentList";
@@ -60,6 +61,7 @@ export function FamilyWindow({ token }: { readonly token: string }) {
 
       <DecidedList decided={view.decided} onAskChange={askChange} />
       <Upcoming view={view} />
+      <AskBox token={token} view={view} />
       <RequestComposer ref={composerRef} token={token} decided={view.decided} draft={draft} onDraftChange={setDraft} onSent={() => setDraft(EMPTY_DRAFT)} />
       <SentList requests={view.requests} />
 

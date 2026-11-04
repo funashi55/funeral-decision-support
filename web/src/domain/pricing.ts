@@ -30,6 +30,8 @@ export interface AltarPlan {
   readonly range: Range;
   readonly label: string;
   readonly price: number;
+  /** ドライアイスと安置料がプランに含まれる日数 */
+  readonly includedDays: number;
   readonly includes: readonly string[];
   /** プランに含まれず、必要なら追加になるもの（見積もりは「含まれないもの」から示す） */
   readonly excludes: readonly string[];
@@ -41,6 +43,7 @@ export const ALTAR_PLANS: readonly AltarPlan[] = [
     range: "simple",
     label: "生花祭壇 こもれび",
     price: 330_000,
+    includedDays: 2,
     includes: ["生花祭壇（幅2間）", "遺影写真", "棺（布張り）", "通常の納棺", "ドライアイス2日分", "霊柩車（10kmまで）", "骨箱一式"],
     excludes: ["会場使用料", "安置料（3日目以降）", "ドライアイスの追加", "湯灌", "料理", "香典返し", "お布施"],
   },
@@ -49,6 +52,7 @@ export const ALTAR_PLANS: readonly AltarPlan[] = [
     range: "standard",
     label: "生花祭壇 せせらぎ",
     price: 520_000,
+    includedDays: 3,
     includes: ["生花祭壇（幅3間）", "遺影写真（カラー）", "棺（布張り）", "通常の納棺", "ドライアイス3日分", "霊柩車（10kmまで）", "骨箱一式", "会葬礼状100枚"],
     excludes: ["会場使用料", "安置料（4日目以降）", "ドライアイスの追加", "湯灌", "料理", "香典返し", "お布施"],
   },
@@ -57,6 +61,7 @@ export const ALTAR_PLANS: readonly AltarPlan[] = [
     range: "gratitude",
     label: "生花祭壇 ひだまり",
     price: 780_000,
+    includedDays: 3,
     includes: ["生花祭壇（幅4間・故人の好きな花を中心に）", "遺影写真（カラー）", "棺（彫刻）", "通常の納棺", "ドライアイス3日分", "霊柩車（10kmまで）", "骨箱一式", "会葬礼状200枚", "思い出の品の展示台"],
     excludes: ["会場使用料", "安置料（4日目以降）", "ドライアイスの追加", "湯灌", "料理", "香典返し", "お布施"],
   },

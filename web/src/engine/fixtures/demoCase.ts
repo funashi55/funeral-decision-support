@@ -21,4 +21,9 @@ export const DEMO_CASE: CaseState = {
   decisions: {},
   requests: [],
   familyToken: "yamada-k7m2q9",
+  familyLinkRevoked: false,
+  feedback: [],
+  familyChat: [],
+  familyNotes: [],
+  audit: [],
 };

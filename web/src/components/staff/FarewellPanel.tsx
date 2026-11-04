@@ -1,6 +1,7 @@
 import { yen } from "../../domain/pricing";
 import type { CaseState } from "../../engine/case";
 import type { EnrichedOption, FarewellResult, OptionFacts } from "../../engine/farewell";
+import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
 import s from "./staff.module.css";
 
 interface FarewellPanelProps {
@@ -9,6 +10,7 @@ interface FarewellPanelProps {
   readonly loading: boolean;
   readonly error: string | null;
   readonly onRun: () => void;
+  readonly onFeedback: FeedbackHandler;
 }
 
 const FIT_LABEL = { suits: "家族の望みに合う", consider: "尋ねてみる", not_now: "今回は合わない" } as const;
@@ -64,7 +66,7 @@ function FactCard({ option }: { readonly option: OptionFacts }) {
   );
 }
 
-function OptionCard({ option, state }: { option: EnrichedOption; state: CaseState }) {
+function OptionCard({ option, state, onFeedback }: { option: EnrichedOption; state: CaseState; onFeedback: FeedbackHandler }) {
   const quotes = state.utterances.filter((u) => option.evidence.utteranceIds.includes(u.id));
   const cls = [s.option, option.fit === "suits" ? s.optionSuits : "", option.fit === "not_now" ? s.optionNotNow : ""].join(" ");
   return (
@@ -78,6 +80,9 @@ function OptionCard({ option, state }: { option: EnrichedOption; state: CaseStat
       </div>
       <p className={s.reason}>{option.reason}</p>
       <FactsBody option={option} />
+      <div className={s.meta2}>
+        <FeedbackButtons state={state} target={`farewell:${option.id}`} onFeedback={onFeedback} />
+      </div>
       {(quotes.length > 0 || option.evidence.rules.length > 0) && (
         <details className={s.evidence}>
           <summary>根拠を見る</summary>
@@ -99,11 +104,11 @@ function OptionCard({ option, state }: { option: EnrichedOption; state: CaseStat
   );
 }
 
-export function FarewellPanel({ state, result, loading, error, onRun }: FarewellPanelProps) {
+export function FarewellPanel({ state, result, loading, error, onRun, onFeedback }: FarewellPanelProps) {
   return (
-    <section className={s.col} aria-labelledby="farewell-title">
-      <div className={s.colHead}>
-        <h2 id="farewell-title">となりのベテランから ― お別れの仕方</h2>
+    <>
+      <div className={s.toolbar}>
+        <span className={s.count}>となりのベテランから</span>
         <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onRun} disabled={loading || state.utterances.length === 0}>
           {loading ? "考えています…" : result ? "考え直す" : "お別れの仕方を考える"}
         </button>
@@ -148,7 +153,7 @@ export function FarewellPanel({ state, result, loading, error, onRun }: Farewell
               )}
             </div>
             {result.recommendation.options.map((o) => (
-              <OptionCard key={o.id} option={o} state={state} />
+              <OptionCard key={o.id} option={o} state={state} onFeedback={onFeedback} />
             ))}
             {result.recommendation.references.length > 0 && (
               <div className={s.refs}>
@@ -192,6 +197,6 @@ export function FarewellPanel({ state, result, loading, error, onRun }: Farewell
           </>
         )}
       </div>
-    </section>
+    </>
   );
 }
