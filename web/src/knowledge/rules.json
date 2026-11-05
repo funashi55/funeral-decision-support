@@ -10,7 +10,9 @@
       "why": "経緯を聞かずに段取りから入ると、遺族は気持ちを置いていかれたと感じる",
       "source": "打合せは信頼関係の構築から。死亡の連絡から今までの流れ、死因と入院期間、お別れやお話ができたかを確認する",
       "origin": "author_memo",
-      "decisionIds": ["body_condition"]
+      "decisionIds": [
+        "body_condition"
+      ]
     },
     {
       "id": "R-farewell-01",
@@ -20,7 +22,11 @@
       "why": "遺体の保存が心配で急いでいるだけなら、日を延ばす方法を知れば後悔しないで済む",
       "source": "火葬早くと言われたら、急がなくてもゆっくりお別れできる方法がある",
       "origin": "author_memo",
-      "decisionIds": ["cremation_date", "resting_place", "embalming"]
+      "decisionIds": [
+        "cremation_date",
+        "resting_place",
+        "embalming"
+      ]
     },
     {
       "id": "R-farewell-02",
@@ -30,7 +36,11 @@
       "why": "会いたい人が揃うまで待てるか、お顔に触れてお別れしたいかは、家族ごとに違う",
       "source": "エンバーミングを選ぶのは、しっかりお別れできていなかった人、火葬まで長い人、生通夜でいろんな人がお顔を見る場合など",
       "origin": "author_memo",
-      "decisionIds": ["embalming", "cremation_date", "face_viewing"]
+      "decisionIds": [
+        "embalming",
+        "cremation_date",
+        "face_viewing"
+      ]
     },
     {
       "id": "R-farewell-03",
@@ -40,7 +50,9 @@
       "why": "長い闘病のあとにさっぱりさせてあげたいと望む家族もいれば、静かに送りたい家族もいる",
       "source": "入院が長かった方は、お風呂に入らせてあげたいと望むご家族がいる",
       "origin": "author_memo",
-      "decisionIds": ["laying_in_style"]
+      "decisionIds": [
+        "laying_in_style"
+      ]
     },
     {
       "id": "R-farewell-04",
@@ -50,7 +62,10 @@
       "why": "悲しみの中にある遺族は、不安をあおられると断れない。納得して選んだことでなければ後悔が残る",
       "source": "高いプランを出すことがいいことなのか？ そこが刺さらないお客さんには満足度の観点からお勧めできない",
       "origin": "author_memo",
-      "decisionIds": ["laying_in_style", "embalming"]
+      "decisionIds": [
+        "laying_in_style",
+        "embalming"
+      ]
     },
     {
       "id": "R-plan-01",
@@ -60,7 +75,10 @@
       "why": "高い順に見せると断りづらくなる。請求が見積もりと違うことが、お葬式で一番多いトラブル",
       "source": "3つのレンジで提案（小：コスト抑えたい／中：しっかり飾りたい／大：感謝の気持ちを表したい）。プラン説明は何が入っているかより何が入っていないかの説明",
       "origin": "author_memo",
-      "decisionIds": ["altar_plan", "estimate"]
+      "decisionIds": [
+        "altar_plan",
+        "estimate"
+      ]
     },
     {
       "id": "R-plan-02",
@@ -70,7 +88,9 @@
       "why": "葬儀だけで予算を考えると、あとで出費が重なって困る家族がいる",
       "source": "お客さんの中でどこまでの出費が一緒の財布なのか？ お墓購入する？墓じまいする？",
       "origin": "author_memo",
-      "decisionIds": ["budget_scope"]
+      "decisionIds": [
+        "budget_scope"
+      ]
     },
     {
       "id": "R-schedule-01",
@@ -80,7 +100,10 @@
       "why": "火葬の日を先に押さえると、お寺の都合と合わずに組み直しになる",
       "source": "市外のお寺の場合は先にお寺の都合を聞く",
       "origin": "author_memo",
-      "decisionIds": ["temple", "cremation_date"]
+      "decisionIds": [
+        "temple",
+        "cremation_date"
+      ]
     },
     {
       "id": "R-plan-03",
@@ -90,7 +113,11 @@
       "why": "その場になって足りないのは絶対に避けたいが、人数は最初はざっくりとしか分からない",
       "source": "誰が来るかざっくりのカウントしか最初はできない。実際にその場になってから足りないというのは絶対に避けたい。香典返しは返品可能",
       "origin": "author_memo",
-      "decisionIds": ["return_gifts", "meals", "attendees_scope"]
+      "decisionIds": [
+        "return_gifts",
+        "meals",
+        "attendees_scope"
+      ]
     },
     {
       "id": "R-logistics-01",
@@ -100,7 +127,9 @@
       "why": "伝えていなかった家族が掲載で知って混乱した事例がある。掲載は取り消せない",
       "source": "故人の夫が重度の認知症のため亡くなったことを伝えていなかった。新聞のお悔やみ欄に掲載したことで気づき、施設で混乱が起きた",
       "origin": "author_memo",
-      "decisionIds": ["obituary"]
+      "decisionIds": [
+        "obituary"
+      ]
     },
     {
       "id": "R-logistics-02",
@@ -110,7 +139,11 @@
       "why": "15時が5時に聞こえるなど、口頭の時刻は勘違いにつながる",
       "source": "時間の約束を口だけすると勘違いにつながる。15時→5時に聞こえるなど",
       "origin": "author_memo",
-      "decisionIds": ["wake_date", "funeral_date", "cremation_date"]
+      "decisionIds": [
+        "wake_date",
+        "funeral_date",
+        "cremation_date"
+      ]
     },
     {
       "id": "R-flow-02",
@@ -121,6 +154,57 @@
       "source": "安置希望とかの内容もちゃんと共有しないとお客さんに何回も説明させてしまう",
       "origin": "author_memo",
       "decisionIds": []
+    },
+    {
+      "id": "R-farewell-05",
+      "topic": "お別れの仕方",
+      "when": "湯灌（お体を洗い清める）を話題にするとき",
+      "do": "納棺の日時を決める話に合わせて、望むかを尋ねる。早すぎても遅すぎても家族が決めにくい",
+      "why": "施行後の振り返りで、湯灌の話は納棺の日取りと一緒にすると家族が考えやすいとわかった",
+      "source": "ボディシャワー提案タイミング→納棺タイミング",
+      "origin": "author_memo",
+      "decisionIds": [
+        "laying_in_style",
+        "laying_in_date"
+      ]
+    },
+    {
+      "id": "R-farewell-06",
+      "topic": "お別れの仕方",
+      "when": "エンバーミングを説明するとき",
+      "do": "火葬の日程を決める話の中で説明し、火葬を急がなくてもゆっくりお別れできることを一緒に伝える",
+      "why": "火葬の日取りと切り離して説明すると、家族は何のための処置かを結びつけにくい",
+      "source": "エンバーミング説明を火葬の時に／火葬早く→そんなことないゆっくりお別れできる",
+      "origin": "author_memo",
+      "decisionIds": [
+        "embalming",
+        "cremation_date"
+      ]
+    },
+    {
+      "id": "R-logistics-03",
+      "topic": "手配と書類",
+      "when": "会葬礼状を決めるとき",
+      "do": "故人の人柄を伝えるオリジナルの礼状（ラストレター）があることも一緒に説明し、定型の礼状でもよいことを伝えたうえで家族に選んでもらう",
+      "why": "礼状を決めた後にラストレターを知ると、家族が選び直しになる",
+      "source": "ラストレターの説明を礼状と一緒に",
+      "origin": "author_memo",
+      "decisionIds": [
+        "thank_you_card"
+      ]
+    },
+    {
+      "id": "R-plan-04",
+      "topic": "プランと費用",
+      "when": "見積もりを作るとき",
+      "do": "会場費や安置料など、日数や時間でかかる費用を入れ忘れない",
+      "why": "施行後に会場費の請求が漏れていたことがあり、見積もりと請求の食い違いは家族の不信につながる",
+      "source": "会場費請求",
+      "origin": "author_memo",
+      "decisionIds": [
+        "estimate",
+        "resting_place"
+      ]
     }
   ]
 }

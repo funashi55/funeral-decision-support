@@ -34,9 +34,18 @@ export function buildChecklist(state: CaseState): ChecklistRow[] {
   });
 }
 
+/**
+ * 手配の段取り
+ *  before：打合せの前に済ませる（枕飾りなど）
+ *  order：業者に発注書（FAX）で頼む
+ *  arrange：電話・予約・社内の段取りで済む（発注書にせず、担当者の TODO にする）
+ */
+export type OrderStage = "before" | "order" | "arrange";
+
 export interface OrderDefinition {
   readonly id: string;
   readonly label: string;
+  readonly stage: OrderStage;
   /** 発注の前に確定している必要がある決定 */
   readonly needs: readonly string[];
   /** 確定した値がこれに当たるときは発注しない（例：通常の納棺なら湯灌の手配は要らない） */
@@ -45,26 +54,36 @@ export interface OrderDefinition {
 
 const DECLINED = /なし|不要|しない|行わない|載せない/;
 
-/** 発注・手配の18項目 */
+/**
+ * 発注・手配の項目。東北地方の互助会系葬儀社の施行管理テンプレート（打合せ前・発注）の項目に合わせた。
+ * 社内で用意するもの（棺・祭壇・遺影写真・霊柩車など）は、プランに含まれるので発注には入れない
+ */
 export const ORDERS: readonly OrderDefinition[] = [
-  { id: "crematorium", label: "火葬場の予約", needs: ["cremation_date"] },
-  { id: "hearse", label: "霊柩車の手配", needs: ["cremation_date"] },
-  { id: "temple_contact", label: "寺院への連絡", needs: ["temple"] },
-  { id: "resting", label: "安置室の確保", needs: ["resting_place"] },
-  { id: "dry_ice", label: "ドライアイスの手配", needs: ["resting_place", "cremation_date"] },
-  { id: "yukan", label: "湯灌の手配", needs: ["laying_in_style", "laying_in_date"], skipIf: { decisionId: "laying_in_style", pattern: /^(?!.*湯灌)/ } },
-  { id: "embalming", label: "エンバーミングの手配", needs: ["embalming"], skipIf: { decisionId: "embalming", pattern: DECLINED } },
-  { id: "coffin", label: "棺の手配", needs: ["coffin"] },
-  { id: "altar", label: "祭壇の設営", needs: ["altar_plan", "funeral_date"] },
-  { id: "flowers", label: "生花の発注", needs: ["altar_plan", "flower_color"] },
-  { id: "photo", label: "遺影写真の作成", needs: ["photo"] },
-  { id: "thank_you_card", label: "会葬礼状の印刷", needs: ["thank_you_card"] },
-  { id: "meals", label: "料理の発注", needs: ["meals"], skipIf: { decisionId: "meals", pattern: DECLINED } },
-  { id: "return_gifts", label: "香典返しの発注", needs: ["return_gifts"] },
-  { id: "obituary", label: "お悔やみ欄の掲載の申し込み", needs: ["obituary"], skipIf: { decisionId: "obituary", pattern: DECLINED } },
-  { id: "emcee", label: "司会の手配", needs: ["emcee"], skipIf: { decisionId: "emcee", pattern: DECLINED } },
-  { id: "reception", label: "受付の手配", needs: ["reception_desk"] },
-  { id: "parking", label: "駐車場係の手配", needs: ["parking"], skipIf: { decisionId: "parking", pattern: DECLINED } },
+  // 打合せの前に
+  { id: "pillow_set", label: "枕花・枕果物・枕菓子", stage: "before", needs: [] },
+  { id: "crematorium", label: "火葬場の空き確認と予約", stage: "arrange", needs: ["cremation_date"] },
+  // 電話・予約・社内の段取り
+  { id: "temple_contact", label: "寺院への連絡", stage: "arrange", needs: ["temple"] },
+  { id: "death_certificate", label: "市役所への死亡届の提出", stage: "arrange", needs: ["death_certificate"] },
+  { id: "crematorium_staff", label: "火葬係への連絡", stage: "arrange", needs: ["cremation_date"] },
+  { id: "venue_shop", label: "斎場の売店への連絡", stage: "arrange", needs: ["cremation_date"] },
+  { id: "offering_dismantle", label: "供物解体の依頼", stage: "arrange", needs: ["funeral_date"] },
+  // 業者への発注
+  { id: "flowers", label: "祭壇花", stage: "order", needs: ["altar_plan", "flower_color"] },
+  { id: "sweets", label: "式用のお菓子", stage: "order", needs: ["altar_plan"] },
+  { id: "fruit", label: "祭壇用の果物", stage: "order", needs: ["altar_plan"] },
+  { id: "farewell_flowers", label: "出棺花", stage: "order", needs: ["funeral_date"] },
+  { id: "return_gifts", label: "香典返し", stage: "order", needs: ["return_gifts"] },
+  { id: "takeaway_set", label: "通夜の持ち帰りセット", stage: "order", needs: ["wake_held", "attendees_scope"], skipIf: { decisionId: "wake_held", pattern: DECLINED } },
+  { id: "thank_you_card", label: "会葬礼状", stage: "order", needs: ["thank_you_card"] },
+  { id: "last_letter", label: "ラストレター", stage: "order", needs: ["thank_you_card"], skipIf: { decisionId: "thank_you_card", pattern: /^(?!.*ラストレター)/ } },
+  { id: "meals", label: "弁当・料理", stage: "order", needs: ["meals"], skipIf: { decisionId: "meals", pattern: DECLINED } },
+  { id: "emcee", label: "司会", stage: "order", needs: ["emcee"], skipIf: { decisionId: "emcee", pattern: DECLINED } },
+  { id: "parking", label: "駐車場の交通誘導員", stage: "order", needs: ["parking"], skipIf: { decisionId: "parking", pattern: DECLINED } },
+  { id: "obituary", label: "新聞広告（お悔やみ欄）", stage: "order", needs: ["obituary"], skipIf: { decisionId: "obituary", pattern: DECLINED } },
+  { id: "taxi", label: "タクシー", stage: "order", needs: ["crematorium_party"] },
+  { id: "yukan", label: "湯灌の依頼", stage: "order", needs: ["laying_in_style", "laying_in_date"], skipIf: { decisionId: "laying_in_style", pattern: /^(?!.*湯灌)/ } },
+  { id: "embalming", label: "エンバーミングの依頼", stage: "order", needs: ["embalming"], skipIf: { decisionId: "embalming", pattern: DECLINED } },
 ];
 
 export type OrderStatus = "ready" | "waiting" | "not_needed";

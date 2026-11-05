@@ -20,8 +20,21 @@ describe("確認表", () => {
 });
 
 describe("発注リスト", () => {
-  test("18項目ある", () => {
-    expect(ORDERS).toHaveLength(18);
+  test("項目の id は重ならず、前提の決定はすべて決めることボードにある", () => {
+    expect(new Set(ORDERS.map((o) => o.id)).size).toBe(ORDERS.length);
+    const ids = new Set(DECISIONS.map((d) => d.id));
+    for (const o of ORDERS) for (const n of o.needs) expect(ids.has(n), `${o.id}:${n}`).toBe(true);
+  });
+
+  test("打合せ前の枕飾りは、何も決まっていなくても手配できる", () => {
+    expect(buildOrders(withDecisions({})).find((o) => o.id === "pillow_set")?.status).toBe("ready");
+  });
+
+  test("会葬礼状にラストレターを含めたときだけ、ラストレターを発注する", () => {
+    const plain = buildOrders(withDecisions({ thank_you_card: ["定型の礼状", "confirmed"] }));
+    expect(plain.find((o) => o.id === "last_letter")?.status).toBe("not_needed");
+    const letter = buildOrders(withDecisions({ thank_you_card: ["オリジナル（ラストレターあり）", "confirmed"] }));
+    expect(letter.find((o) => o.id === "last_letter")?.status).toBe("ready");
   });
 
   test("候補のままでは手配できる状態にしない。確定すると手配できる", () => {
@@ -46,7 +59,7 @@ describe("発注リスト", () => {
 
   test("前提が決まっていないものは、何を待っているかを返す", () => {
     const rows = buildOrders(withDecisions({}));
-    expect(rows.find((o) => o.id === "altar")?.waitingFor).toEqual(["祭壇のプラン", "葬儀の日時と会場"]);
+    expect(rows.find((o) => o.id === "flowers")?.waitingFor).toEqual(["祭壇のプラン", "生花の色合い"]);
   });
 });
 

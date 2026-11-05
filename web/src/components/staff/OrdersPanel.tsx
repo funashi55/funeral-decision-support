@@ -29,6 +29,9 @@ export function OrdersPanel({ state }: { readonly state: CaseState }) {
         </div>
       </div>
       <PaperworkSection state={state} />
+      <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/nenkai`} target="_blank" rel="noopener">
+        年回表（中陰月日表）を作る
+      </a>
       <a className={`${s.btn} ${s.btnPrimary}`} href={`/api/cases/${encodeURIComponent(state.caseId)}/export`} download>
         基幹システム向けに書き出す（CSV）
       </a>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../client/api";
 import type { CaseState } from "../../engine/case";
-import { isSendable, type OrderSheet, type Paperwork } from "../../engine/paperwork";
+import { TODO_STAGES, isSendable, type OrderSheet, type Paperwork } from "../../engine/paperwork";
 import s from "./staff.module.css";
 
 const message = (e: unknown): string => (e instanceof Error ? e.message : "問題が起きました");
@@ -76,22 +76,36 @@ export function PaperworkSection({ state }: { readonly state: CaseState }) {
           <h3>
             担当者の TODO<span>{paperwork.todos.length - done.size}</span>
           </h3>
-          <ul className={s.todoList}>
-            {paperwork.todos.map((t, i) => (
-              <li key={`${t.task}-${i}`}>
-                <label>
-                  <input type="checkbox" checked={done.has(i)} onChange={() => toggle(i)} />
-                  <span className={done.has(i) ? s.todoDone : undefined}>
-                    {t.task}
-                    <span className={s.itemVal}>
-                      {t.when}
-                      {t.source === "board" ? "・決めることボードから" : ""}
-                    </span>
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
+          {TODO_STAGES.map((stage) => {
+            const items = paperwork.todos.map((t, i) => ({ t, i })).filter(({ t }) => t.stage === stage);
+            if (items.length === 0) return null;
+            return (
+              <div key={stage}>
+                <p className={s.todoStage}>{stage}</p>
+                <ul className={s.todoList}>
+                  {items.map(({ t, i }) => (
+                    <li key={`${t.task}-${i}`}>
+                      <label>
+                        <input type="checkbox" checked={done.has(i)} onChange={() => toggle(i)} />
+                        <span className={done.has(i) ? s.todoDone : undefined}>
+                          {t.task}
+                          <span className={s.itemVal}>
+                            {t.when}
+                            {t.source === "board" ? "・決めることボードから" : t.source === "template" ? "・毎回の定番" : ""}
+                          </span>
+                        </span>
+                      </label>
+                      {t.task.includes("年回表") && (
+                        <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/nenkai`} target="_blank" rel="noopener">
+                          年回表を作る
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
 
           {paperwork.askFamily.length > 0 && (
             <>

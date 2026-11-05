@@ -15,31 +15,52 @@ import { ORDERS, buildChecklist, buildOrders, type OrderStatus } from "./orders"
 
 /** 発注書を送る先の業者の種類（どの発注をどの業者に1枚の発注書にまとめるか） */
 export const VENDOR_OF: Readonly<Record<string, string>> = {
+  pillow_set: "生花店・果物店・菓子店（枕飾り）",
   flowers: "生花店",
-  altar: "生花店",
-  meals: "料理店",
+  farewell_flowers: "生花店",
+  sweets: "菓子店",
+  fruit: "果物店",
   return_gifts: "返礼品店",
+  takeaway_set: "返礼品店（通夜の持ち帰りセット）",
   thank_you_card: "印刷所（会葬礼状）",
-  photo: "写真店（遺影）",
-  obituary: "新聞社（お悔やみ欄）",
+  last_letter: "ラストレター制作",
+  meals: "仕出し・弁当店",
   emcee: "司会",
-  coffin: "棺・葬具",
-  dry_ice: "棺・葬具",
-  yukan: "湯灌",
-  embalming: "エンバーミング",
-  hearse: "霊柩車",
+  parking: "警備会社（交通誘導員）",
+  obituary: "新聞社（お悔やみ欄）",
+  taxi: "タクシー会社",
+  yukan: "納棺・湯灌の業者",
+  embalming: "エンバーミングの業者",
   crematorium: "火葬場",
   temple_contact: "寺院",
-  resting: "安置室",
-  reception: "受付",
-  parking: "駐車場係",
+  death_certificate: "市役所",
+  crematorium_staff: "火葬係",
+  venue_shop: "斎場の売店",
+  offering_dismantle: "供物解体",
 };
 
 /**
  * 発注書（FAX）にしない手配。電話や予約、社内の段取りで済むため、発注書ではなく担当者の TODO に回す
  * （本番で「寺院 御中」「火葬場 御中」の発注書ができてしまったため）
  */
-export const ARRANGE_BY_PHONE: ReadonlySet<string> = new Set(["temple_contact", "crematorium", "resting", "reception", "parking"]);
+export const ARRANGE_BY_PHONE: ReadonlySet<string> = new Set(ORDERS.filter((o) => o.stage === "arrange").map((o) => o.id));
+
+/** TODO の段取り（施行管理テンプレートの区分に合わせる） */
+export const TODO_STAGES = ["打合せ前", "打合せ", "手配", "作成・用意", "施行後"] as const;
+export type TodoStage = (typeof TODO_STAGES)[number];
+
+/**
+ * 施行管理テンプレートの「作成・用意物」と「施行後」。会話に出なくても毎回あるので、AI に頼らず必ず載せる
+ */
+const TEMPLATE_TODOS: readonly { readonly task: string; readonly stage: TodoStage; readonly when: string }[] = [
+  { task: "年回表（中陰月日表）を作ってお渡しする", stage: "作成・用意", when: "亡くなった日が確定したら" },
+  { task: "死亡届のコピーを取る", stage: "作成・用意", when: "市役所に出す前に" },
+  { task: "お布施の封筒と香典帳をお渡しする", stage: "作成・用意", when: "通夜の前までに" },
+  { task: "遺影写真を作る", stage: "作成・用意", when: "通夜の前までに" },
+  { task: "看板を作る", stage: "作成・用意", when: "通夜の前までに" },
+  { task: "香典返しの余りを返品する", stage: "施行後", when: "葬儀のあと" },
+  { task: "集金する（請求書の説明をしてから）", stage: "施行後", when: "葬儀のあと" },
+];
 
 const orderIds = ORDERS.map((o) => o.id) as [string, ...string[]];
 const decisionIds = DECISIONS.map((d) => d.id) as [string, ...string[]];
@@ -50,6 +71,7 @@ export const PaperworkDraftSchema = z.object({
     .array(
       z.object({
         task: z.string().describe("担当者がすること。動詞で終える（例：寺院に日程を確認する）"),
+        stage: z.enum(TODO_STAGES).describe("段取りのどこでするか"),
         when: z.string().describe("いつまでに。会話や決定に根拠がなければ「早めに」"),
         decisionIds: z.array(z.enum(decisionIds)),
         utteranceIds: z.array(z.string()).describe("根拠になった発言の id"),
@@ -116,7 +138,7 @@ export interface Paperwork {
   /** どの発言までを見て作ったか */
   readonly basedOn: number;
   readonly summary: string;
-  readonly todos: readonly (PaperworkDraft["todos"][number] & { readonly source: "ai" | "board" })[];
+  readonly todos: readonly (PaperworkDraft["todos"][number] & { readonly source: "ai" | "board" | "template" })[];
   readonly sheets: readonly OrderSheet[];
   readonly askFamily: readonly string[];
 }
@@ -192,9 +214,9 @@ export function assemblePaperwork(state: CaseState, draft: PaperworkDraft, now =
   const hard = open.filter((r) => getDecision(r.decisionId).hard);
   const rest = open.length - hard.length;
   const board = [
-    ...hard.map((r) => ({ task: `ご家族と決める：${r.label}`, when: "今日の打合せのうちに", decisionIds: [r.decisionId], utteranceIds: [], source: "board" as const })),
+    ...hard.map((r) => ({ task: `ご家族と決める：${r.label}`, when: "今日の打合せのうちに", stage: "打合せ" as const, decisionIds: [r.decisionId], utteranceIds: [], source: "board" as const })),
     ...(rest > 0
-      ? [{ task: `ほかに今日決める項目が ${rest} 件あります（決めることボードを見る）`, when: "今日の打合せのうちに", decisionIds: [], utteranceIds: [], source: "board" as const }]
+      ? [{ task: `ほかに今日決める項目が ${rest} 件あります（決めることボードを見る）`, when: "今日の打合せのうちに", stage: "打合せ" as const, decisionIds: [], utteranceIds: [], source: "board" as const }]
       : []),
   ];
   // 電話や予約で済む手配は、発注書ではなく TODO にする（同じ手配は1つにまとめる）
@@ -205,19 +227,20 @@ export function assemblePaperwork(state: CaseState, draft: PaperworkDraft, now =
     arranged.add(o.orderId);
     const detail = [o.items.map((i) => i.name).join("・"), o.notes].filter(Boolean).join("。");
     const waiting = row.status === "waiting" ? `（確定待ち：${row.waitingFor.join("・")}）` : "";
-    return [{ task: `${row.label}${waiting}：${detail}`, when: o.deliverAt, decisionIds: [], utteranceIds: o.utteranceIds.filter((id) => known.has(id)), source: "ai" as const }];
+    return [{ task: `${row.label}${waiting}：${detail}`, when: o.deliverAt, stage: (o.orderId === "crematorium" ? "打合せ前" : "手配") as TodoStage, decisionIds: [], utteranceIds: o.utteranceIds.filter((id) => known.has(id)), source: "ai" as const }];
   });
   const aiTodos = [
     ...draft.todos.map((t) => ({ ...t, utteranceIds: t.utteranceIds.filter((id) => known.has(id)), source: "ai" as const })),
     ...phoneTodos,
   ];
+  const templateTodos = TEMPLATE_TODOS.map((t) => ({ ...t, decisionIds: [], utteranceIds: [], source: "template" as const }));
   return {
     caseId: state.caseId,
     familyName: state.familyName,
     createdAt: now,
     basedOn: state.utterances.length,
     summary: draft.summary,
-    todos: [...aiTodos, ...board],
+    todos: sortTodos([...aiTodos, ...board, ...templateTodos]),
     sheets: [...sheets].sort((a, b) => Number(!isSendable(a)) - Number(!isSendable(b)) || Number(a.status !== "ready") - Number(b.status !== "ready")),
     askFamily: draft.askFamily,
   };
@@ -245,4 +268,12 @@ export async function draftPaperwork(state: CaseState, generate: GeneratePaperwo
     prompt = `${base}\n\n# 前回の下書きは次の理由で出せませんでした。直してください\n${violations.map((v) => `- ${v.message}${v.quote ? `（「${v.quote}」）` : ""}`).join("\n")}`;
   }
   return { ok: false, violations, attempts: 2 };
+}
+
+/** TODO を段取りの順（打合せ前 → 打合せ → 手配 → 作成・用意 → 施行後）に並べる。同じ段取りの中は元の順を保つ */
+export function sortTodos<T extends { readonly stage: TodoStage }>(todos: readonly T[]): T[] {
+  return todos
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => TODO_STAGES.indexOf(a.t.stage) - TODO_STAGES.indexOf(b.t.stage) || a.i - b.i)
+    .map(({ t }) => t);
 }

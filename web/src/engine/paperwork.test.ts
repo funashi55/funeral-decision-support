@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { CaseState } from "./case";
 import { DEMO_CASE } from "./fixtures/demoCase";
 import { ORDERS } from "./orders";
-import { VENDOR_OF, assemblePaperwork, checkPaperwork, draftPaperwork, isSendable, paperworkPrompt, type PaperworkDraft } from "./paperwork";
+import { VENDOR_OF, assemblePaperwork, checkPaperwork, draftPaperwork, isSendable, paperworkPrompt, TODO_STAGES, type PaperworkDraft } from "./paperwork";
 
 const STATE: CaseState = {
   ...DEMO_CASE,
@@ -15,7 +15,7 @@ const STATE: CaseState = {
 
 const DRAFT: PaperworkDraft = {
   summary: "入院が長かったお母さまを、身内だけで送りたいご家族です。",
-  todos: [{ task: "菩提寺に日程を確認する", when: "今日中", decisionIds: ["temple"], utteranceIds: ["U3", "U99"] }],
+  todos: [{ task: "菩提寺に日程を確認する", stage: "手配", when: "今日中", decisionIds: ["temple"], utteranceIds: ["U3", "U99"] }],
   orders: [
     { orderId: "flowers", items: [{ name: "祭壇の生花", quantity: "一式", note: "白と淡い紫" }], deliverAt: "要確認", deliverTo: "会館", notes: "", utteranceIds: ["U2"] },
     { orderId: "meals", items: [{ name: "通夜ぶるまい", quantity: "15名分", note: "" }], deliverAt: "要確認", deliverTo: "要確認", notes: "", utteranceIds: [] },
@@ -34,24 +34,32 @@ describe("打合せの後の実務", () => {
     expect(prompt).toContain("U2 喪主（長女）");
     expect(prompt).toContain("確定「白と淡い紫」");
     expect(prompt).toContain("候補「通夜ぶるまい 15名分」");
-    expect(prompt).toContain("flowers（生花の発注）：発注できる");
+    expect(prompt).toContain("flowers（祭壇花）：発注できる");
   });
 
   test("確定した決定だけの発注は送れる、候補が残る発注は下書きにする。重複は1枚にまとめる", () => {
     const pw = assemblePaperwork(STATE, DRAFT, 1);
     expect(pw.sheets.map((s) => [s.orderId, s.status, s.vendor])).toEqual([
       ["flowers", "ready", "生花店"],
-      ["meals", "waiting", "料理店"],
+      ["meals", "waiting", "仕出し・弁当店"],
     ]);
   });
 
   test("書き起こしにない発言の id は落とし、今日決める未確定の項目を TODO に足す（迷いやすいものは1つずつ、ほかはまとめて1行）", () => {
     const pw = assemblePaperwork(STATE, DRAFT, 1);
-    expect(pw.todos[0]!.utteranceIds).toEqual(["U3"]);
+    expect(pw.todos.find((t) => t.task === "菩提寺に日程を確認する")!.utteranceIds).toEqual(["U3"]);
     const board = pw.todos.filter((t) => t.source === "board");
     expect(board.some((t) => t.task.includes("葬儀の形"))).toBe(true);
     expect(board.some((t) => t.task.includes("喪主を誰にするか"))).toBe(false);
     expect(board.at(-1)!.task).toMatch(/ほかに今日決める項目が \d+ 件/);
+  });
+
+  test("TODO は段取りの順に並び、作成・用意と施行後の定番は必ず入る", () => {
+    const pw = assemblePaperwork(STATE, DRAFT, 1);
+    const stages = pw.todos.map((t) => t.stage);
+    expect(stages).toEqual([...stages].sort((a, b) => TODO_STAGES.indexOf(a) - TODO_STAGES.indexOf(b)));
+    expect(pw.todos.some((t) => t.source === "template" && t.task.includes("年回表"))).toBe(true);
+    expect(pw.todos.at(-1)).toMatchObject({ stage: "施行後", source: "template" });
   });
 
   test("寺院・火葬場などの電話や予約で済む手配は、発注書にせず TODO に回す", () => {

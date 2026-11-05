@@ -182,3 +182,5 @@
 .todoList label { display: flex; gap: 0.5rem; align-items: flex-start; cursor: pointer; }
 .todoList input { margin-top: 0.3rem; }
 .todoDone { color: var(--ink-3); text-decoration: line-through; }
+.todoStage { margin: 0.6rem 0 0.2rem; font-size: 0.72rem; font-weight: 700; color: var(--ink-3); letter-spacing: 0.08em; }
+.todoList li { display: flex; justify-content: space-between; gap: 0.6rem; align-items: flex-start; }

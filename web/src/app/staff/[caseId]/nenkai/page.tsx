@@ -1,0 +1,16 @@
+import type { Metadata } from "next";
+import { NenkaiSheet } from "../../../../components/paperwork/NenkaiSheet";
+import s from "../../../../components/paperwork/sheet.module.css";
+import { store } from "../../../../server/store";
+
+export const metadata: Metadata = { title: "年回表｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+
+export default async function NenkaiPage({ params }: PageProps<"/staff/[caseId]/nenkai">) {
+  const { caseId } = await params;
+  const state = await store.get(caseId);
+  return (
+    <main className={s.page} data-print-page>
+      <NenkaiSheet familyName={state?.familyName ?? ""} />
+    </main>
+  );
+}

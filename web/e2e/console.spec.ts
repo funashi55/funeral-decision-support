@@ -47,7 +47,7 @@ test("確定したものだけが手配に回り、CSV に書き出される", a
   await page.goto(`/staff/${CASE_ID}`);
   await page.getByRole("tab", { name: "手配と書き出し" }).click();
   const orders = page.getByTestId("orders");
-  await expect(orders.getByText("火葬場の予約").locator("..")).toContainText("手配できる");
+  await expect(orders.getByText("火葬場の空き確認と予約").locator("..")).toContainText("手配できる");
   await expect(orders.getByText("寺院への連絡").locator("..")).toContainText("確定待ち");
 
   const download = page.waitForEvent("download");
