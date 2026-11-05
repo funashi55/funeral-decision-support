@@ -21,7 +21,7 @@ export interface CaseStore {
 }
 
 /** 案件の形を変えたら版を上げる（古い形のまま残ったデータを読まないように） */
-const STORE_VERSION = 5;
+const STORE_VERSION = 6;
 const caseKey = (id: string): string => `v${STORE_VERSION}:case:${id}`;
 const revKey = (id: string): string => `v${STORE_VERSION}:rev:${id}`;
 const tokenKey = (token: string): string => `v${STORE_VERSION}:token:${token}`;
