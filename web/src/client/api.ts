@@ -1,6 +1,7 @@
 import type { CaseState } from "../engine/case";
 import type { FarewellResult } from "../engine/farewell";
 import type { FamilyView } from "../engine/familyView";
+import type { Paperwork } from "../engine/paperwork";
 import type { QuickFit } from "../engine/quickFit";
 
 interface Envelope<T> {
@@ -23,6 +24,8 @@ export const api = {
   extract: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/extract`),
   farewell: (caseId: string) => post<FarewellResult & { basedOn?: number }>(`/api/cases/${caseId}/farewell`),
   quickFit: (caseId: string) => post<QuickFit>(`/api/cases/${caseId}/quick-fit`),
+  paperwork: (caseId: string) => call<Paperwork | null>(`/api/cases/${caseId}/paperwork`),
+  makePaperwork: (caseId: string) => post<Paperwork>(`/api/cases/${caseId}/paperwork`),
   confirm: (caseId: string, decisionId: string, value: string) => post<CaseState>(`/api/cases/${caseId}/decisions`, { decisionId, value }),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
   acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),

@@ -1,5 +1,6 @@
 import type { CaseState } from "../../engine/case";
 import { buildChecklist, buildOrders, type OrderStatus } from "../../engine/orders";
+import { PaperworkSection } from "./PaperworkSection";
 import s from "./staff.module.css";
 
 const STATUS_LABEL: Record<OrderStatus, string> = { ready: "手配できる", waiting: "確定待ち", not_needed: "不要" };
@@ -27,6 +28,7 @@ export function OrdersPanel({ state }: { readonly state: CaseState }) {
           <span>発注・手配の項目</span>
         </div>
       </div>
+      <PaperworkSection state={state} />
       <a className={`${s.btn} ${s.btnPrimary}`} href={`/api/cases/${encodeURIComponent(state.caseId)}/export`} download>
         基幹システム向けに書き出す（CSV）
       </a>

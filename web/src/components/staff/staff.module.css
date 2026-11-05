@@ -176,3 +176,9 @@
 .quickList { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem 0.8rem; font-size: 0.8rem; }
 .quickList li { display: flex; align-items: center; gap: 0.4rem; }
 .quickList .fit, .quickList li > span:first-child { white-space: nowrap; flex: none; }
+
+/* 打合せの後の TODO */
+.todoList { list-style: none; margin: 0.3rem 0 0.8rem; padding: 0; display: grid; gap: 0.35rem; font-size: 0.82rem; line-height: 1.6; }
+.todoList label { display: flex; gap: 0.5rem; align-items: flex-start; cursor: pointer; }
+.todoList input { margin-top: 0.3rem; }
+.todoDone { color: var(--ink-3); text-decoration: line-through; }

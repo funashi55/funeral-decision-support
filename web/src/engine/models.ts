@@ -8,6 +8,7 @@ import { MODEL_REASONING, ModelOutputError, ModelRefusedError, getClient } from 
 import type { ChatModel } from "./familyChat";
 import { FarewellDraftSchema, type FarewellDraft, type FarewellRecommendation } from "./farewell";
 import type { GuardRule, GuardViolation } from "./guard";
+import { PaperworkDraftSchema, type PaperworkDraft } from "./paperwork";
 import { QuickFitSchema, type QuickFitDraft } from "./quickFit";
 
 interface ParsedResponse<T> {
@@ -90,4 +91,16 @@ export async function generateQuickFit(system: string, prompt: string): Promise<
     messages: [{ role: "user", content: prompt }],
   });
   return unwrap(response as ParsedResponse<QuickFitDraft>);
+}
+
+/** 打合せの後の実務（まとめ・TODO・発注書の下書き）。打合せの後に1回だけ呼ぶので、考える量はふつう */
+export async function generatePaperwork(system: string, prompt: string): Promise<PaperworkDraft> {
+  const response = await getClient().messages.parse({
+    model: MODEL_REASONING,
+    max_tokens: 12000,
+    system,
+    output_config: { effort: "medium", format: zodOutputFormat(PaperworkDraftSchema) },
+    messages: [{ role: "user", content: prompt }],
+  });
+  return unwrap(response as ParsedResponse<PaperworkDraft>);
 }

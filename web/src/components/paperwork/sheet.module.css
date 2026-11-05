@@ -1,0 +1,151 @@
+.page {
+  background: #e9e6df;
+  min-height: 100vh;
+  padding: 1.5rem 0 3rem;
+  color: #111;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+}
+
+.bar {
+  max-width: 210mm;
+  margin: 0 auto 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  font-family: system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.print {
+  font: inherit;
+  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 1.5rem;
+  padding: 18mm 16mm;
+  background: #fff;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.12);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6mm;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.title {
+  font-size: 22pt;
+  letter-spacing: 0.4em;
+  margin: 0;
+}
+
+.draft {
+  border: 2px solid #b42318;
+  color: #b42318;
+  font-weight: 700;
+  padding: 1mm 3mm;
+  font-family: system-ui, sans-serif;
+  font-size: 10pt;
+}
+
+.to {
+  font-size: 14pt;
+  border-bottom: 1px solid #111;
+  padding-bottom: 1mm;
+  width: 60%;
+}
+
+.meta,
+.items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+}
+
+.meta th,
+.meta td,
+.items th,
+.items td {
+  border: 1px solid #111;
+  padding: 2mm 3mm;
+  text-align: left;
+  vertical-align: top;
+}
+
+.meta th,
+.items th {
+  background: #f2f2f2;
+  font-weight: 600;
+}
+
+.meta th {
+  width: 28mm;
+}
+
+.note {
+  font-size: 10pt;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin: 1mm 0 0;
+}
+
+.foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 9.5pt;
+  color: #333;
+  gap: 6mm;
+}
+
+.stamp {
+  display: grid;
+  grid-template-columns: repeat(2, 22mm);
+  text-align: center;
+  font-size: 9pt;
+}
+
+.stamp span {
+  border: 1px solid #111;
+  height: 18mm;
+  padding-top: 1mm;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  .page {
+    background: #fff;
+    padding: 0;
+  }
+
+  .bar {
+    display: none;
+  }
+
+  .sheet {
+    box-shadow: none;
+    margin: 0;
+    break-after: page;
+  }
+}
