@@ -5,6 +5,10 @@ import { ACCESS_COOKIE, accessDigest, isOpenPath } from "./server/access";
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const code = process.env.ACCESS_CODE;
   const { pathname, search } = request.nextUrl;
+  // Vercel の本番で合言葉を入れ忘れたら、開けたままにせず閉じる（AI の料金がかかるため）
+  if (!code && process.env.VERCEL_ENV === "production") {
+    return new NextResponse("試用の準備中です。", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  }
   if (!code || isOpenPath(pathname)) return NextResponse.next();
   const cookie = request.cookies.get(ACCESS_COOKIE)?.value;
   if (cookie && cookie === (await accessDigest(code))) return NextResponse.next();
