@@ -32,6 +32,14 @@ function seedFor(caseId: string, familyToken: string): CaseState {
   return { ...DEMO_CASE, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 } };
 }
 
+/**
+ * 共用デモの窓口の合言葉。リポジトリに載っている合言葉は、試用で公開しているとき（ACCESS_CODE があるとき）は使わない。
+ * 載っている合言葉で誰でも窓口を開き、案内役（AI）を呼べてしまうため。
+ */
+function demoToken(): string {
+  return process.env.ACCESS_CODE ? randomBytes(12).toString("base64url") : (DEMO_CASE.familyToken ?? "");
+}
+
 function isKnownCase(caseId: string): boolean {
   return caseId === DEMO_CASE.caseId || caseId.startsWith(TRIAL_PREFIX);
 }
@@ -47,14 +55,15 @@ export function createCaseStore(kv: Kv): CaseStore {
     const saved = await kv.get<CaseState>(caseKey(caseId));
     if (saved) return saved;
     // デモの案件は、まだ一度も保存されていなければ最初の状態から始める
-    return caseId === DEMO_CASE.caseId ? save(seedFor(caseId, DEMO_CASE.familyToken ?? "")) : undefined;
+    return caseId === DEMO_CASE.caseId ? save(seedFor(caseId, demoToken())) : undefined;
   };
   return {
     get,
     save,
     findByToken: async (token) => {
       const direct = await kv.get<string>(tokenKey(token));
-      const caseId = direct ?? (token === DEMO_CASE.familyToken ? DEMO_CASE.caseId : undefined);
+      const publicDemoToken = !process.env.ACCESS_CODE && token === DEMO_CASE.familyToken;
+      const caseId = direct ?? (publicDemoToken ? DEMO_CASE.caseId : undefined);
       if (!caseId) return undefined;
       const state = await get(caseId);
       // 合言葉を作り直した後は、古い合言葉では引けない
@@ -64,7 +73,7 @@ export function createCaseStore(kv: Kv): CaseStore {
       if (!isKnownCase(caseId)) return undefined;
       const current = await kv.get<CaseState>(caseKey(caseId));
       if (!current && caseId !== DEMO_CASE.caseId) return undefined;
-      const token = caseId === DEMO_CASE.caseId ? (DEMO_CASE.familyToken ?? "") : (current?.familyToken ?? "");
+      const token = caseId === DEMO_CASE.caseId ? demoToken() : (current?.familyToken ?? "");
       return save(seedFor(caseId, token));
     },
     createTrial: async () => {

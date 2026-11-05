@@ -43,6 +43,19 @@ describe("案件の保存場所", () => {
     expect(await store.findByToken("new-token-123")).toMatchObject({ caseId: a.caseId });
   });
 
+  test("試用で公開しているときは、リポジトリに載っている窓口の合言葉では開けない", async () => {
+    process.env.ACCESS_CODE = "test-code";
+    try {
+      const store = createCaseStore(createTestKv());
+      const demo = await store.get("demo-yamada");
+      expect(demo?.familyToken).not.toBe("yamada-k7m2q9");
+      expect(await store.findByToken("yamada-k7m2q9")).toBeUndefined();
+      expect(await store.findByToken(demo!.familyToken!)).toMatchObject({ caseId: "demo-yamada" });
+    } finally {
+      delete process.env.ACCESS_CODE;
+    }
+  });
+
   test("知らない案件は最初に戻せない", async () => {
     const store = createCaseStore(createTestKv());
     expect(await store.reset("someone-else")).toBeUndefined();
