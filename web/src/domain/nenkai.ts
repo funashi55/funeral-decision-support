@@ -1,11 +1,14 @@
 /**
  * 年回表（中陰月日表と年忌の一覧）。亡くなった日から、七日ごとの法要・四十九日・百か日・年忌の日付を数える。
  * AI を使わない計算。数え方は「亡くなった日を1日目」とする（初七日は亡くなった日を含めて7日目）。
+ * 東北地方の互助会系葬儀社が使っていた年回表（表計算）と同じ数え方・同じ項目（初月忌、三十七回忌、五十回忌を含む）にそろえた。
  * 地域や寺院によって数え方（前日から数える、など）が違うことがあるので、表にその旨を必ず添える。
  */
 
 export interface NenkaiRow {
   readonly name: string;
+  /** 日数の数え方（例：七日目、一ヶ月目の命日） */
+  readonly count: string;
   /** 別名（例：七七日 → 四十九日） */
   readonly alias?: string;
   /** YYYY-MM-DD */
@@ -23,15 +26,15 @@ export interface NenkaiTable {
 export type NenkiRow = NenkaiRow;
 
 /** 亡くなった日に足す日数（亡くなった日を1日目とする） */
-const CHUIN: readonly { readonly name: string; readonly alias?: string; readonly plus: number }[] = [
-  { name: "初七日", plus: 6 },
-  { name: "二七日", plus: 13 },
-  { name: "三七日", plus: 20 },
-  { name: "四七日", plus: 27 },
-  { name: "五七日", alias: "三十五日", plus: 34 },
-  { name: "六七日", plus: 41 },
-  { name: "七七日", alias: "四十九日（忌明け）", plus: 48 },
-  { name: "百か日", plus: 99 },
+const CHUIN: readonly { readonly name: string; readonly alias?: string; readonly count: string; readonly plus: number }[] = [
+  { name: "初七日", count: "七日目", plus: 6 },
+  { name: "二七日", count: "十四日目", plus: 13 },
+  { name: "三七日", count: "二十一日目", plus: 20 },
+  { name: "四七日", count: "二十八日目", plus: 27 },
+  { name: "五七日", alias: "三十五日", count: "三十五日目", plus: 34 },
+  { name: "六七日", count: "四十二日目", plus: 41 },
+  { name: "七七日", alias: "四十九日", count: "四十九日目", plus: 48 },
+  { name: "百か日", count: "百日目", plus: 99 },
 ];
 
 /** 年忌：亡くなった年に足す年数（一周忌は1年後、三回忌は2年後） */
@@ -44,7 +47,19 @@ const NENKI: readonly { readonly name: string; readonly years: number }[] = [
   { name: "二十三回忌", years: 22 },
   { name: "二十七回忌", years: 26 },
   { name: "三十三回忌", years: 32 },
+  { name: "三十七回忌", years: 36 },
+  { name: "五十回忌", years: 49 },
 ];
+
+const KANJI_YEARS: Readonly<Record<number, string>> = { 1: "一", 2: "二", 6: "六", 12: "十二", 16: "十六", 22: "二十二", 26: "二十六", 32: "三十二", 36: "三十六", 49: "四十九" };
+
+/** 月を足す（初月忌）。月末に亡くなった方で、翌月にその日がないときは翌月の末日にする（表計算の EDATE と同じ） */
+function addMonths(d: Date, months: number): Date {
+  const y = d.getUTCFullYear();
+  const m = d.getUTCMonth() + months;
+  const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m, Math.min(d.getUTCDate(), last)));
+}
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -73,8 +88,11 @@ function addYears(d: Date, years: number): Date {
 
 export function buildNenkai(deathDate: string): NenkaiTable {
   const death = parse(deathDate);
-  const chuin = CHUIN.map((c) => ({ name: c.name, ...(c.alias ? { alias: c.alias } : {}), date: iso(addDays(death, c.plus)) }));
-  const nenki = NENKI.map((n) => ({ name: n.name, date: iso(addYears(death, n.years)) }));
+  const weekly = CHUIN.map((c) => ({ name: c.name, count: c.count, ...(c.alias ? { alias: c.alias } : {}), date: iso(addDays(death, c.plus)) }));
+  const firstMonth = { name: "初月忌", count: "一ヶ月目の命日", date: iso(addMonths(death, 1)) };
+  // 日付の順に並べる（初月忌は四七日と五七日の間に入ることが多い）
+  const chuin = [...weekly, firstMonth].sort((a, b) => a.date.localeCompare(b.date));
+  const nenki = NENKI.map((n) => ({ name: n.name, count: `${KANJI_YEARS[n.years]}年目の命日`, date: iso(addYears(death, n.years)) }));
   const fortyNinth = addDays(death, 48);
   const months = (fortyNinth.getUTCFullYear() - death.getUTCFullYear()) * 12 + fortyNinth.getUTCMonth() - death.getUTCMonth();
   return { deathDate, chuin, nenki, spansThreeMonths: months >= 2 };

@@ -36,6 +36,19 @@ describe("年回表", () => {
     expect(buildNenkai("2026-11-05").spansThreeMonths).toBe(false);
   });
 
+  test("会社の年回表と同じく、初月忌・三十七回忌・五十回忌も載せる", () => {
+    const t = buildNenkai("2026-11-05");
+    expect(dateOf(t.chuin, "初月忌")).toBe("2026-12-05");
+    expect(t.chuin.map((r) => r.name).slice(3, 6)).toEqual(["四七日", "初月忌", "五七日"]);
+    expect(dateOf(t.nenki, "三十七回忌")).toBe("2062-11-05");
+    expect(dateOf(t.nenki, "五十回忌")).toBe("2075-11-05");
+    expect(t.nenki.find((r) => r.name === "三回忌")?.count).toBe("二年目の命日");
+  });
+
+  test("月末に亡くなった方の初月忌は、翌月の末日", () => {
+    expect(dateOf(buildNenkai("2027-01-31").chuin, "初月忌")).toBe("2027-02-28");
+  });
+
   test("ない日付や形の違う日付は受け付けない", () => {
     expect(() => buildNenkai("2026-02-30")).toThrow();
     expect(() => buildNenkai("2026/11/05")).toThrow();

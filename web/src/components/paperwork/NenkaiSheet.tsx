@@ -17,6 +17,7 @@ function Rows({ rows }: { readonly rows: readonly NenkaiRow[] }) {
               {r.name}
               {r.alias ? `（${r.alias}）` : ""}
             </td>
+            <td>{r.count}</td>
             <td>{f.western}</td>
             <td>{f.japanese}</td>
           </tr>
@@ -53,14 +54,32 @@ export function NenkaiSheet({ familyName }: { readonly familyName: string }) {
       {table ? (
         <article className={s.sheet} aria-label="年回表">
           <div className={s.head}>
-            <h1 className={s.title}>年回表</h1>
+            <h1 className={s.titleSmall}>中陰月日表及び年回表</h1>
           </div>
           <div className={s.to}>{familyName}　様</div>
-          <p className={s.note}>ご逝去日：{formatJa(table.deathDate).western}（{formatJa(table.deathDate).japanese}）</p>
+          <table className={s.meta}>
+            <tbody>
+              <tr>
+                <th scope="row">戒（法）名</th>
+                <td aria-label="手書きで記入する欄" />
+              </tr>
+              <tr>
+                <th scope="row">俗名</th>
+                <td aria-label="手書きで記入する欄" />
+              </tr>
+              <tr>
+                <th scope="row">ご逝去日</th>
+                <td>
+                  {formatJa(table.deathDate).western}（{formatJa(table.deathDate).japanese}）歿
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <table className={s.items}>
             <thead>
               <tr>
                 <th scope="col">中陰の法要</th>
+                <th scope="col">日数</th>
                 <th scope="col">日付</th>
                 <th scope="col">和暦</th>
               </tr>
@@ -73,6 +92,7 @@ export function NenkaiSheet({ familyName }: { readonly familyName: string }) {
             <thead>
               <tr>
                 <th scope="col">年忌法要</th>
+                <th scope="col">日数</th>
                 <th scope="col">日付</th>
                 <th scope="col">和暦</th>
               </tr>

@@ -149,3 +149,9 @@
     break-after: page;
   }
 }
+
+.titleSmall {
+  font-size: 17pt;
+  letter-spacing: 0.2em;
+  margin: 0;
+}
