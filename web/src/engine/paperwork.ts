@@ -35,6 +35,12 @@ export const VENDOR_OF: Readonly<Record<string, string>> = {
   parking: "駐車場係",
 };
 
+/**
+ * 発注書（FAX）にしない手配。電話や予約、社内の段取りで済むため、発注書ではなく担当者の TODO に回す
+ * （本番で「寺院 御中」「火葬場 御中」の発注書ができてしまったため）
+ */
+export const ARRANGE_BY_PHONE: ReadonlySet<string> = new Set(["temple_contact", "crematorium", "resting", "reception", "parking"]);
+
 const orderIds = ORDERS.map((o) => o.id) as [string, ...string[]];
 const decisionIds = DECISIONS.map((d) => d.id) as [string, ...string[]];
 
@@ -119,7 +125,7 @@ export const PAPERWORK_SYSTEM = `あなたは葬儀社のベテラン担当者�
 会話の書き起こしと、決めることボードの状態（確定・候補・未定）を読み、次の3つを作ります。
 1. 打合せのまとめ
 2. 担当者の TODO（今日・明日にすること）
-3. 発注書の下書き（発注の種類は与えた一覧の中から、この打合せで必要なものだけ）
+3. 発注書の下書き（発注の種類は与えた一覧の中から、この打合せで必要なものだけ。寺院・火葬場・安置室・受付・駐車場の手配は、電話や予約で済むので担当者の TODO として扱われる）
 
 守ること：
 - 書いてよいのは、会話にあることと決定の値だけ。数・日時・場所がわからないときは「要確認」と書き、推測で埋めない
@@ -162,7 +168,7 @@ export function assemblePaperwork(state: CaseState, draft: PaperworkDraft, now =
   const seen = new Set<string>();
   const sheets: OrderSheet[] = draft.orders.flatMap((o) => {
     const row = status.get(o.orderId);
-    if (!row || row.status === "not_needed" || seen.has(o.orderId)) return [];
+    if (!row || row.status === "not_needed" || seen.has(o.orderId) || ARRANGE_BY_PHONE.has(o.orderId)) return [];
     seen.add(o.orderId);
     return [
       {
@@ -191,7 +197,20 @@ export function assemblePaperwork(state: CaseState, draft: PaperworkDraft, now =
       ? [{ task: `ほかに今日決める項目が ${rest} 件あります（決めることボードを見る）`, when: "今日の打合せのうちに", decisionIds: [], utteranceIds: [], source: "board" as const }]
       : []),
   ];
-  const aiTodos = draft.todos.map((t) => ({ ...t, utteranceIds: t.utteranceIds.filter((id) => known.has(id)), source: "ai" as const }));
+  // 電話や予約で済む手配は、発注書ではなく TODO にする（同じ手配は1つにまとめる）
+  const arranged = new Set<string>();
+  const phoneTodos = draft.orders.flatMap((o) => {
+    const row = status.get(o.orderId);
+    if (!row || row.status === "not_needed" || !ARRANGE_BY_PHONE.has(o.orderId) || arranged.has(o.orderId)) return [];
+    arranged.add(o.orderId);
+    const detail = [o.items.map((i) => i.name).join("・"), o.notes].filter(Boolean).join("。");
+    const waiting = row.status === "waiting" ? `（確定待ち：${row.waitingFor.join("・")}）` : "";
+    return [{ task: `${row.label}${waiting}：${detail}`, when: o.deliverAt, decisionIds: [], utteranceIds: o.utteranceIds.filter((id) => known.has(id)), source: "ai" as const }];
+  });
+  const aiTodos = [
+    ...draft.todos.map((t) => ({ ...t, utteranceIds: t.utteranceIds.filter((id) => known.has(id)), source: "ai" as const })),
+    ...phoneTodos,
+  ];
   return {
     caseId: state.caseId,
     familyName: state.familyName,

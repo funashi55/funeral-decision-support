@@ -86,14 +86,14 @@ export default async function PaperworkPage({ params, searchParams }: PageProps<
   const paperwork = await paperworkStore.get(caseId);
   if (!paperwork) {
     return (
-      <main className={s.page}>
+      <main className={s.page} data-print-page>
         <p className={s.bar}>まだ発注書がありません。担当者の画面の「手配と書き出し」で「まとめて発注書を作る」を押してください。</p>
       </main>
     );
   }
   const sheets = typeof order === "string" ? paperwork.sheets.filter((x) => x.orderId === order) : paperwork.sheets;
   return (
-    <main className={s.page}>
+    <main className={s.page} data-print-page>
       <div className={s.bar}>
         <span>
           {paperwork.familyName}・発注書 {sheets.length} 枚（A4）。「PDF に保存」を選ぶとファイルになり、FAX の送信に使えます。

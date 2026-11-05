@@ -54,6 +54,18 @@ describe("打合せの後の実務", () => {
     expect(board.at(-1)!.task).toMatch(/ほかに今日決める項目が \d+ 件/);
   });
 
+  test("寺院・火葬場などの電話や予約で済む手配は、発注書にせず TODO に回す", () => {
+    const withTemple = {
+      ...DRAFT,
+      orders: [...DRAFT.orders, { orderId: "temple_contact", items: [{ name: "ご逝去の連絡と日程の相談", quantity: "1件", note: "" }], deliverAt: "今日中", deliverTo: "", notes: "市外の菩提寺", utteranceIds: ["U5"] }],
+    };
+    const pw = assemblePaperwork(STATE, withTemple, 1);
+    expect(pw.sheets.some((x) => x.orderId === "temple_contact")).toBe(false);
+    const todo = pw.todos.find((t) => t.task.startsWith("寺院への連絡"))!;
+    expect(todo).toMatchObject({ when: "今日中", source: "ai" });
+    expect(todo.task).toContain("市外の菩提寺");
+  });
+
   test("要確認の欄が残る発注書は、確定していても「送れる」にしない", () => {
     const pw = assemblePaperwork(STATE, DRAFT, 1);
     const flowers = pw.sheets.find((x) => x.orderId === "flowers")!;

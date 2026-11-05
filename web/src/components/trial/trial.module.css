@@ -293,3 +293,16 @@
     transition: none;
   }
 }
+
+/* 発注書のページと印刷では、感想のボタンを出さない（発注書に重なり、印刷に写り込むため） */
+body:has([data-print-page]) .noteFab,
+body:has([data-print-page]) .notePanel {
+  display: none;
+}
+
+@media print {
+  .noteFab,
+  .notePanel {
+    display: none;
+  }
+}
