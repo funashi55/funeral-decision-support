@@ -14,13 +14,13 @@ const VERDICT_LABEL = { told: "家族に伝えた", unused: "使わなかった"
 export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/feedback">): Promise<Response> {
   try {
     const { caseId } = await ctx.params;
-    const state = store.get(caseId);
+    const state = await store.get(caseId);
     if (!state) return fail("案件が見つかりません", 404);
     const { target, verdict } = BodySchema.parse(await req.json());
     const at = Date.now();
     const feedback = [...state.feedback.filter((f) => f.target !== target), { target, verdict, at }];
     const next = appendAudit({ ...state, feedback }, { at, actor: "staff", kind: "feedback", summary: VERDICT_LABEL[verdict], refs: [target] });
-    return ok(store.save(next));
+    return ok(await store.save(next));
   } catch (error) {
     return handleError(error);
   }

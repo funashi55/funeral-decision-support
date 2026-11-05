@@ -17,10 +17,10 @@ globalForLimiter.__familyLimiter = limiter;
 
 export const NOT_AVAILABLE = "このリンクは使えません。担当者にお問い合わせください";
 
-export function resolveFamily(req: Request, token: string): CaseState | Response {
+export async function resolveFamily(req: Request, token: string): Promise<CaseState | Response> {
   const key = clientKey(req);
   if (limiter.isBlocked(key)) return fail("しばらく時間をおいてから、もう一度お試しください", 429);
-  const state = store.findByToken(token);
+  const state = await store.findByToken(token);
   if (!state || state.familyLinkRevoked) {
     limiter.recordFailure(key);
     return fail(NOT_AVAILABLE, 404);

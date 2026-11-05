@@ -2,9 +2,11 @@
  * 知見の前後比較（F9）。聞き取りの前の知見（作者のメモ）と、今の知見（聞き取りの後）で推奨を出し、
  * ベテランの答えとの一致率を比べる。
  *   npm run compare:knowledge
+ *   npm run compare:knowledge -- --respondent ベテランA   （答えた人を選ぶ。省くと最後に送った人）
+ * /veteran で集めた答え（npm run trial:pull で docs/private/veteran/answers.json に取り出したもの）があれば、それを正解にする。
  * 結果は docs/redteam/knowledge-compare.md に書き出す（モデルを呼ぶので費用がかかる）。
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { getFarewellOption } from "../src/domain/farewell";
 import type { CaseState } from "../src/engine/case";
@@ -15,7 +17,20 @@ import { generateFarewellDraft, judgeRecommendation } from "../src/engine/models
 import before from "../src/knowledge/rules.author-memo.json";
 import { loadKnowledge, type Knowledge } from "../src/knowledge/rules";
 import { agreementOf, rate, type Agreement } from "./agreement";
-import { SCENES, type Fit, type JudgmentScene } from "./judgment-scenes";
+import { SCENES as AUTHOR_SCENES, type Fit, type JudgmentScene } from "./judgment-scenes";
+import { applyVeteranAnswers, pickSubmission, type Submission } from "./veteranAnswers";
+
+const ANSWERS_PATH = path.resolve(__dirname, "../../docs/private/veteran/answers.json");
+
+function loadSubmission(): Submission | undefined {
+  if (!existsSync(ANSWERS_PATH)) return undefined;
+  const all = JSON.parse(readFileSync(ANSWERS_PATH, "utf8")) as Submission[];
+  const flag = process.argv.indexOf("--respondent");
+  return pickSubmission(all, flag >= 0 ? process.argv[flag + 1] : undefined);
+}
+
+const submission = loadSubmission();
+const SCENES = applyVeteranAnswers(AUTHOR_SCENES, submission);
 
 const CONCURRENCY = 4;
 const REPORT_PATH = path.resolve(__dirname, "../../docs/redteam/knowledge-compare.md");
@@ -90,6 +105,7 @@ async function main(): Promise<void> {
     "",
     "場面は `web/redteam/judgment-scenes.ts`（すべて架空）、実行は `npm run compare:knowledge`。",
     provisional ? "\n> 答えの一部は作者の仮の答えです。ベテランが同じ場面に答えたら置き換えます。\n" : "",
+    submission ? `\n> 正解はベテランの答え（${SCENES.filter((s) => s.answeredBy === "veteran").length}場面）。作者の仮の答えとベテランの答えの一致率は ${rate(AUTHOR_SCENES.flatMap((a, i) => (SCENES[i]!.answeredBy === "veteran" ? [agreementOf(SCENES[i]!, new Map(Object.entries(a.answer)))] : [])))}%。\n` : "",
     "## 結果",
     "",
     "| 知見 | 規則の数 | ベテランの答えとの一致率 |",

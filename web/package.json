@@ -15,7 +15,9 @@
     "knowledge": "tsx scripts/knowledge.ts",
     "compare:knowledge": "tsx --env-file=.env.local redteam/knowledge-compare.ts",
     "altar:check": "tsx --env-file=.env.local scripts/altar-check.ts",
-    "demo:record": "playwright test -c playwright.record.config.ts"
+    "demo:record": "playwright test -c playwright.record.config.ts",
+    "trial:pull": "tsx --env-file=.env.trial scripts/trial-pull.ts",
+    "test:e2e:trial": "playwright test -c playwright.trial.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",

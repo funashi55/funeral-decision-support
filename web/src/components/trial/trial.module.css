@@ -1,0 +1,295 @@
+.page {
+  min-height: 100vh;
+  padding: clamp(2rem, 1rem + 4vw, 5rem) clamp(1.25rem, 0.5rem + 4vw, 4rem);
+  background:
+    radial-gradient(120% 60% at 0% 0%, var(--accent-soft), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+}
+
+.column {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.title {
+  font-size: clamp(1.6rem, 1.1rem + 2vw, 2.4rem);
+  font-weight: 900;
+  line-height: 1.35;
+  margin: 0.4rem 0 1rem;
+}
+
+.lead {
+  color: var(--ink-2);
+  line-height: 1.9;
+  margin: 0 0 1.5rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  padding: clamp(1.25rem, 1rem + 1vw, 2rem);
+  margin-bottom: 1.25rem;
+}
+
+.notice {
+  border-left: 4px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: var(--r-sm);
+  padding: 0.8rem 1rem;
+  line-height: 1.8;
+  font-size: 0.92rem;
+  margin-bottom: 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.input,
+.textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.textarea {
+  min-height: 6rem;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.input:focus-visible,
+.textarea:focus-visible,
+.button:focus-visible,
+.choice input:focus-visible + span {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.button {
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.6rem;
+  background: var(--ink);
+  color: var(--surface);
+  cursor: pointer;
+  transition: transform var(--duration-fast, 150ms) var(--ease), opacity 150ms;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+
+.buttonGhost {
+  composes: button;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+}
+
+.error {
+  color: var(--accent);
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.done {
+  color: var(--safe);
+  background: var(--safe-soft);
+  border-radius: var(--r-md);
+  padding: 0.8rem 1rem;
+  font-weight: 600;
+}
+
+.links {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.linkCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 1.1rem 1.3rem;
+  transition: transform 150ms var(--ease), border-color 150ms;
+}
+
+.linkCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-2);
+}
+
+.linkTitle {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.linkSub {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  line-height: 1.7;
+}
+
+/* ベテランの回答ページ */
+.scene {
+  composes: card;
+}
+
+.sceneHead {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.sceneId {
+  font-family: var(--font-inter), monospace;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.sceneTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.sceneMeta {
+  color: var(--ink-3);
+  font-size: 0.88rem;
+}
+
+.lines {
+  margin: 0.9rem 0 1.1rem;
+  padding: 0.9rem 1rem;
+  background: var(--surface-3);
+  border-radius: var(--r-md);
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+  line-height: 1.8;
+}
+
+.speaker {
+  font-weight: 700;
+  margin-right: 0.4rem;
+}
+
+.option {
+  border-top: 1px solid var(--line);
+  padding: 0.8rem 0;
+}
+
+.optionLabel {
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.choice {
+  position: relative;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+}
+
+.choice span {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  cursor: pointer;
+  font-size: 0.92rem;
+  transition: background 150ms, color 150ms, border-color 150ms;
+}
+
+.choice input:checked + span {
+  background: var(--ink);
+  color: var(--surface);
+  border-color: var(--ink);
+}
+
+.progress {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 600;
+}
+
+/* 感想を送るボタン */
+.noteFab {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+  composes: button;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.5);
+}
+
+.notePanel {
+  position: fixed;
+  right: 1rem;
+  bottom: 4.5rem;
+  z-index: 50;
+  width: min(360px, calc(100vw - 2rem));
+  composes: card;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .linkCard {
+    transition: none;
+  }
+}

@@ -1,62 +1,78 @@
 /**
- * 案件の保存場所。今はプロセス内のメモリに置く（デモは1台のサーバーで動かす）。
- * 後で Supabase に差し替えるため、読み書きはこのインターフェース経由に限る。
+ * 案件の保存場所。中身は kv.ts（本番は Upstash Redis、手元はメモリ）に置く。
+ * 読み書きはこのインターフェース経由に限る。
  */
+import { randomBytes } from "node:crypto";
 import type { CaseState } from "../engine/case";
 import { DEMO_CASE } from "../engine/fixtures/demoCase";
+import { getKv, type Kv } from "./kv";
 
 export interface CaseStore {
-  get(caseId: string): CaseState | undefined;
+  get(caseId: string): Promise<CaseState | undefined>;
   /** 遺族の窓口の合言葉から案件を引く */
-  findByToken(token: string): CaseState | undefined;
-  save(state: CaseState): CaseState;
-  reset(caseId: string): CaseState | undefined;
-  subscribe(caseId: string, listener: (state: CaseState) => void): () => void;
+  findByToken(token: string): Promise<CaseState | undefined>;
+  save(state: CaseState): Promise<CaseState>;
+  /** 案件を最初の状態に戻す（家族の名前と条件だけがあり、会話はこれから） */
+  reset(caseId: string): Promise<CaseState | undefined>;
+  /** 試してもらう人ごとに、デモと同じ条件の新しい案件を作る */
+  createTrial(): Promise<CaseState>;
+  /** 更新のたびに増える番号。画面への配信が変化に気づくために使う */
+  revision(caseId: string): Promise<number>;
 }
 
-type Listener = (state: CaseState) => void;
+/** 案件の形を変えたら版を上げる（古い形のまま残ったデータを読まないように） */
+const STORE_VERSION = 5;
+const caseKey = (id: string): string => `v${STORE_VERSION}:case:${id}`;
+const revKey = (id: string): string => `v${STORE_VERSION}:rev:${id}`;
+const tokenKey = (token: string): string => `v${STORE_VERSION}:token:${token}`;
 
-/** デモの初期状態：家族の名前と条件だけがあり、会話はこれから */
-const SEEDS: Record<string, CaseState> = {
-  [DEMO_CASE.caseId]: { ...DEMO_CASE, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 } },
-};
+export const TRIAL_PREFIX = "trial-";
 
-function createMemoryStore(): CaseStore {
-  const cases = new Map<string, CaseState>(Object.entries(SEEDS));
-  const listeners = new Map<string, Set<Listener>>();
-  const notify = (state: CaseState): void => {
-    for (const l of listeners.get(state.caseId) ?? []) l(state);
+function seedFor(caseId: string, familyToken: string): CaseState {
+  return { ...DEMO_CASE, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 } };
+}
+
+function isKnownCase(caseId: string): boolean {
+  return caseId === DEMO_CASE.caseId || caseId.startsWith(TRIAL_PREFIX);
+}
+
+export function createCaseStore(kv: Kv): CaseStore {
+  const save = async (state: CaseState): Promise<CaseState> => {
+    await kv.set(caseKey(state.caseId), state);
+    if (state.familyToken) await kv.set(tokenKey(state.familyToken), state.caseId);
+    await kv.incr(revKey(state.caseId));
+    return state;
+  };
+  const get = async (caseId: string): Promise<CaseState | undefined> => {
+    const saved = await kv.get<CaseState>(caseKey(caseId));
+    if (saved) return saved;
+    // デモの案件は、まだ一度も保存されていなければ最初の状態から始める
+    return caseId === DEMO_CASE.caseId ? save(seedFor(caseId, DEMO_CASE.familyToken ?? "")) : undefined;
   };
   return {
-    get: (caseId) => cases.get(caseId),
-    findByToken: (token) => [...cases.values()].find((c) => c.familyToken === token),
-    save: (state) => {
-      cases.set(state.caseId, state);
-      notify(state);
-      return state;
+    get,
+    save,
+    findByToken: async (token) => {
+      const direct = await kv.get<string>(tokenKey(token));
+      const caseId = direct ?? (token === DEMO_CASE.familyToken ? DEMO_CASE.caseId : undefined);
+      if (!caseId) return undefined;
+      const state = await get(caseId);
+      // 合言葉を作り直した後は、古い合言葉では引けない
+      return state?.familyToken === token ? state : undefined;
     },
-    reset: (caseId) => {
-      const seed = SEEDS[caseId];
-      if (!seed) return undefined;
-      cases.set(caseId, seed);
-      notify(seed);
-      return seed;
+    reset: async (caseId) => {
+      if (!isKnownCase(caseId)) return undefined;
+      const current = await kv.get<CaseState>(caseKey(caseId));
+      if (!current && caseId !== DEMO_CASE.caseId) return undefined;
+      const token = caseId === DEMO_CASE.caseId ? (DEMO_CASE.familyToken ?? "") : (current?.familyToken ?? "");
+      return save(seedFor(caseId, token));
     },
-    subscribe: (caseId, listener) => {
-      const set = listeners.get(caseId) ?? new Set<Listener>();
-      set.add(listener);
-      listeners.set(caseId, set);
-      return () => set.delete(listener);
+    createTrial: async () => {
+      const id = `${TRIAL_PREFIX}${randomBytes(6).toString("base64url")}`;
+      return save(seedFor(id, randomBytes(12).toString("base64url")));
     },
+    revision: async (caseId) => Number((await kv.get<number>(revKey(caseId))) ?? 0),
   };
 }
 
-/**
- * 開発中の再読み込みでも案件を失わないよう globalThis に置く。
- * 案件の形を変えたら版を上げる（古い形のまま残った保存場所を使わないように）
- */
-const STORE_VERSION = 4;
-const STORE_KEY = `__caseStore_v${STORE_VERSION}`;
-const globalForStore = globalThis as unknown as Record<string, CaseStore | undefined>;
-export const store: CaseStore = globalForStore[STORE_KEY] ?? createMemoryStore();
-globalForStore[STORE_KEY] = store;
+export const store: CaseStore = createCaseStore(getKv());

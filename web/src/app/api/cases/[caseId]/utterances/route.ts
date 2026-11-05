@@ -12,11 +12,11 @@ const BodySchema = z.object({
 export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/utterances">): Promise<Response> {
   try {
     const { caseId } = await ctx.params;
-    const state = store.get(caseId);
+    const state = await store.get(caseId);
     if (!state) return fail("案件が見つかりません", 404);
     const body = BodySchema.parse(await req.json());
     const utterance = { ...body, id: `U${state.utterances.length + 1}` };
-    return ok(store.save({ ...state, utterances: [...state.utterances, utterance] }), 201);
+    return ok(await store.save({ ...state, utterances: [...state.utterances, utterance] }), 201);
   } catch (error) {
     return handleError(error);
   }

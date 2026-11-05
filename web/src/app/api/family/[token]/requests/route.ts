@@ -16,13 +16,13 @@ const BodySchema = z.object({
 export async function POST(req: Request, ctx: RouteContext<"/api/family/[token]/requests">): Promise<Response> {
   try {
     const { token } = await ctx.params;
-    const state = resolveFamily(req, token);
+    const state = await resolveFamily(req, token);
     if (state instanceof Response) return state;
     const body = BodySchema.parse(await req.json());
     const added = addFamilyRequest(state, { ...body, sentAt: Date.now() });
     const request = added.requests[added.requests.length - 1];
     const summary = body.kind === "change" ? "遺族から変更の希望が届いた" : "遺族から質問が届いた";
-    const next = store.save(appendAudit(added, { at: Date.now(), actor: "family", kind: "family_request", summary, refs: [request?.id ?? "", ...(body.decisionId ? [body.decisionId] : [])] }));
+    const next = await store.save(appendAudit(added, { at: Date.now(), actor: "family", kind: "family_request", summary, refs: [request?.id ?? "", ...(body.decisionId ? [body.decisionId] : [])] }));
     return ok(toFamilyView(next), 201);
   } catch (error) {
     return handleError(error);
