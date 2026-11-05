@@ -1,6 +1,7 @@
 import type { CaseState } from "../engine/case";
 import type { FarewellResult } from "../engine/farewell";
 import type { FamilyView } from "../engine/familyView";
+import type { QuickFit } from "../engine/quickFit";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -20,7 +21,8 @@ const post = <T,>(path: string, body?: unknown): Promise<T> => call<T>(path, { m
 export const api = {
   addUtterance: (caseId: string, u: { speaker: string; speakerLabel: string; text: string; at: number }) => post<CaseState>(`/api/cases/${caseId}/utterances`, u),
   extract: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/extract`),
-  farewell: (caseId: string) => post<FarewellResult>(`/api/cases/${caseId}/farewell`),
+  farewell: (caseId: string) => post<FarewellResult & { basedOn?: number }>(`/api/cases/${caseId}/farewell`),
+  quickFit: (caseId: string) => post<QuickFit>(`/api/cases/${caseId}/quick-fit`),
   confirm: (caseId: string, decisionId: string, value: string) => post<CaseState>(`/api/cases/${caseId}/decisions`, { decisionId, value }),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
   acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),

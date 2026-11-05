@@ -3,7 +3,16 @@
  * ここで落ちた推奨は表示しない。
  */
 
-export type GuardRule = "fear_appeal" | "numbers_in_text" | "no_budget_option" | "majority_pressure" | "pressure_language" | "upsell" | "unknown_reference";
+export type GuardRule = "fear_appeal" | "numbers_in_text" | "no_budget_option" | "majority_pressure" | "pressure_language" | "upsell" | "not_japanese" | "unknown_reference";
+
+/** 日本語でない文章の目安：ラテン文字が一定数あり、かな・漢字より多い（実時間テストで推奨がまるごと英語で出たことがあった） */
+const MIN_LATIN_LETTERS = 20;
+
+function isNotJapanese(text: string): boolean {
+  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
+  const japanese = (text.match(/[぀-ヿ一-鿿]/g) ?? []).length;
+  return latin >= MIN_LATIN_LETTERS && latin > japanese;
+}
 
 export interface GuardViolation {
   readonly rule: GuardRule;
@@ -89,6 +98,7 @@ function findQuote(text: string, index: number, length: number): string {
 /** モデルが書いた文章を検査する */
 export function checkText(text: string): GuardViolation[] {
   const violations: GuardViolation[] = [];
+  if (isNotJapanese(text)) violations.push({ rule: "not_japanese", message: "日本語で書かれていません。すべて日本語で書き直してください", quote: text.slice(0, 40) });
   for (const pattern of FEAR_PATTERNS) {
     const m = pattern.exec(text);
     if (m) violations.push({ rule: "fear_appeal", message: `不安をあおる言い回し「${m[0]}」が含まれています`, quote: findQuote(text, m.index, m[0].length) });

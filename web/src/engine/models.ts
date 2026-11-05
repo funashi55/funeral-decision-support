@@ -8,6 +8,7 @@ import { MODEL_REASONING, ModelOutputError, ModelRefusedError, getClient } from 
 import type { ChatModel } from "./familyChat";
 import { FarewellDraftSchema, type FarewellDraft, type FarewellRecommendation } from "./farewell";
 import type { GuardRule, GuardViolation } from "./guard";
+import { QuickFitSchema, type QuickFitDraft } from "./quickFit";
 
 interface ParsedResponse<T> {
   readonly stop_reason: string | null;
@@ -78,3 +79,15 @@ export const familyChatModel: ChatModel = async ({ system, messages, tools }) =>
   });
   return { content: response.content, stop_reason: response.stop_reason };
 };
+
+/** いまの見立て（即答の層）。見立てだけを返させ、考える量を少なめにして約2秒で返す */
+export async function generateQuickFit(system: string, prompt: string): Promise<QuickFitDraft> {
+  const response = await getClient().messages.parse({
+    model: MODEL_REASONING,
+    max_tokens: 1000,
+    system,
+    output_config: { effort: "low", format: zodOutputFormat(QuickFitSchema) },
+    messages: [{ role: "user", content: prompt }],
+  });
+  return unwrap(response as ParsedResponse<QuickFitDraft>);
+}

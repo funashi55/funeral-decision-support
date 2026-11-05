@@ -16,7 +16,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     const result = await recommendFarewell(state, generateFarewellDraft, judgeRecommendation);
     const latest = await store.get(caseId) ?? state;
     await store.save(appendAudits(latest, auditOfFarewell(result, Date.now())));
-    return ok(result);
+    return ok({ ...result, basedOn: state.utterances.length });
   } catch (error) {
     return handleError(error);
   }

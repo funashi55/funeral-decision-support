@@ -8,6 +8,7 @@ import type { FarewellResult } from "../../engine/farewell";
 import { DEMO_SCRIPT } from "../../engine/fixtures/demoScript";
 import { detectOversights } from "../../engine/oversight";
 import { detectPhase } from "../../engine/phase";
+import { fitsChanged, type QuickFit } from "../../engine/quickFit";
 import { DecisionBoard } from "./DecisionBoard";
 import { FamilyInbox } from "./FamilyInbox";
 import { FarewellPanel } from "./FarewellPanel";
@@ -19,6 +20,8 @@ import { Transcript } from "./Transcript";
 import s from "./staff.module.css";
 
 const LINE_INTERVAL_MS = 2800;
+/** 見立てが変わらなくても、理由を書いてからこの数だけ発言が増えたら書き直す */
+const REWRITE_AFTER_LINES = 3;
 
 type Tab = "farewell" | "plans" | "orders";
 const TABS: readonly { readonly id: Tab; readonly label: string }[] = [
@@ -56,17 +59,65 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     }
   }, [caseId]);
 
+  /** 理由づけ（推奨）がどの発言までを見て書かれたか */
+  const [farewellBasedOn, setFarewellBasedOn] = useState(0);
+  const farewellRunning = useRef(false);
   const runFarewell = useCallback(async () => {
+    if (farewellRunning.current) return;
+    farewellRunning.current = true;
     setFarewellLoading(true);
     setError(null);
     try {
-      setFarewell(await api.farewell(caseId));
+      const result = await api.farewell(caseId);
+      setFarewell(result);
+      if (result.ok) setFarewellBasedOn(result.basedOn ?? 0);
     } catch (e) {
       setError(message(e));
     } finally {
+      farewellRunning.current = false;
       setFarewellLoading(false);
     }
   }, [caseId]);
+
+  /**
+   * 聞きながら考える：発言が入るたびに、事情の拾い上げ（Haiku）→ いまの見立て（Opus・約2秒）。
+   * 見立てが前の理由づけから変わったら、理由と根拠（推奨）を裏で書き直す。
+   * 走っている間に発言が増えたら、終わってからもう一度だけ回す（呼び出しをためない）
+   */
+  const [quick, setQuick] = useState<QuickFit | null>(null);
+  const [listening, setListening] = useState(false);
+  const listenRunning = useRef(false);
+  const listenAgain = useRef(false);
+  const reasonedFits = useRef<QuickFit["fits"] | null>(null);
+  const reasonedAt = useRef(0);
+  const listen = useCallback(async (): Promise<void> => {
+    if (listenRunning.current) {
+      listenAgain.current = true;
+      return;
+    }
+    listenRunning.current = true;
+    setListening(true);
+    try {
+      do {
+        listenAgain.current = false;
+        await runExtract();
+        const next = await api.quickFit(caseId);
+        setQuick(next);
+        // 見立てが変わったとき、または理由を書いてから発言が十分に増えたときに、理由と根拠を書き直す
+        const grown = next.basedOn - reasonedAt.current >= REWRITE_AFTER_LINES;
+        if ((fitsChanged(reasonedFits.current, next.fits) || grown) && !farewellRunning.current) {
+          reasonedFits.current = next.fits;
+          reasonedAt.current = next.basedOn;
+          void runFarewell();
+        }
+      } while (listenAgain.current);
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      listenRunning.current = false;
+      setListening(false);
+    }
+  }, [caseId, runExtract, runFarewell]);
 
   const advance = useCallback(async (): Promise<boolean> => {
     const line = DEMO_SCRIPT[step.current];
@@ -74,13 +125,13 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     step.current += 1;
     try {
       await api.addUtterance(caseId, { ...line, at: step.current * 20 });
-      void runExtract();
+      void listen();
     } catch (e) {
       setError(message(e));
       return false;
     }
     return step.current < DEMO_SCRIPT.length;
-  }, [caseId, runExtract]);
+  }, [caseId, listen]);
 
   useEffect(() => {
     if (!playing) return;
@@ -109,18 +160,18 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       try {
         const at = state ? (state.utterances.at(-1)?.at ?? 0) + 20 : 0;
         await api.addUtterance(caseId, { ...line, at });
-        void runExtract();
+        void listen();
       } catch (e) {
         setError(message(e));
       }
     },
-    [caseId, runExtract, state],
+    [caseId, listen, state],
   );
 
   const editLine = async (utteranceId: string, text: string): Promise<void> => {
     try {
       await api.editUtterance(caseId, utteranceId, text);
-      void runExtract();
+      void listen();
     } catch (e) {
       setError(message(e));
     }
@@ -154,6 +205,10 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     setPlaying(false);
     step.current = 0;
     setFarewell(null);
+    setQuick(null);
+    setFarewellBasedOn(0);
+    reasonedFits.current = null;
+    reasonedAt.current = 0;
     setImpacted(new Set());
     setError(null);
     await api.reset(caseId);
@@ -210,6 +265,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               <FarewellPanel
                 state={state}
                 result={farewell}
+                resultBasedOn={farewellBasedOn}
+                quick={quick}
+                listening={listening}
                 loading={farewellLoading}
                 error={error}
                 onRun={() => void runFarewell()}

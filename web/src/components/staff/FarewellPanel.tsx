@@ -1,4 +1,6 @@
+import { FAREWELL_OPTIONS } from "../../domain/farewell";
 import { yen } from "../../domain/pricing";
+import type { QuickFit } from "../../engine/quickFit";
 import type { CaseState } from "../../engine/case";
 import type { EnrichedOption, FarewellResult, OptionFacts } from "../../engine/farewell";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
@@ -7,6 +9,10 @@ import s from "./staff.module.css";
 interface FarewellPanelProps {
   readonly state: CaseState;
   readonly result: FarewellResult | null;
+  /** 推奨（理由づけ）がどの発言までを見て書かれたか */
+  readonly resultBasedOn: number;
+  readonly quick: QuickFit | null;
+  readonly listening: boolean;
   readonly loading: boolean;
   readonly error: string | null;
   readonly onRun: () => void;
@@ -104,9 +110,37 @@ function OptionCard({ option, state, onFeedback }: { option: EnrichedOption; sta
   );
 }
 
-export function FarewellPanel({ state, result, loading, error, onRun, onFeedback }: FarewellPanelProps) {
+/** いまの見立て：発言のたびに約2秒で更新される。理由と根拠はその下の推奨が書く */
+function QuickStrip({ quick, listening, stale }: { readonly quick: QuickFit | null; readonly listening: boolean; readonly stale: boolean }) {
+  if (!quick && !listening) return null;
+  return (
+    <section className={s.quick} aria-label="いまの見立て" aria-live="polite" data-testid="quick-fit">
+      <div className={s.quickHead}>
+        <b>いまの見立て</b>
+        <span className={s.count}>
+          {listening ? "聞きながら考えています…" : quick ? `${quick.basedOn}発言目まで・${(quick.ms / 1000).toFixed(1)}秒` : ""}
+        </span>
+      </div>
+      {quick && (
+        <ul className={s.quickList}>
+          {FAREWELL_OPTIONS.map((o) => (
+            <li key={o.id}>
+              <span className={`${s.fit} ${FIT_CLASS[quick.fits[o.id]]}`}>{FIT_LABEL[quick.fits[o.id]]}</span>
+              {o.label}
+            </li>
+          ))}
+        </ul>
+      )}
+      {stale && <p className={s.count}>下の理由は、少し前の発言までで書いたものです。新しい見立てに合わせて書き直しています…</p>}
+    </section>
+  );
+}
+
+export function FarewellPanel({ state, result, resultBasedOn, quick, listening, loading, error, onRun, onFeedback }: FarewellPanelProps) {
+  const stale = Boolean(result?.ok && quick && loading && quick.basedOn > resultBasedOn);
   return (
     <>
+      <QuickStrip quick={quick} listening={listening} stale={stale} />
       <div className={s.toolbar}>
         <span className={s.count}>となりのベテランから</span>
         <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onRun} disabled={loading || state.utterances.length === 0}>

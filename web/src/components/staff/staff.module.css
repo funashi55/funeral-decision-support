@@ -169,3 +169,10 @@
 .altar { margin: 0 0 0.9rem; }
 .altar img { width: 100%; height: auto; border-radius: var(--r-md); display: block; }
 .altar figcaption { display: block; margin-top: 0.35rem; }
+
+/* いまの見立て（発言のたびに更新） */
+.quick { margin: 0 0 0.6rem; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: var(--r-md, 10px); background: var(--surface); }
+.quickHead { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; font-size: 0.78rem; margin-bottom: 0.4rem; }
+.quickList { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem 0.8rem; font-size: 0.8rem; }
+.quickList li { display: flex; align-items: center; gap: 0.4rem; }
+.quickList .fit, .quickList li > span:first-child { white-space: nowrap; flex: none; }
