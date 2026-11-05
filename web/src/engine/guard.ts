@@ -3,7 +3,7 @@
  * ここで落ちた推奨は表示しない。
  */
 
-export type GuardRule = "fear_appeal" | "numbers_in_text" | "no_budget_option" | "majority_pressure" | "pressure_language" | "unknown_reference";
+export type GuardRule = "fear_appeal" | "numbers_in_text" | "no_budget_option" | "majority_pressure" | "pressure_language" | "upsell" | "unknown_reference";
 
 export interface GuardViolation {
   readonly rule: GuardRule;
@@ -59,6 +59,18 @@ const PRESSURE_PATTERNS = [
 ] as const;
 
 /**
+ * 基本の内容に上乗せする販売を勧める言い回し。
+ * 施行の記録では、一日葬の家族の多くで祭壇のグレードアップや遺骨のアクセサリーが足されていた（売る側の都合が混ざりやすい）
+ */
+const UPSELL_PATTERNS = [
+  /グレードアップ/,
+  /ランク(?:を)?上げ/,
+  /上(?:の|位の)(?:プラン|コース|祭壇)/,
+  /ソウルジュエリー|遺骨(?:の)?(?:アクセサリー|ペンダント|ジュエリー)/,
+  /(?:せっかく|一生に一度).{0,8}(?:祭壇|お花|プラン)/,
+] as const;
+
+/**
  * 金額・割合・件数の表記（数字はサーバー側で差し込むため、モデルの文章に入っていてはいけない）。
  * 日数や時刻（3日後、2時間）は止めない
  */
@@ -88,6 +100,10 @@ export function checkText(text: string): GuardViolation[] {
   for (const pattern of PRESSURE_PATTERNS) {
     const m = pattern.exec(text);
     if (m) violations.push({ rule: "pressure_language", message: "決断を急がせる、断りづらくする言い回しです", quote: findQuote(text, m.index, m[0].length) });
+  }
+  for (const pattern of UPSELL_PATTERNS) {
+    const m = pattern.exec(text);
+    if (m) violations.push({ rule: "upsell", message: "基本の内容への上乗せ（グレードアップや追加の品）を勧める言い回しです", quote: findQuote(text, m.index, m[0].length) });
   }
   for (const pattern of NUMBER_PATTERNS) {
     const m = pattern.exec(text);

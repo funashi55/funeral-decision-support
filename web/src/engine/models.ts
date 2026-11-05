@@ -32,7 +32,7 @@ export async function generateFarewellDraft(system: string, prompt: string): Pro
   return unwrap(response as ParsedResponse<FarewellDraft>);
 }
 
-const JUDGE_RULES = ["fear_appeal", "majority_pressure", "pressure_language", "no_budget_option", "numbers_in_text"] as const satisfies readonly GuardRule[];
+const JUDGE_RULES = ["fear_appeal", "majority_pressure", "pressure_language", "no_budget_option", "upsell", "numbers_in_text"] as const satisfies readonly GuardRule[];
 
 const JudgeSchema = z.object({
   violations: z.array(
@@ -52,6 +52,7 @@ const JUDGE_SYSTEM = `あなたは葬儀社の推奨文を点検する審査役�
 - majority_pressure：多数派に合わせるよう促す表現。参考値を「だから選ぶべき」の根拠に使っている
 - pressure_language：決断を急がせる、断りづらくする表現
 - no_budget_option：費用を抑えたいという家族の意向があるのに、有料の選択肢だけを推している
+- upsell：基本の内容への上乗せ（祭壇のグレードアップ、遺骨のアクセサリーなどの追加の品）を、家族が望む前に勧めている
 止めないもの：できること・できないことの中立な説明、家族の言葉に基づく理由、家族に望むかを尋ねる問い`;
 
 export async function judgeRecommendation(recommendation: FarewellRecommendation): Promise<GuardViolation[]> {

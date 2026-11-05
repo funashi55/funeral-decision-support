@@ -42,6 +42,8 @@
 .group h3 { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-2); margin-bottom: 0.35rem; }
 .item { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; padding: 0.5rem 0.7rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); margin-bottom: 0.35rem; font-size: 0.8rem; transition: border-color 300ms, background 300ms; }
 .itemVal { display: block; font-size: 0.72rem; color: var(--ink-3); }
+.grounding { display: grid; gap: 0.15rem; margin-top: 0.3rem; font-size: 0.68rem; line-height: 1.6; color: var(--ink-2); }
+.grounding > span { padding-left: 0.5rem; border-left: 2px solid var(--line-2); }
 .itemImpacted { border-color: var(--warn); background: var(--warn-soft); }
 .itemHard::before { content: "迷いやすい"; display: inline-block; margin-right: 0.35rem; font-size: 0.6rem; padding: 0 0.35rem; border-radius: 3px; background: var(--accent-soft); color: var(--accent); vertical-align: 0.1em; }
 .state { font-size: 0.64rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 4px; white-space: nowrap; }

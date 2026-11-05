@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { DECISIONS, PHASE_LABEL, type DecisionItem } from "../../domain/decisions";
+import { EVIDENCE_SOURCE, evidenceFor, tipsFor } from "../../domain/decisionEvidence";
 import type { CaseState } from "../../engine/case";
 import type { OversightAlert } from "../../engine/oversight";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
@@ -48,6 +49,27 @@ function ConfirmControl({ item, value, onConfirm }: { item: DecisionItem; value:
   );
 }
 
+/** 項目に添える実績（施行の記録の集計）と知見。数字は集計表から出す */
+function Grounding({ decisionId }: { readonly decisionId: string }) {
+  const evidence = evidenceFor(decisionId);
+  const tip = tipsFor(decisionId)[0];
+  if (!evidence && !tip) return null;
+  return (
+    <span className={s.grounding}>
+      {evidence && (
+        <span title={`${EVIDENCE_SOURCE}・${evidence.count}件`}>
+          実績（参考）：{evidence.text}
+        </span>
+      )}
+      {tip && (
+        <span title={`根拠：${tip.source}`}>
+          知見：{tip.when}は、{tip.do}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Item({ item, state, impacted, onConfirm }: { item: DecisionItem } & Pick<DecisionBoardProps, "state" | "impacted" | "onConfirm">) {
   const d = state.decisions[item.id];
   const className = [s.item, impacted.has(item.id) ? s.itemImpacted : ""].join(" ");
@@ -56,6 +78,7 @@ function Item({ item, state, impacted, onConfirm }: { item: DecisionItem } & Pic
       <span>
         <span className={item.hard ? s.itemHard : undefined}>{item.label}</span>
         <span className={s.itemVal}>{d ? `${d.status === "candidate" ? "候補：" : ""}${d.value}` : impacted.has(item.id) ? "見直しが必要です" : "未定"}</span>
+        {d?.status !== "confirmed" && <Grounding decisionId={item.id} />}
       </span>
       {d?.status === "confirmed" ? (
         <span className={`${s.state} ${s.stateDone}`}>確定</span>
@@ -137,6 +160,7 @@ export function DecisionBoard(props: DecisionBoardProps) {
                 <span>
                   <span className={s.itemHard}>{item.label}</span>
                   <span className={s.itemVal}>{PHASE_LABEL[item.phase]}</span>
+                  <Grounding decisionId={item.id} />
                 </span>
                 <span className={`${s.state} ${s.stateOpen}`}>未定</span>
               </div>

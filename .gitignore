@@ -4,3 +4,4 @@ docs/private/
 !.env.example
 node_modules/
 .DS_Store
+__pycache__/

@@ -30,6 +30,12 @@ export const WORDING_CASES: readonly WordingCase[] = [
   { text: "せっかくなら、きちんと送ってあげませんか", expect: ["pressure_language"], note: "せっかくなら" },
   { text: "親戚の方の目もありますので、こちらのほうが", expect: ["pressure_language"], note: "世間体" },
   { text: "最後の親孝行として、湯灌をしてあげてはいかがでしょう", expect: ["pressure_language"], note: "最後の親孝行" },
+  // ── 上乗せの販売（施行の記録で一日葬に多く足されていた品）
+  { text: "一日葬なら、その分祭壇をグレードアップされてはいかがでしょう", expect: ["upsell"], note: "グレードアップ" },
+  { text: "ひとつ上のプランにすると、お花が華やかになります", expect: ["upsell"], note: "上のプラン" },
+  { text: "ご遺骨の一部をソウルジュエリーにして身につける方もいます", expect: ["upsell"], note: "遺骨のアクセサリー" },
+  { text: "せっかくですから祭壇を大きくしましょう", expect: ["upsell"], note: "せっかく＋祭壇" },
+  { text: "安置が長くなるなら、消臭保全剤を使えば安心です", expect: ["fear_appeal"], note: "消臭保全剤" },
   // ── 数字の混入（金額・割合はサーバーが差し込む）
   { text: "八万八千円で湯灌ができます", expect: ["numbers_in_text"], note: "漢数字の金額" },
   { text: "8.8万円の追加になります", expect: ["numbers_in_text"], note: "小数の万円" },

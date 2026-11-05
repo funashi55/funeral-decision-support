@@ -10,7 +10,7 @@ import { FAREWELL_OPTIONS, getFarewellOption, type FarewellOptionId } from "../d
 import { getCatalogItem } from "../domain/pricing";
 import { yukanReferences, type Reference } from "../domain/similarFamilies";
 import { DECISIONS, getDecision } from "../domain/decisions";
-import { loadKnowledge, rulesFor, type Knowledge, type Rule } from "../knowledge/rules";
+import { loadKnowledge, rulesFor, withRecordRules, type Knowledge, type Rule } from "../knowledge/rules";
 import type { CaseState } from "./case";
 import { checkBudgetOption, checkText, type GuardViolation } from "./guard";
 
@@ -49,7 +49,7 @@ export interface FarewellContext {
 }
 
 /** knowledge を渡すと、その知見で推奨を作る（聞き取りの前後の比べ方に使う） */
-export function buildFarewellContext(state: CaseState, knowledge: Knowledge = loadKnowledge()): FarewellContext {
+export function buildFarewellContext(state: CaseState, knowledge: Knowledge = withRecordRules(loadKnowledge())): FarewellContext {
   const rules = rulesFor(knowledge, [...FAREWELL_DECISIONS]);
   const refs = yukanReferences(state.profile).references;
   const references = new Map(refs.map((r, i) => [`REF-${i + 1}`, r]));

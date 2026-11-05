@@ -74,7 +74,9 @@ export function createCaseStore(kv: Kv): CaseStore {
       const current = await kv.get<CaseState>(caseKey(caseId));
       if (!current && caseId !== DEMO_CASE.caseId) return undefined;
       const token = caseId === DEMO_CASE.caseId ? demoToken() : (current?.familyToken ?? "");
-      return save(seedFor(caseId, token));
+      const seed = seedFor(caseId, token);
+      // 試用・ロールプレイの案件は、家族の名前と条件を作ったときのまま残す
+      return save(current ? { ...seed, familyName: current.familyName, profile: current.profile } : seed);
     },
     createTrial: async () => {
       const id = `${TRIAL_PREFIX}${randomBytes(6).toString("base64url")}`;
