@@ -155,3 +155,17 @@
   letter-spacing: 0.2em;
   margin: 0;
 }
+
+.row {
+  break-inside: avoid;
+}
+
+.check {
+  text-align: center;
+  width: 16mm;
+}
+
+.items td,
+.items th {
+  font-size: 9.5pt;
+}

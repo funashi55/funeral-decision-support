@@ -62,6 +62,29 @@ const TEMPLATE_TODOS: readonly { readonly task: string; readonly stage: TodoStag
   { task: "集金する（請求書の説明をしてから）", stage: "施行後", when: "葬儀のあと" },
 ];
 
+/** 受注書の品目の区分（東北地方の互助会系葬儀社の受注書の並びに合わせる） */
+export const LEDGER_CATEGORIES = ["お迎え・安置", "枕飾り", "納棺", "祭壇・生花", "菓子・果物", "写真", "位牌・仏具", "車両", "斎場", "飲食", "返礼品・礼状", "供物", "人の手配", "その他"] as const;
+
+/** 社内で用意するもの（プランに含まれる一式）の発注先の書き方 */
+export const IN_HOUSE = "自社（プランに含む）";
+
+/**
+ * プランに含まれ、ほぼすべての施行で用意する一式（受注書の定番の行）。
+ * 基幹システムの施行の記録では、宗派を問わずほぼ全施行に入っていた。AI が書き漏らしても必ず載せる
+ */
+const STANDARD_ROWS: readonly { readonly category: (typeof LEDGER_CATEGORIES)[number]; readonly name: string; readonly key: string }[] = [
+  { category: "お迎え・安置", name: "お迎え", key: "迎え" },
+  { category: "枕飾り", name: "枕飾り一式", key: "枕飾り" },
+  { category: "納棺", name: "寝棺一式", key: "棺" },
+  { category: "納棺", name: "納棺処置", key: "処置" },
+  { category: "納棺", name: "仏衣一式", key: "仏衣" },
+  { category: "納棺", name: "ドライアイス", key: "ドライアイス" },
+  { category: "納棺", name: "骨箱一式", key: "骨箱" },
+  { category: "写真", name: "遺影写真（額）", key: "写真" },
+  { category: "位牌・仏具", name: "位牌", key: "位牌" },
+  { category: "車両", name: "霊柩車", key: "霊柩車" },
+];
+
 const orderIds = ORDERS.map((o) => o.id) as [string, ...string[]];
 const decisionIds = DECISIONS.map((d) => d.id) as [string, ...string[]];
 
@@ -95,12 +118,58 @@ export const PaperworkDraftSchema = z.object({
         deliverAt: z.string().describe("納品・実施の日時。わからなければ「要確認」"),
         deliverTo: z.string().describe("納品・実施の場所。わからなければ「要確認」"),
         notes: z.string().describe("業者への申し送り。家族の希望を短く。なければ空"),
+        extras: z
+          .array(z.object({ label: z.string(), value: z.string() }))
+          .max(6)
+          .describe("業者ごとの確認欄。花：色指定（白グリーン／色入れ）・献花の本数。タクシー：経路（片送り・往復）・待機の時刻と場所。香典返し：即納と式場それぞれの数。わからなければ「要確認」"),
         utteranceIds: z.array(z.string()),
       }),
     )
     .max(18),
+  schedule: z
+    .object({
+      death: z.string(),
+      layingIn: z.string(),
+      departure: z.string(),
+      cremation: z.string(),
+      wake: z.string(),
+      funeral: z.string(),
+      burial: z.string(),
+      meal: z.string(),
+    })
+    .describe("死亡・納棺・出棺・火葬・通夜・葬式・埋葬・会食の日時。会話と決定にないものは「要確認」、行わないものは「なし」"),
+  venue: z.string().describe("式場（届け先）。わからなければ「要確認」"),
+  restingPlace: z.string().describe("安置先。わからなければ「要確認」"),
+  deceased: z.object({
+    age: z.string().describe("故人の年齢（例：84歳）。わからなければ「要確認」"),
+    sex: z.enum(["男性", "女性", "要確認"]).describe("会話の続柄から分かるときだけ（母→女性）"),
+  }),
+  ledger: z
+    .array(
+      z.object({
+        category: z.enum(LEDGER_CATEGORIES),
+        name: z.string().describe("品目"),
+        quantity: z.string().describe("数。会話や決定にないときは「要確認」。プランに含まれる一式は「一式」"),
+        orderId: z.enum([...orderIds, "none"]).describe("外の業者に頼む品目は発注の種類。プランに含まれ社内で用意するものは none"),
+        note: z.string().describe("色・好み・届け先など。なければ空"),
+      }),
+    )
+    .max(40)
+    .describe("受注書：この施行で手配するもの・決まったものを、プランに含まれる一式も含めてすべて1行ずつ"),
   askFamily: z.array(z.string()).max(6).describe("発注の前に家族に確かめること（数・日時・好みなど）"),
 });
+
+export interface LedgerRow {
+  readonly category: (typeof LEDGER_CATEGORIES)[number];
+  readonly name: string;
+  readonly quantity: string;
+  readonly note: string;
+  readonly orderId: string | null;
+  /** 発注先（業者の種類）。プランに含まれ社内で用意するものは「自社（プランに含む）」 */
+  readonly vendor: string;
+  /** 発注に回すものの状態。社内で用意するものは null */
+  readonly status: OrderStatus | null;
+}
 
 export type PaperworkDraft = z.infer<typeof PaperworkDraftSchema>;
 
@@ -115,6 +184,8 @@ export interface OrderSheet {
   readonly deliverAt: string;
   readonly deliverTo: string;
   readonly notes: string;
+  /** 業者ごとの確認欄（花の色指定、タクシーの経路など） */
+  readonly extras: readonly { readonly label: string; readonly value: string }[];
   readonly utteranceIds: readonly string[];
   /** 「要確認」のまま残っている欄の数。0 でなければ、担当者が埋めてから送る */
   readonly blanks: number;
@@ -128,7 +199,7 @@ export function isSendable(sheet: OrderSheet): boolean {
 const BLANK = /要確認/;
 
 function countBlanks(o: PaperworkDraft["orders"][number]): number {
-  return [o.deliverAt, o.deliverTo, ...o.items.map((i) => i.quantity)].filter((v) => !v.trim() || BLANK.test(v)).length;
+  return [o.deliverAt, o.deliverTo, ...o.items.map((i) => i.quantity), ...o.extras.map((e) => e.value)].filter((v) => !v.trim() || BLANK.test(v)).length;
 }
 
 export interface Paperwork {
@@ -141,13 +212,20 @@ export interface Paperwork {
   readonly todos: readonly (PaperworkDraft["todos"][number] & { readonly source: "ai" | "board" | "template" })[];
   readonly sheets: readonly OrderSheet[];
   readonly askFamily: readonly string[];
+  readonly schedule: PaperworkDraft["schedule"];
+  readonly venue: string;
+  readonly restingPlace: string;
+  readonly deceased: PaperworkDraft["deceased"];
+  /** 受注書（この施行で手配するもの・決まったものの一覧） */
+  readonly ledger: readonly LedgerRow[];
 }
 
 export const PAPERWORK_SYSTEM = `あなたは葬儀社のベテラン担当者です。打合せが終わったあとの実務を、経験の浅い担当者のために片付けます。
 会話の書き起こしと、決めることボードの状態（確定・候補・未定）を読み、次の3つを作ります。
 1. 打合せのまとめ
 2. 担当者の TODO（今日・明日にすること）
-3. 発注書の下書き（発注の種類は与えた一覧の中から、この打合せで必要なものだけ。寺院・火葬場・安置室・受付・駐車場の手配は、電話や予約で済むので担当者の TODO として扱われる）
+3. 受注書（この施行で手配するもの・決まったものの一覧。プランに含まれ社内で用意する一式も含めて1行ずつ。葬儀の日程・式場・安置先も）
+4. 発注書の下書き（発注の種類は与えた一覧の中から、この打合せで必要なものだけ。寺院・火葬場・市役所などの手配は、電話や予約で済むので担当者の TODO として扱われる）
 
 守ること：
 - 書いてよいのは、会話にあることと決定の値だけ。数・日時・場所がわからないときは「要確認」と書き、推測で埋めない
@@ -176,6 +254,11 @@ export function checkPaperwork(draft: PaperworkDraft): GuardViolation[] {
     ...draft.todos.map((t) => `${t.task} ${t.when}`),
     ...draft.orders.flatMap((o) => [o.notes, o.deliverAt, o.deliverTo, ...o.items.map((i) => `${i.name} ${i.quantity} ${i.note}`)]),
     ...draft.askFamily,
+    ...Object.values(draft.schedule),
+    draft.venue,
+    draft.restingPlace,
+    ...draft.ledger.map((r) => `${r.name} ${r.quantity} ${r.note}`),
+    ...draft.orders.flatMap((o) => o.extras.map((e) => `${e.label} ${e.value}`)),
   ];
   // 数量（30個・25名分）は書いてよいので、割合・件数の規則は外し、金額だけを別に見る
   const violations = texts.flatMap((t) => checkText(t)).filter((v) => v.rule !== "numbers_in_text");
@@ -204,6 +287,7 @@ export function assemblePaperwork(state: CaseState, draft: PaperworkDraft, now =
         deliverTo: o.deliverTo,
         notes: o.notes,
         utteranceIds: o.utteranceIds.filter((id) => known.has(id)),
+        extras: o.extras,
         blanks: countBlanks(o),
       },
     ];
@@ -243,7 +327,37 @@ export function assemblePaperwork(state: CaseState, draft: PaperworkDraft, now =
     todos: sortTodos([...aiTodos, ...board, ...templateTodos]),
     sheets: [...sheets].sort((a, b) => Number(!isSendable(a)) - Number(!isSendable(b)) || Number(a.status !== "ready") - Number(b.status !== "ready")),
     askFamily: draft.askFamily,
+    schedule: draft.schedule,
+    venue: draft.venue,
+    restingPlace: draft.restingPlace,
+    deceased: draft.deceased,
+    ledger: withStandardRows(
+      draft.ledger.map((r) => {
+        const orderId = r.orderId === "none" ? null : r.orderId;
+        const row = orderId ? status.get(orderId) : undefined;
+        return {
+          category: r.category,
+          name: r.name,
+          quantity: r.quantity,
+          note: r.note,
+          orderId,
+          vendor: orderId ? (VENDOR_OF[orderId] ?? IN_HOUSE) : IN_HOUSE,
+          status: row ? row.status : null,
+        };
+      }),
+    ),
   };
+}
+
+/** 定番の一式を、AI の行に同じ品目がなければ足し、受注書の区分の順に並べる */
+export function withStandardRows(rows: readonly LedgerRow[]): LedgerRow[] {
+  const missing = STANDARD_ROWS.filter((std) => !rows.some((r) => r.name.includes(std.key))).map(
+    (std): LedgerRow => ({ category: std.category, name: std.name, quantity: "一式", note: "", orderId: null, vendor: IN_HOUSE, status: null }),
+  );
+  return [...rows, ...missing]
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => LEDGER_CATEGORIES.indexOf(a.r.category) - LEDGER_CATEGORIES.indexOf(b.r.category) || a.i - b.i)
+    .map(({ r }) => r);
 }
 
 export function decisionLabel(id: string): string {

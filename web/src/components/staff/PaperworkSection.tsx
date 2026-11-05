@@ -121,6 +121,9 @@ export function PaperworkSection({ state }: { readonly state: CaseState }) {
           <h3>
             発注書<span>{paperwork.sheets.length}</span>
           </h3>
+          <a className={`${s.btn} ${s.btnPrimary}`} href={`/staff/${encodeURIComponent(state.caseId)}/juchu`} target="_blank" rel="noopener">
+            受注書を開く（{paperwork.ledger.length} 品目・チェック表）
+          </a>{" "}
           <a className={`${s.btn} ${s.btnPrimary}`} href={sheetsUrl} target="_blank" rel="noopener">
             すべての発注書を開く（印刷・PDF・FAX）
           </a>

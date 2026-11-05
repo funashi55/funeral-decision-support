@@ -2,7 +2,8 @@
 import type { Paperwork } from "../engine/paperwork";
 import { getKv, type Kv } from "./kv";
 
-const key = (caseId: string): string => `v1:paperwork:${caseId}`;
+/** 形を変えたら版を上げる（受注書・日程・確認欄を足したので v2） */
+const key = (caseId: string): string => `v2:paperwork:${caseId}`;
 
 export function createPaperworkStore(kv: Kv) {
   return {

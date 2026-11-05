@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { CaseState } from "./case";
 import { DEMO_CASE } from "./fixtures/demoCase";
 import { ORDERS } from "./orders";
-import { VENDOR_OF, assemblePaperwork, checkPaperwork, draftPaperwork, isSendable, paperworkPrompt, TODO_STAGES, type PaperworkDraft } from "./paperwork";
+import { IN_HOUSE, LEDGER_CATEGORIES, VENDOR_OF, assemblePaperwork, checkPaperwork, draftPaperwork, isSendable, paperworkPrompt, TODO_STAGES, type PaperworkDraft } from "./paperwork";
 
 const STATE: CaseState = {
   ...DEMO_CASE,
@@ -17,9 +17,18 @@ const DRAFT: PaperworkDraft = {
   summary: "入院が長かったお母さまを、身内だけで送りたいご家族です。",
   todos: [{ task: "菩提寺に日程を確認する", stage: "手配", when: "今日中", decisionIds: ["temple"], utteranceIds: ["U3", "U99"] }],
   orders: [
-    { orderId: "flowers", items: [{ name: "祭壇の生花", quantity: "一式", note: "白と淡い紫" }], deliverAt: "要確認", deliverTo: "会館", notes: "", utteranceIds: ["U2"] },
-    { orderId: "meals", items: [{ name: "通夜ぶるまい", quantity: "15名分", note: "" }], deliverAt: "要確認", deliverTo: "要確認", notes: "", utteranceIds: [] },
-    { orderId: "flowers", items: [{ name: "重複", quantity: "1", note: "" }], deliverAt: "", deliverTo: "", notes: "", utteranceIds: [] },
+    { orderId: "flowers", items: [{ name: "祭壇の生花", quantity: "一式", note: "白と淡い紫" }], deliverAt: "要確認", deliverTo: "会館", notes: "", extras: [], utteranceIds: ["U2"] },
+    { orderId: "meals", items: [{ name: "通夜ぶるまい", quantity: "15名分", note: "" }], deliverAt: "要確認", deliverTo: "要確認", notes: "", extras: [], utteranceIds: [] },
+    { orderId: "flowers", items: [{ name: "重複", quantity: "1", note: "" }], deliverAt: "", deliverTo: "", notes: "", extras: [], utteranceIds: [] },
+  ],
+  schedule: { death: "11月4日 夜", layingIn: "要確認", departure: "要確認", cremation: "要確認", wake: "要確認", funeral: "要確認", burial: "要確認", meal: "要確認" },
+  venue: "要確認",
+  restingPlace: "会館",
+  deceased: { age: "84歳", sex: "女性" },
+  ledger: [
+    { category: "枕飾り", name: "枕飾り一式", quantity: "一式", orderId: "none", note: "" },
+    { category: "祭壇・生花", name: "祭壇の生花", quantity: "一式", orderId: "flowers", note: "白と淡い紫" },
+    { category: "返礼品・礼状", name: "香典返し（持ち帰りの品）", quantity: "30個（要確認）", orderId: "return_gifts", note: "" },
   ],
   askFamily: ["通夜ぶるまいの人数"],
 };
@@ -62,10 +71,41 @@ describe("打合せの後の実務", () => {
     expect(pw.todos.at(-1)).toMatchObject({ stage: "施行後", source: "template" });
   });
 
+  test("受注書：社内で用意する一式は自社、外に頼むものは業者の種類と発注の状態を付ける", () => {
+    const pw = assemblePaperwork(STATE, DRAFT, 1);
+    const row = (name: string) => pw.ledger.find((r) => r.name === name);
+    expect(row("枕飾り一式")).toMatchObject({ vendor: IN_HOUSE, status: null });
+    expect(row("祭壇の生花")).toMatchObject({ vendor: "生花店", status: "ready" });
+    expect(row("香典返し（持ち帰りの品）")).toMatchObject({ vendor: "返礼品店", status: "waiting" });
+    expect(pw.schedule.death).toBe("11月4日 夜");
+    expect(pw.deceased).toEqual({ age: "84歳", sex: "女性" });
+  });
+
+  test("受注書には、プランに含まれる定番の一式を必ず載せ、AI と重ねず、区分の順に並べる", () => {
+    const pw = assemblePaperwork(STATE, DRAFT, 1);
+    const names = pw.ledger.map((r) => r.name);
+    for (const n of ["お迎え", "寝棺一式", "骨箱一式", "遺影写真（額）", "位牌", "霊柩車"]) expect(names).toContain(n);
+    expect(names.filter((n) => n.includes("枕飾り"))).toEqual(["枕飾り一式"]);
+    const cats = pw.ledger.map((r) => LEDGER_CATEGORIES.indexOf(r.category));
+    expect(cats).toEqual([...cats].sort((a, b) => a - b));
+  });
+
+  test("業者ごとの確認欄の「要確認」も、埋めるべき欄として数える", () => {
+    const withExtras = { ...DRAFT, orders: [{ ...DRAFT.orders[0]!, deliverAt: "11月8日 9時", extras: [{ label: "色指定", value: "白グリーン" }, { label: "献花の本数", value: "要確認" }] }] };
+    const flowers = assemblePaperwork(STATE, withExtras, 1).sheets[0]!;
+    expect(flowers.extras).toHaveLength(2);
+    expect(flowers.blanks).toBe(1);
+  });
+
+  test("受注書の品目に金額を書いたら止める", () => {
+    const priced = { ...DRAFT, ledger: [{ ...DRAFT.ledger[0]!, note: "20,000円" }] };
+    expect(checkPaperwork(priced).map((v) => v.rule)).toContain("numbers_in_text");
+  });
+
   test("寺院・火葬場などの電話や予約で済む手配は、発注書にせず TODO に回す", () => {
     const withTemple = {
       ...DRAFT,
-      orders: [...DRAFT.orders, { orderId: "temple_contact", items: [{ name: "ご逝去の連絡と日程の相談", quantity: "1件", note: "" }], deliverAt: "今日中", deliverTo: "", notes: "市外の菩提寺", utteranceIds: ["U5"] }],
+      orders: [...DRAFT.orders, { orderId: "temple_contact", items: [{ name: "ご逝去の連絡と日程の相談", quantity: "1件", note: "" }], deliverAt: "今日中", deliverTo: "", notes: "市外の菩提寺", extras: [], utteranceIds: ["U5"] }],
     };
     const pw = assemblePaperwork(STATE, withTemple, 1);
     expect(pw.sheets.some((x) => x.orderId === "temple_contact")).toBe(false);
