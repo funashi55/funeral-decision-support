@@ -1,0 +1,3 @@
+# Vercel に送らないもの（秘密の値）
+.env*
+!.env.example

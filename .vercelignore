@@ -1,0 +1,7 @@
+# Vercel に送らないもの（2026-11-05 に、リポジトリの根から誤ってデプロイされ docs/private が公開されたため）
+# このリポジトリの根はデプロイしない。デプロイは web/ から、プロジェクトを固定して行う
+docs/private
+**/.env*
+!**/.env.example
+.claude
+scripts
