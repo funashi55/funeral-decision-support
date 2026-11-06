@@ -29,7 +29,7 @@ describe("3つの幅での案", () => {
     const [simple, standard] = buildPlanProposals(DEMO_CASE);
     const iceOf = (p: typeof simple) => p!.estimate.lines.find((l) => l.label === getCatalogItem("dry_ice").label)?.quantity;
     expect(iceOf(simple)).toBe(4);
-    expect(iceOf(standard)).toBe(3);
+    expect(iceOf(standard)).toBe(4);
   });
 
   test("自宅で安置するなら、安置料を足さない", () => {
@@ -39,7 +39,7 @@ describe("3つの幅での案", () => {
 
   test("湯灌を選んだら足し、含まれないものから湯灌が消える", () => {
     const [simple] = buildPlanProposals(decided({ laying_in_style: "湯灌を行う" }));
-    expect(simple!.estimate.lines.some((l) => l.unitPrice === 88_000)).toBe(true);
+    expect(simple!.estimate.lines.some((l) => l.unitPrice === getCatalogItem("yukan").unitPrice)).toBe(true);
     expect(simple!.estimate.notIncluded).not.toContain("湯灌");
   });
 
@@ -64,7 +64,17 @@ describe("3つの幅での案", () => {
 
   test("火葬式なら会場使用料を足さない", () => {
     const [simple] = buildPlanProposals(decided({}, { funeralStyle: "火葬式", daysUntilFuneral: 2 }));
-    expect(simple!.estimate.lines.map((l) => l.label)).toEqual([getPlan("altar_simple").label]);
+    expect(simple!.estimate.lines).toHaveLength(1);
+    expect(simple!.estimate.lines[0]?.label).toContain(getPlan("altar_simple").label);
+  });
+
+  test("会員でないと決まったら一般価格で見積もり、決まっていなければ会員価格で見積もる", () => {
+    const [member] = buildPlanProposals(DEMO_CASE);
+    const [general] = buildPlanProposals(decided({ membership: "一般（会員ではない）" }));
+    expect(member!.estimate.tier).toBe("member");
+    expect(general!.estimate.tier).toBe("general");
+    expect(general!.estimate.lines[0]?.unitPrice).toBe(getPlan("altar_simple").generalPrice);
+    expect(general!.estimate.total).toBeGreaterThan(member!.estimate.total);
   });
 
   test("人数を読む", () => {

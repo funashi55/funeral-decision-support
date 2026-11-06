@@ -28,7 +28,7 @@ export const FAREWELL_DECISION: Readonly<Record<FarewellOptionId, string>> = {
 };
 
 /** プランの提案に触れたとみなす言葉 */
-export const PLAN_CUES: readonly RegExp[] = [/プラン/, /祭壇/, /こもれび|せせらぎ|ひだまり/];
+export const PLAN_CUES: readonly RegExp[] = [/プラン/, /祭壇/];
 
 /** 文から短い識別子を作る（尋ねることなど、ID のない提案のため） */
 export function textKey(text: string): string {

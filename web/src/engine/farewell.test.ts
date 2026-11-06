@@ -34,7 +34,7 @@ describe("お別れの仕方の推奨", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const yukan = result.recommendation.options.find((o) => o.id === "yukan");
-    expect(yukan?.price?.amount).toBe(88_000);
+    expect(yukan?.price?.amount).toBe(65_000);
     expect(result.recommendation.options.find((o) => o.id === "standard_laying")?.price).toBeNull();
     expect(result.recommendation.references[1]).toMatchObject({ cohort: "葬儀まで6日以上の家族", percent: 22.2 });
     expect(result.recommendation.options[0].fit).toBe("suits");

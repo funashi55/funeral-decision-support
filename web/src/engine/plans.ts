@@ -3,7 +3,7 @@
  * 価格の上下ではなく、家族の気持ちの幅として並べる。並びは費用を抑える案が先。
  * 金額はすべて pricing.ts で計算する。人数が決まっていない品目は金額に入れず、「人数が決まってから」と示す。
  */
-import { ALTAR_PLANS, RANGE_LABEL, buildEstimate, type AltarPlan, type Estimate, type EstimateOption, type Range } from "../domain/pricing";
+import { ALTAR_PLANS, RANGE_LABEL, buildEstimate, type AltarPlan, type Estimate, type EstimateOption, type PriceTier, type Range } from "../domain/pricing";
 import type { CaseState } from "./case";
 
 export interface PlanProposal {
@@ -71,13 +71,18 @@ function additionsFor(state: CaseState, plan: AltarPlan): { additions: Addition[
   return { additions, pending };
 }
 
+/** 会員か一般か。「一般」「会員ではない」と決まったときだけ一般価格にし、それ以外は会員価格で見積もる */
+export function priceTier(state: CaseState): PriceTier {
+  return chose(state, "membership", /一般|員外|会員(?:では|じゃ)ない|入って(?:い)?ない|積立(?:は)?(?:ない|なし)/) ? "general" : "member";
+}
+
 /** 3つの幅の案を、費用を抑える案から順に返す */
 export function buildPlanProposals(state: CaseState): PlanProposal[] {
   return RANGES.map((range) => {
     const plan = ALTAR_PLANS.find((p) => p.range === range);
     if (!plan) throw new Error(`幅 ${range} のプランがありません`);
     const { additions, pending } = additionsFor(state, plan);
-    const estimate = buildEstimate(plan.id, additions.map((a) => a.option));
+    const estimate = buildEstimate(plan.id, additions.map((a) => a.option), priceTier(state));
     return {
       range,
       rangeLabel: RANGE_LABEL[range],

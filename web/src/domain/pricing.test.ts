@@ -14,7 +14,7 @@ describe("プラン", () => {
 describe("見積もり", () => {
   test("プランだけなら、プランの金額がそのまま合計になる", () => {
     const e = buildEstimate("altar_simple", []);
-    expect(e.total).toBe(330_000);
+    expect(e.total).toBe(411_500);
     expect(e.lines).toHaveLength(1);
   });
 
@@ -23,7 +23,7 @@ describe("見積もり", () => {
       { itemId: "yukan", quantity: 1 },
       { itemId: "resting_fee", quantity: 2 },
     ]);
-    expect(e.total).toBe(520_000 + 88_000 + 16_500 * 2);
+    expect(e.total).toBe(636_500 + 65_000 + 33_000 * 2);
   });
 
   test("足した品目は「含まれないもの」から消え、足していないものは残る", () => {
@@ -41,13 +41,17 @@ describe("見積もり", () => {
 
   test("香典返しは返品できる品目として明細に出る", () => {
     const e = buildEstimate("altar_simple", [{ itemId: "return_gift", quantity: 50 }]);
-    expect(e.lines[1]).toMatchObject({ returnable: true, amount: 165_000 });
+    expect(e.lines[1]).toMatchObject({ returnable: true, amount: 100_000 });
   });
 
   test("不正な数量や未定義の品目はエラーになる", () => {
     expect(() => buildEstimate("altar_simple", [{ itemId: "yukan", quantity: -1 }])).toThrow("数量が不正です");
     expect(() => buildEstimate("altar_simple", [{ itemId: "unknown", quantity: 1 }])).toThrow("未定義の品目です");
     expect(() => buildEstimate("unknown", [])).toThrow("未定義のプランです");
+  });
+
+  test("一般価格では、プランの一式が一般の価格になる", () => {
+    expect(buildEstimate("altar_simple", [], "general").total).toBe(472_000);
   });
 
   test("円表記", () => {
