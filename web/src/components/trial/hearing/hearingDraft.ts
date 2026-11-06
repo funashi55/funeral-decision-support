@@ -1,6 +1,6 @@
 "use client";
 /**
- * 聞き取りの途中経過をこの端末に残す（閉じても続きから再開できる）。サーバーには場面ごとの最後に送るだけ。
+ * 打合せのロールプレイの途中経過をこの端末に残す（閉じても続きから再開できる）。サーバーにはご家族ごとの最後に送るだけ。
  */
 import { useState, useSyncExternalStore } from "react";
 import type { FarewellOptionId } from "../../../domain/farewell";
@@ -8,7 +8,7 @@ import type { ExtractedJudgment, HearingTurn } from "../../../engine/hearing";
 
 export type InputMode = "voice" | "chat";
 export type Experience = "under1" | "1to3" | "3to10" | "over10";
-export type Stage = "card" | "roleplay" | "debrief" | "fits" | "confirm" | "sent";
+export type Stage = "card" | "roleplay" | "fits" | "confirm" | "sent";
 export type FitAnswer = "suits" | "consider" | "not_now" | "unknown";
 export type Verdict = "agree" | "disagree" | "unsure";
 
@@ -32,7 +32,7 @@ export interface HearingDraft {
 
 export const EMPTY_SCENE: SceneProgress = { stage: "card", turns: [], revealed: [], fits: {}, judgments: [], firstWords: "", verdicts: {}, notes: {} };
 const EMPTY: HearingDraft = { respondent: "", experience: "", mode: "chat", scenes: {} };
-const KEY = "veteran-hearing-v2";
+const KEY = "veteran-hearing-v3";
 
 let cachedRaw: string | null = null;
 let cachedDraft: HearingDraft | null = null;

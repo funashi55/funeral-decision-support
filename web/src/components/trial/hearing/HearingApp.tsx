@@ -9,7 +9,6 @@ import h from "./hearing.module.css";
 const STAGE_LABEL: Record<Stage, string> = {
   card: "まだ",
   roleplay: "打合せの途中",
-  debrief: "ふりかえりの途中",
   fits: "見立ての途中",
   confirm: "確認の途中",
   sent: "✓ 送りました",
@@ -46,7 +45,7 @@ export function HearingApp() {
         </div>
         <span className={`${h.topNote} ${h.topExplain}`}>途中で切り替えられます。声のときは、ご家族の言葉も読み上げます</span>
         <span className={h.topNote} style={{ marginLeft: "auto" }}>
-          送った場面 <b>{sent}</b> / {HEARING_SCENES.length}
+          送ったご家族 <b>{sent}</b> / {HEARING_SCENES.length}
         </span>
       </div>
 
@@ -81,7 +80,7 @@ export function HearingApp() {
               );
             })}
           </ul>
-          {!ready && <p className={h.topNote}>お名前と経験を入れると、場面を選べます。</p>}
+          {!ready && <p className={h.topNote}>お名前と経験を入れると、ご家族を選べます。</p>}
         </>
       )}
 

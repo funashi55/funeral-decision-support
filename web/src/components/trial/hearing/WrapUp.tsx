@@ -38,10 +38,10 @@ export function WrapUp({ progress, busy, error, onChange, onExtract, onSubmit, o
     return (
       <div className={s.card}>
         <p className={s.done} role="status">
-          この場面の答えを受け取りました。ありがとうございます。
+          この打合せの記録を受け取りました。ありがとうございます。
         </p>
         <button type="button" className={s.button} onClick={onBack}>
-          場面の一覧へ
+          ご家族の一覧へ
         </button>
       </div>
     );
@@ -50,8 +50,9 @@ export function WrapUp({ progress, busy, error, onChange, onExtract, onSubmit, o
   if (stage === "fits") {
     return (
       <div className={s.card}>
-        <p className={h.stageTitle}>この家族に、4つのお別れの仕方はどうですか</p>
-        <p className={h.stageLead}>いまの打合せのご家族について、直感で選んでください。迷うものは「わからない」で構いません。</p>
+        <p className={h.stageTitle}>おつかれさまでした。最後に2つだけ伺います</p>
+        <p className={h.stageLead}>1. いまのご家族に、4つのお別れの仕方はどうですか。</p>
+        <p className={h.stageLead}>直感で選んでください。迷うものは「わからない」で構いません。</p>
         {FAREWELL_OPTIONS.map((option) => (
           <div key={option.id} className={s.option}>
             <p className={s.optionLabel}>{option.label}</p>
@@ -77,7 +78,7 @@ export function WrapUp({ progress, busy, error, onChange, onExtract, onSubmit, o
           </p>
         )}
         <button type="button" className={s.button} style={{ marginTop: "1.25rem" }} onClick={onExtract} disabled={busy}>
-          {busy ? "あなたの判断をまとめています…（30秒ほど）" : "次へ：あなたの判断のまとめを確かめる"}
+          {busy ? "打合せの記録をまとめています…（30秒ほど）" : "次へ：打合せのまとめを確かめる"}
         </button>
       </div>
     );
@@ -85,9 +86,9 @@ export function WrapUp({ progress, busy, error, onChange, onExtract, onSubmit, o
 
   return (
     <div>
-      <p className={h.stageTitle}>あなたの判断として、合っていますか</p>
+      <p className={h.stageTitle}>2. あなたの打合せのまとめとして、合っていますか</p>
       <p className={h.stageLead}>
-        打合せとふりかえりから、Claude が「こういうときは、こうする」を取り出しました。あなたの言葉をそのまま引いています。違うものは「違う」を押してください。合っているものだけを使います。
+        打合せの記録から、Claude が「こういうときは、こうする」を取り出しました。あなたの言葉をそのまま引いています。違うものは「違う」を押してください。合っているものだけを使います。
       </p>
       {progress.judgments.length === 0 && <p className={s.notice}>取り出せる判断がありませんでした。このまま送っていただいても、打合せの記録として使います。</p>}
       {progress.judgments.map((j, i) => (
@@ -133,7 +134,7 @@ export function WrapUp({ progress, busy, error, onChange, onExtract, onSubmit, o
         </article>
       ))}
       <label className={`${s.field} ${s.card}`}>
-        この場面について、ほかに伝えたいこと（任意）
+        この打合せについて、ほかに伝えたいこと（任意）
         <textarea className={s.textarea} maxLength={2000} value={comment} onChange={(e) => setComment(e.target.value)} />
       </label>
       {error && (
@@ -142,7 +143,7 @@ export function WrapUp({ progress, busy, error, onChange, onExtract, onSubmit, o
         </p>
       )}
       <button type="button" className={s.button} onClick={() => onSubmit(comment)} disabled={busy}>
-        {busy ? "送っています…" : "この場面の答えを送る"}
+        {busy ? "送っています…" : "打合せの記録を送る"}
       </button>
     </div>
   );

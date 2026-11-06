@@ -89,8 +89,13 @@
 .family { background: var(--surface); border: 1px solid var(--line); justify-self: start; border-bottom-left-radius: 4px; }
 .veteran { background: var(--accent); color: #fff; justify-self: end; border-bottom-right-radius: 4px; }
 .veteran small { color: rgba(255, 255, 255, 0.7); }
-.interviewer { background: color-mix(in oklab, var(--care) 10%, var(--surface)); border-left: 3px solid var(--care); justify-self: start; }
-.typing { color: var(--ink-3); font-size: 0.95rem; }
+.typing { color: var(--ink-3); font-size: 1.1rem; letter-spacing: 0.2em; justify-self: start; padding-left: 0.5rem; }
+
+/* 打合せ室：同席している方と、始まりのト書き */
+.room { margin: 1rem 0 0.4rem; font-size: 1.05rem; font-weight: 700; }
+.present { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1rem; }
+.person { padding: 0.3rem 0.85rem; border-radius: 999px; background: var(--surface-3); color: var(--ink-2); font-size: 0.9rem; font-weight: 700; }
+.direction { justify-self: center; color: var(--ink-3); font-size: 0.95rem; padding: 0.5rem 0; }
 
 .composer {
   position: sticky;

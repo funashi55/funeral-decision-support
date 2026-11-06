@@ -11,13 +11,10 @@ import type { GuardRule, GuardViolation } from "./guard";
 import {
   ExtractionSchema,
   FamilyReplySchema,
-  InterviewerReplySchema,
   type ExtractModel,
   type Extraction,
   type FamilyModel,
   type FamilyReply,
-  type InterviewerModel,
-  type InterviewerReply,
 } from "./hearing";
 import { PaperworkDraftSchema, type PaperworkDraft } from "./paperwork";
 import { QuickFitSchema, type QuickFitDraft } from "./quickFit";
@@ -116,7 +113,7 @@ export async function generatePaperwork(system: string, prompt: string): Promise
   return unwrap(response as ParsedResponse<PaperworkDraft>);
 }
 
-/** ベテランへの聞き取り：家族役。会話のテンポを優先して考える量は少なめ */
+/** 遺族との打合せのロールプレイ：ご遺族役。会話のテンポを優先して考える量は少なめ */
 export const hearingFamilyModel: FamilyModel = async (system, messages) => {
   const response = await getClient().messages.parse({
     model: MODEL_REASONING,
@@ -128,19 +125,7 @@ export const hearingFamilyModel: FamilyModel = async (system, messages) => {
   return unwrap(response as ParsedResponse<FamilyReply>);
 };
 
-/** ベテランへの聞き取り：ふりかえりの聞き手 */
-export const hearingInterviewerModel: InterviewerModel = async (system, prompt) => {
-  const response = await getClient().messages.parse({
-    model: MODEL_REASONING,
-    max_tokens: 1500,
-    system,
-    output_config: { effort: "low", format: zodOutputFormat(InterviewerReplySchema) },
-    messages: [{ role: "user", content: prompt }],
-  });
-  return unwrap(response as ParsedResponse<InterviewerReply>);
-};
-
-/** ベテランへの聞き取り：判断の取り出し。終わりに1回だけ呼ぶので考える量はふつう */
+/** 遺族との打合せのロールプレイ：判断の取り出し。終わりに1回だけ呼ぶので考える量はふつう */
 export const hearingExtractModel: ExtractModel = async (system, prompt) => {
   const response = await getClient().messages.parse({
     model: MODEL_REASONING,

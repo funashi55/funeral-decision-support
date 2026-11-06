@@ -1,7 +1,10 @@
 /* 担当者の画面の左の帯と同じ色・同じ選択の印で、ほかの画面の上に置く */
+/* 本文の高さ指定に左右されないよう、上に固定する。下に同じ高さの余白を置く */
 .bar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   display: flex;
   align-items: center;
@@ -29,3 +32,4 @@
 .item[aria-current="page"]::after { content: ""; position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent-2); }
 .item:focus-visible, .brand:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 @media (max-width: 480px) { .brand { display: none; } }
+.spacer { height: 52px; }

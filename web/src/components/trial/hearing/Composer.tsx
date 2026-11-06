@@ -81,7 +81,7 @@ export function Composer({ mode, busy, placeholder, onSend, children }: Composer
   );
 }
 
-/** 声のときは家族や聞き手の言葉を読み上げる（ブラウザの読み上げ。音声は保存しない） */
+/** 声のときはご家族の言葉を読み上げる（ブラウザの読み上げ。音声は保存しない） */
 export function speak(text: string): void {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   const u = new SpeechSynthesisUtterance(text);

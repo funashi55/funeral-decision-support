@@ -33,18 +33,10 @@ export interface HearingScene {
   readonly basis: string;
   readonly card: readonly string[];
   readonly family: readonly HearingFamilyMember[];
-  /** 家族の最初の発言（担当者のお悔やみのあと） */
+  /** 打合せの始まりのご家族の様子（ご遺族役への手がかり。画面には先に出さない） */
   readonly opening: readonly { readonly speaker: string; readonly text: string }[];
   readonly hidden: readonly HiddenFact[];
 }
-
-/** ふりかえりで聞くこと。ペルソナごとに変えず、同じ問いで比べる */
-export const DEBRIEF_FOCUS: readonly string[] = [
-  "最初に何を確かめ、なぜその順にしたか",
-  "ご家族の様子から何に気づき、何を変えたか",
-  "迷ったところと、何がわかっていれば決めやすかったか",
-  "新人ならこの打合せで何をしがちか",
-];
 
 export const HEARING_SCENES: readonly HearingScene[] = [
   {
