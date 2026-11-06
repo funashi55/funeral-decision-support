@@ -3,7 +3,9 @@
  * 保存先は kv.ts（本番は Upstash Redis）。取り出しは scripts/trial-pull.ts で docs/private/ に書き出す。
  */
 import { z } from "zod";
+import { HEARING_SCENES } from "../data/hearingScenes";
 import { FITS, SCENES } from "../data/judgmentScenes";
+import { ExtractedJudgmentSchema, HearingTurnsSchema, TURN_TEXT_MAX } from "../engine/hearing";
 import { FAREWELL_OPTIONS } from "../domain/farewell";
 import { getKv, type Kv } from "./kv";
 
@@ -57,4 +59,39 @@ export async function listVeteranSubmissions(kv: Kv = getKv()): Promise<VeteranS
 
 export async function listNotes(kv: Kv = getKv()): Promise<TrialNote[]> {
   return kv.list<TrialNote>(NOTES_KEY);
+}
+
+// ---- ロールプレイの聞き取り（/veteran/hearing） ----
+
+export const HEARINGS_KEY = "trial:veteran-hearings";
+
+const hearingSceneIds = HEARING_SCENES.map((s) => s.id) as [string, ...string[]];
+
+export const HearingSubmissionSchema = z.object({
+  respondent: z.string().trim().min(1).max(NAME_MAX),
+  /** 葬祭の仕事の経験年数（自己申告）。経験の違う担当者どうしで比べるために使う */
+  experience: z.enum(["under1", "1to3", "3to10", "over10"]),
+  sceneId: z.enum(hearingSceneIds),
+  mode: z.enum(["voice", "chat"]),
+  turns: HearingTurnsSchema,
+  /** 家族が話した隠れた事情の ID（話した順） */
+  revealed: z.array(z.string().max(40)).max(20),
+  fits: z.partialRecord(z.enum(optionIds), z.enum(["suits", "consider", "not_now", "unknown"])),
+  judgments: z
+    .array(ExtractedJudgmentSchema.extend({ verdict: z.enum(["agree", "disagree", "unsure"]), note: z.string().max(REASON_MAX).default("") }))
+    .max(12),
+  firstWords: z.string().max(TURN_TEXT_MAX).default(""),
+  comment: z.string().max(NOTE_MAX).default(""),
+});
+
+export type HearingSubmission = z.infer<typeof HearingSubmissionSchema> & { readonly at: number };
+
+export async function saveHearing(input: unknown, kv: Kv = getKv(), now = Date.now()): Promise<HearingSubmission> {
+  const submission: HearingSubmission = { ...HearingSubmissionSchema.parse(input), at: now };
+  await kv.push(HEARINGS_KEY, submission);
+  return submission;
+}
+
+export async function listHearings(kv: Kv = getKv()): Promise<HearingSubmission[]> {
+  return kv.list<HearingSubmission>(HEARINGS_KEY);
 }

@@ -18,6 +18,9 @@ export default function VeteranPage() {
         <p className={s.notice}>
           場面の家族と会話はすべて架空です。理由の欄に、実在のご家族や会社がわかる名前・事情は書かないでください。
         </p>
+        <p className={s.lead}>
+          <a href="/veteran/hearing">設問に答える代わりに、架空のご家族と打合せのロールプレイをして答えることもできます（チャットか声で、1場面8分ほど）→</a>
+        </p>
         <VeteranForm />
       </div>
     </main>

@@ -3,7 +3,7 @@ import { accessDigest, isOpenPath, safeNext } from "./access";
 import { spendAiCall } from "./budget";
 import { createTestKv } from "./kv";
 import { createCaseStore, TRIAL_PREFIX } from "./store";
-import { listNotes, listVeteranSubmissions, saveNote, saveVeteranSubmission } from "./trialFeedback";
+import { listHearings, listNotes, listVeteranSubmissions, saveHearing, saveNote, saveVeteranSubmission } from "./trialFeedback";
 
 const req = (ip = "203.0.113.5"): Request => new Request("https://example.test/api", { headers: { "x-forwarded-for": ip } });
 
@@ -127,5 +127,38 @@ describe("ベテランの答えと感想", () => {
     await expect(saveNote({ page: "/staff/x", text: "  " }, kv)).rejects.toThrow();
     await saveNote({ page: "/staff/x", text: "ここは現場ではこう言う" }, kv, 5);
     expect(await listNotes(kv)).toEqual([{ name: "", page: "/staff/x", text: "ここは現場ではこう言う", at: 5 }]);
+  });
+});
+
+describe("ロールプレイの聞き取り", () => {
+  const base = {
+    respondent: "ベテランA",
+    experience: "over10",
+    sceneId: "P1",
+    mode: "voice",
+    turns: [
+      { role: "veteran", speaker: "担当者", text: "お孫さんとのご関係を伺えますか" },
+      { role: "family", speaker: "長女", text: "おばあちゃん子でした" },
+    ],
+    revealed: ["P1-people"],
+    fits: { yukan: "unknown", standard_laying: "suits" },
+    judgments: [{ when: "孫が遠方", do: "日程より先に関係を聞く", why: "", quote: "お孫さんとのご関係を伺えますか", verdict: "agree" }],
+  };
+
+  test("1場面分を保存して取り出せる。わからないも答えとして残る", async () => {
+    const kv = createTestKv();
+    await saveHearing(base, kv, 5);
+    const [saved] = await listHearings(kv);
+    expect(saved?.at).toBe(5);
+    expect(saved?.fits.yukan).toBe("unknown");
+    expect(saved?.judgments[0]?.note).toBe("");
+  });
+
+  test("ない場面・ない入力の方法・長すぎる発言は受け付けない", async () => {
+    const kv = createTestKv();
+    await expect(saveHearing({ ...base, sceneId: "P99" }, kv)).rejects.toThrow();
+    await expect(saveHearing({ ...base, mode: "video" }, kv)).rejects.toThrow();
+    await expect(saveHearing({ ...base, experience: "veteran" }, kv)).rejects.toThrow();
+    await expect(saveHearing({ ...base, turns: [{ role: "veteran", speaker: "担当者", text: "あ".repeat(900) }] }, kv)).rejects.toThrow();
   });
 });
