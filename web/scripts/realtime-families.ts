@@ -26,7 +26,7 @@ const wife = chief("喪主（妻）");
 const sister = family("故人の妹");
 
 export const REALTIME_FAMILIES: readonly RealtimeFamily[] = [
-  { id: "F1", title: "デモの家族（入院が長く、孫が遠方、費用を抑えたい）", lines: DEMO_SCRIPT, checkpoints: [11, 16], expect: "孫の到着に合わせた日程、湯灌は勧めず尋ねる、費用のかからない選択肢" },
+  { id: "F1", title: "デモの家族（入院が長く、孫が遠方、費用を抑えたい）", lines: DEMO_SCRIPT, checkpoints: [13, 18], expect: "孫の到着に合わせた日程、湯灌は勧めず尋ねる、費用のかからない選択肢" },
   {
     id: "F2",
     title: "高齢の夫が喪主、耳が遠い、日程が短い",
