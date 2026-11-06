@@ -2,7 +2,7 @@
 
 .top {
   position: sticky;
-  top: 0;
+  top: 52px; /* システムの帯の下 */
   z-index: 5;
   display: flex;
   flex-wrap: wrap;

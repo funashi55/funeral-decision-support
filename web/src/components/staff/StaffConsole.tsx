@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../client/api";
 import { useCaseStream } from "../../client/useCaseStream";
@@ -11,6 +12,7 @@ import { buildOrders } from "../../engine/orders";
 import { detectOversights } from "../../engine/oversight";
 import { detectPhase } from "../../engine/phase";
 import { fitsChanged, type QuickFit } from "../../engine/quickFit";
+import { roleplayHref } from "../system/SystemBar";
 import { DecisionBoard } from "./DecisionBoard";
 import { NowView } from "./NowView";
 import { FamilyInbox } from "./FamilyInbox";
@@ -279,6 +281,10 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           ))}
         </div>
         <div className={c.railFoot}>
+          <Link href={roleplayHref(caseId)} className={c.navItem} title="架空のご家族と打合せの練習をする">
+            <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+            <span>ロールプレイ</span>
+          </Link>
           <button type="button" className={`${c.navItem} ${s.inboxBtn}`} onClick={() => setInboxOpen((o) => !o)} aria-expanded={inboxOpen}>
             <Icon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             <span>ご家族の窓口</span>

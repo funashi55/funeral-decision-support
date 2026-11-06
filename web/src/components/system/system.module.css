@@ -1,0 +1,31 @@
+/* 担当者の画面の左の帯と同じ色・同じ選択の印で、ほかの画面の上に置く */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 clamp(1rem, 0.5rem + 2vw, 2rem);
+  min-height: 52px;
+  background: var(--night);
+  color: #e9e1d4;
+}
+.brand { font-weight: 900; letter-spacing: 0.04em; color: #fff; text-decoration: none; white-space: nowrap; }
+.items { display: flex; gap: 0.25rem; list-style: none; margin: 0; padding: 0; }
+.item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 0.9rem;
+  color: #b9ae9e;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--duration-fast, 150ms);
+}
+.item:hover { color: #fff; }
+.item[aria-current="page"] { color: #fff; }
+.item[aria-current="page"]::after { content: ""; position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent-2); }
+.item:focus-visible, .brand:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+@media (max-width: 480px) { .brand { display: none; } }
