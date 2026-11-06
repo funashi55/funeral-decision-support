@@ -8,7 +8,7 @@ test("担当者の画面は「いま」から始まり、決めることに切�
   await expect(page.getByText("山田家")).toBeVisible();
   await expect(page.getByRole("heading", { name: "次にすること" })).toBeVisible();
   await page.getByRole("tab", { name: /決めること/ }).click();
-  await expect(page.getByRole("heading", { name: "決めることボード" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "決めること", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "▶ 打合せを再生" })).toBeEnabled();
 });
 

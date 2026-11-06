@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { DECISIONS, PHASE_LABEL, type DecisionItem } from "../../domain/decisions";
-import { EVIDENCE_SOURCE, evidenceFor, tipsFor } from "../../domain/decisionEvidence";
 import type { CaseState } from "../../engine/case";
+import c from "./console.module.css";
 import s from "./staff.module.css";
 
 interface DecisionBoardProps {
@@ -45,111 +45,87 @@ export function ConfirmControl({ item, value, onConfirm }: { item: DecisionItem;
   );
 }
 
-/** 項目に添える実績（施行の記録の集計）と知見。数字は集計表から出す。長いので、開いたときだけ見せる */
-function Grounding({ decisionId }: { readonly decisionId: string }) {
-  const evidence = evidenceFor(decisionId);
-  const tip = tipsFor(decisionId)[0];
-  if (!evidence && !tip) return null;
+/** まだの項目に、担当者が手で内容を入れて確定する */
+export function ManualEntry({ item, onConfirm }: { readonly item: DecisionItem; readonly onConfirm: DecisionBoardProps["onConfirm"] }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  if (!open) {
+    return (
+      <button type="button" className={c.todoEnter} onClick={() => setOpen(true)}>
+        入れる
+      </button>
+    );
+  }
   return (
-    <details className={s.grounding}>
-      <summary>{evidence ? "実績と知見" : "ベテランの知見"}</summary>
-      {evidence && (
-        <p title={`${EVIDENCE_SOURCE}・${evidence.count}件`}>
-          <b>実績（参考）</b>
-          {evidence.text}
-        </p>
-      )}
-      {tip && (
-        <p title={`根拠：${tip.source}`}>
-          <b>知見</b>
-          {tip.when}は、{tip.do}
-        </p>
-      )}
-    </details>
+    <form
+      className={c.todoForm}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!value.trim()) return;
+        onConfirm(item.id, value.trim());
+        setOpen(false);
+        setValue("");
+      }}
+    >
+      <input aria-label={`${item.label}の内容`} value={value} maxLength={200} autoFocus onChange={(e) => setValue(e.target.value)} />
+      <button type="submit" disabled={!value.trim()}>
+        確定
+      </button>
+      <button type="button" className={c.todoCancel} onClick={() => setOpen(false)}>
+        やめる
+      </button>
+    </form>
   );
 }
 
-export function DecisionRow({ item, state, impacted, onConfirm }: { item: DecisionItem } & Pick<DecisionBoardProps, "state" | "impacted" | "onConfirm">) {
-  const d = state.decisions[item.id];
-  const className = [s.item, impacted.has(item.id) ? s.itemImpacted : ""].join(" ");
-  return (
-    <div className={className}>
-      <span>
-        <span className={s.itemLabel}>
-          {item.label}
-          {item.hard && <span className={s.hardTag}>迷いやすい</span>}
-        </span>
-        <span className={s.itemVal}>{d ? `${d.status === "candidate" ? "候補：" : ""}${d.value}` : impacted.has(item.id) ? "見直しが必要です" : "未定"}</span>
-        {d?.status !== "confirmed" && <Grounding decisionId={item.id} />}
-      </span>
-      {d?.status === "confirmed" ? (
-        <span className={`${s.state} ${s.stateDone}`}>確定</span>
-      ) : d ? (
-        <ConfirmControl item={item} value={d.value} onConfirm={onConfirm} />
-      ) : (
-        <span className={`${s.state} ${s.stateOpen}`}>{item.urgency === "today" ? "今日" : "あとで"}</span>
-      )}
-    </div>
-  );
-}
+const PHASES = ["trust", "hearing", "farewell", "schedule", "plan", "logistics", "after"] as const;
 
-export function DecisionBoard(props: DecisionBoardProps) {
-  const { state } = props;
-  const touched = DECISIONS.filter((d) => state.decisions[d.id] || props.impacted.has(d.id));
-  const todayOpen = DECISIONS.filter((d) => d.urgency === "today" && state.decisions[d.id]?.status !== "confirmed");
-  const confirmed = DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed");
-  const hardOpen = DECISIONS.filter((d) => d.hard && d.urgency === "today" && !state.decisions[d.id]);
+/**
+ * 決めること：全項目を打合せの段階ごとに並べた、シンプルなチェックリスト。
+ * ✓ 決まった／● 候補が出ている（確定を待つ）／○ まだ。候補は確定、まだの項目は手で入れられる
+ */
+export function DecisionBoard({ state, impacted, onConfirm }: DecisionBoardProps) {
+  const confirmed = DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed").length;
   return (
-    <section className={s.col} aria-labelledby="board-title">
-      <div className={s.colHead}>
-        <h2 id="board-title">決めることボード</h2>
-        <span className={s.count}>全 {DECISIONS.length} 項目</span>
+    <section aria-labelledby="board-title" className={c.checklist}>
+      <h2 id="board-title" className={c.blockTitle}>
+        決めること
+      </h2>
+      <p className={c.todoCount}>
+        決まった <b>{confirmed}</b> / {DECISIONS.length}
+      </p>
+      <div className={c.todoBar} aria-hidden="true">
+        <i style={{ width: `${(confirmed / DECISIONS.length) * 100}%` }} />
       </div>
-      <div className={s.progress} aria-label={`今日決める ${todayOpen.length} 項目・確定 ${confirmed.length} 項目`}>
-        <div className={s.progressNums}>
-          <span>
-            今日決める<b className={s.progressToday}>{todayOpen.length}</b>
-          </span>
-          <span>
-            明日以降<b>{DECISIONS.length - todayOpen.length - confirmed.length}</b>
-          </span>
-          <span>
-            確定<b className={s.progressDone}>{confirmed.length}</b>
-          </span>
-        </div>
-        <span className={s.progressBar}>
-          <i style={{ width: `${(confirmed.length / DECISIONS.length) * 100}%` }} />
-        </span>
-      </div>
-      <div className={s.scroll}>
-        {touched.length > 0 && (
-          <div className={s.group}>
-            <h3>
-              会話で出てきた項目<span>{touched.length}</span>
-            </h3>
-            {touched.map((item) => (
-              <DecisionRow key={item.id} item={item} state={state} impacted={props.impacted} onConfirm={props.onConfirm} />
-            ))}
+      {PHASES.map((phase) => {
+        const items = DECISIONS.filter((d) => d.phase === phase);
+        if (items.length === 0) return null;
+        return (
+          <div key={phase}>
+            <h3 className={c.todoGroup}>{PHASE_LABEL[phase]}</h3>
+            <ul className={c.todoList}>
+              {items.map((d) => {
+                const decision = state.decisions[d.id];
+                const done = decision?.status === "confirmed";
+                const waiting = decision?.status === "candidate" || (impacted.has(d.id) && !done);
+                return (
+                  <li key={d.id} className={`${c.todoItem} ${done ? c.todoDone : waiting ? c.todoWaiting : ""}`}>
+                    <span className={c.todoMark} aria-hidden="true">
+                      {done ? "✓" : waiting ? "●" : "○"}
+                    </span>
+                    <span className={c.todoText}>
+                      {d.label}
+                      {d.urgency === "today" && !done && <span className={c.todayTag}>今日</span>}
+                      {decision && <small>{impacted.has(d.id) && !done ? "見直しが必要です" : decision.value}</small>}
+                    </span>
+                    {done ? null : decision ? <ConfirmControl item={d} value={decision.value} onConfirm={onConfirm} /> : <ManualEntry item={d} onConfirm={onConfirm} />}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-        )}
-        <div className={s.group}>
-          <h3>
-            今日決める・迷いやすい項目<span>{hardOpen.filter((d) => !touched.includes(d)).length}</span>
-          </h3>
-          {hardOpen
-            .filter((d) => !touched.includes(d))
-            .map((item) => (
-              <div key={item.id} className={`${s.item} ${s.itemQuiet}`}>
-                <span>
-                  <span className={s.itemLabel}>{item.label}</span>
-                  <span className={s.itemVal}>{PHASE_LABEL[item.phase]}</span>
-                  <Grounding decisionId={item.id} />
-                </span>
-                <span className={`${s.state} ${s.stateOpen}`}>未定</span>
-              </div>
-            ))}
-        </div>
-      </div>
+        );
+      })}
     </section>
   );
 }

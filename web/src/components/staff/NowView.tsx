@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DECISIONS, type DecisionItem } from "../../domain/decisions";
+import { DECISIONS } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
 import { nextSteps } from "../../engine/nextSteps";
 import { TODO_TEXT_MAX, todosOf } from "../../engine/todos";
@@ -7,7 +7,7 @@ import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
 import { getGriefPrinciple } from "../../domain/griefCare";
 import { FAREWELL_CUES, FAREWELL_DECISION, HANDLED_LABEL, PLAN_CUES, handledBy, textKey, type HandledBy, type HandledCheck } from "../../engine/handled";
-import { ConfirmControl } from "./DecisionBoard";
+import { ConfirmControl, ManualEntry } from "./DecisionBoard";
 import { GriefCareLane } from "./GriefCareLane";
 import { PlanFitCard } from "./PlanFitCard";
 import type { PlanFitProposal } from "../../engine/planFit";
@@ -327,39 +327,6 @@ function TodoList({ state, impacted, oversights, onConfirm, onTodo }: Pick<NowVi
         </>
       )}
     </aside>
-  );
-}
-
-/** まだの項目に、担当者が手で内容を入れて確定する */
-function ManualEntry({ item, onConfirm }: { readonly item: DecisionItem; readonly onConfirm: NowViewProps["onConfirm"] }) {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
-  if (!open) {
-    return (
-      <button type="button" className={c.todoEnter} onClick={() => setOpen(true)}>
-        入れる
-      </button>
-    );
-  }
-  return (
-    <form
-      className={c.todoForm}
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!value.trim()) return;
-        onConfirm(item.id, value.trim());
-        setOpen(false);
-        setValue("");
-      }}
-    >
-      <input aria-label={`${item.label}の内容`} value={value} maxLength={200} autoFocus onChange={(e) => setValue(e.target.value)} />
-      <button type="submit" disabled={!value.trim()}>
-        確定
-      </button>
-      <button type="button" className={c.todoCancel} onClick={() => setOpen(false)}>
-        やめる
-      </button>
-    </form>
   );
 }
 

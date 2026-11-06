@@ -392,7 +392,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
             </NowView>
           )}
           {view === "decisions" && (
-            <div className={`${c.view} ${c.wide}`}>
+            <div className={c.view}>
               <DecisionBoard state={state} impacted={impacted} onConfirm={(id, v) => void confirm(id, v)} />
             </div>
           )}
