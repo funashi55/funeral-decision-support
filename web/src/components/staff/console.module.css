@@ -249,3 +249,10 @@
 .doneLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .doneBy { font-size: var(--text-xs); color: var(--safe); font-weight: 700; }
 .doneUndo { font-size: var(--text-xs); color: var(--accent); }
+
+/* 次に進めること：やることリストの上に押し上げる */
+.nextBox { margin-top: var(--space-2); padding: var(--space-3); border-radius: var(--r-md); background: var(--accent-soft); border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent); }
+.nextTitle { font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.08em; color: var(--accent); margin-bottom: var(--space-1); }
+.nextItem { background: var(--surface); box-shadow: var(--shadow-sm); animation: rise 400ms var(--ease); }
+.nextItem .todoMark { color: var(--accent); font-weight: 900; }
+.nextReason { color: var(--accent) !important; font-weight: 600; }

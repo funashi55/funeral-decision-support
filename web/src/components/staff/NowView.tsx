@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { DECISIONS, type DecisionItem } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
+import { nextSteps } from "../../engine/nextSteps";
 import { TODO_TEXT_MAX, todosOf } from "../../engine/todos";
 import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
@@ -195,7 +196,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
         )}
       </div>
 
-      <TodoList state={state} impacted={impacted} onConfirm={onConfirm} onTodo={onTodo} />
+      <TodoList state={state} impacted={impacted} oversights={oversights} onConfirm={onConfirm} onTodo={onTodo} />
     </div>
   );
 }
@@ -204,11 +205,14 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
  * 今日決めることを打合せの順に並べる。会話から候補が入ると上がり、確定すると ✓ が付く。
  * まだの項目は手でも入れられ、一覧にない用事は自分で足せる
  */
-function TodoList({ state, impacted, onConfirm, onTodo }: Pick<NowViewProps, "state" | "impacted" | "onConfirm" | "onTodo">) {
+function TodoList({ state, impacted, oversights, onConfirm, onTodo }: Pick<NowViewProps, "state" | "impacted" | "oversights" | "onConfirm" | "onTodo">) {
   const today = DECISIONS.filter((d) => d.urgency === "today");
   const done = today.filter((d) => state.decisions[d.id]?.status === "confirmed");
-  const waiting = DECISIONS.filter((d) => state.decisions[d.id]?.status === "candidate" || (impacted.has(d.id) && state.decisions[d.id]?.status !== "confirmed"));
-  const open = today.filter((d) => !state.decisions[d.id] && !impacted.has(d.id));
+  // 会話の流れで、いま進めるとよい項目を上に押し上げる（下の一覧には重ねて出さない）
+  const next = nextSteps(state, oversights);
+  const pushed = new Set(next.map((n) => n.item.id));
+  const waiting = DECISIONS.filter((d) => !pushed.has(d.id) && (state.decisions[d.id]?.status === "candidate" || (impacted.has(d.id) && state.decisions[d.id]?.status !== "confirmed")));
+  const open = today.filter((d) => !pushed.has(d.id) && !state.decisions[d.id] && !impacted.has(d.id));
   const customs = todosOf(state);
   const total = today.length + customs.length;
   const finished = done.length + customs.filter((t) => t.done).length;
@@ -223,6 +227,28 @@ function TodoList({ state, impacted, onConfirm, onTodo }: Pick<NowViewProps, "st
       <div className={c.todoBar} aria-hidden="true">
         <i style={{ width: `${(finished / Math.max(total, 1)) * 100}%` }} />
       </div>
+
+      {next.length > 0 && (
+        <div className={c.nextBox} data-testid="next-steps">
+          <h3 className={c.nextTitle}>次に進めること</h3>
+          <ul className={c.todoList}>
+            {next.map((n) => {
+              const value = state.decisions[n.item.id]?.value;
+              return (
+                <li key={n.item.id} className={`${c.todoItem} ${c.nextItem}`}>
+                  <span className={c.todoMark} aria-hidden="true">→</span>
+                  <span className={c.todoText}>
+                    {n.item.label}
+                    <small className={c.nextReason}>{n.reason}</small>
+                    {value && <small>候補：{value}</small>}
+                  </span>
+                  {n.kind === "confirm" && value ? <ConfirmControl item={n.item} value={value} onConfirm={onConfirm} /> : <ManualEntry item={n.item} onConfirm={onConfirm} />}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {waiting.length > 0 && (
         <>
