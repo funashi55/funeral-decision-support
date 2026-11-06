@@ -1,14 +1,14 @@
 :root {
-  /* 色：生成りの紙と木、深い青を主にした落ち着いた配色。赤は不安をあおるので使わない */
-  --bg: #f6f2e9;
-  --surface: #fffdf8;
-  --surface-2: #faf7f0;
-  --surface-3: #efe9dc;
+  /* 色：白地に深い青を主にした落ち着いた配色。赤は不安をあおるので使わない */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f7f8f7;
+  --surface-3: #eff2f1;
   --ink: #2b2f2e;
   --ink-2: #4c4c4c;
   --ink-3: #6f6c63;
-  --line: #e6dfd0;
-  --line-2: #d6cdb9;
+  --line: #e3e7e5;
+  --line-2: #cfd6d3;
   /* 主色：深い青（AI が今出したもの・要対応・選択中） */
   --accent: #2c698a;
   --accent-2: #4f8fb0;

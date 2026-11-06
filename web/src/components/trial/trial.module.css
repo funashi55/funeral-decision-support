@@ -1,9 +1,7 @@
 .page {
   min-height: 100vh;
   padding: clamp(2rem, 1rem + 4vw, 5rem) clamp(1.25rem, 0.5rem + 4vw, 4rem);
-  background:
-    radial-gradient(120% 60% at 0% 0%, var(--accent-soft), transparent 60%),
-    var(--bg);
+  background: var(--bg);
   color: var(--ink);
 }
 

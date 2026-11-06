@@ -1,14 +1,12 @@
 /* ご家族の窓口：スマホで片手で読む。便箋のように静かに、決まったことを大きく */
 .page {
-  --paper: #f8f4ec;
+  --paper: #ffffff;
   --page-pad: clamp(1.1rem, 4vw, 1.6rem);
   max-width: 34rem;
   margin: 0 auto;
   min-height: 100vh;
   padding: 0 var(--page-pad) 3rem;
-  background:
-    radial-gradient(120% 60% at 100% 0%, #e6f0f5 0%, transparent 60%),
-    var(--paper);
+  background: var(--paper);
   font-size: 1rem;
 }
 
