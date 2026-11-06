@@ -11,7 +11,7 @@ import { DECISIONS } from "../../domain/decisions";
 import { buildOrders } from "../../engine/orders";
 import { detectOversights } from "../../engine/oversight";
 import { allowsPrices, detectPhase } from "../../engine/phase";
-import type { PlanFitResult } from "../../engine/planFit";
+import { speaksAboutBudget, type PlanFitResult } from "../../engine/planFit";
 import { fitsChanged, type QuickFit } from "../../engine/quickFit";
 import { roleplayHref } from "../system/SystemBar";
 import { DecisionBoard } from "./DecisionBoard";
@@ -102,8 +102,11 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   useEffect(() => {
     if (!utterances || utterances.length === 0) return;
     if (!allowsPrices(detectPhase(utterances).phase)) return;
-    const familyLines = utterances.filter((u) => u.speaker !== "staff").length;
-    if (planFitAt.current === 0 || familyLines - planFitAt.current >= PLAN_REWRITE_AFTER) void runPlanFit(familyLines);
+    const family = utterances.filter((u) => u.speaker !== "staff");
+    const familyLines = family.length;
+    // 費用についての気持ちが新しく出たら、3発言を待たずに書き直す（古い見立てで上の幅を勧めないように）
+    const budgetJustSaid = familyLines > planFitAt.current && speaksAboutBudget(family.at(-1)?.text ?? "");
+    if (planFitAt.current === 0 || budgetJustSaid || familyLines - planFitAt.current >= PLAN_REWRITE_AFTER) void runPlanFit(familyLines);
   }, [utterances, runPlanFit]);
 
   /** 理由づけ（推奨）がどの発言までを見て書かれたか */

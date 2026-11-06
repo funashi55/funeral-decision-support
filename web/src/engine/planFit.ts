@@ -51,6 +51,11 @@ const BUDGET_CUES = [/抑え/, /安く/, /安い/, /最低限/, /節約/, /か�
 /** ご家族が上の幅や飾りを自分から尋ねているか */
 const ASKED_UP_CUES = [/しっかり(?:した|と)?(?:形|葬儀|お葬式|飾)/, /立派/, /華やか/, /いちばん良い/, /一番いい/, /お金は(?:気にしない|かまわない|いい)/];
 
+/** 費用についての気持ち（抑えたい・上を望む）が出た発言か。出たら見立てをすぐ書き直す */
+export function speaksAboutBudget(text: string): boolean {
+  return [...BUDGET_CUES, ...ASKED_UP_CUES].some((c) => c.test(text));
+}
+
 export function familyWantsToSave(state: CaseState): boolean {
   return state.utterances.some((u) => u.speaker !== "staff" && BUDGET_CUES.some((c) => c.test(u.text)));
 }
