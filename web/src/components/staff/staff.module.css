@@ -243,3 +243,10 @@
   .col { min-height: 60vh; }
 }
 .orderActions { display: inline-flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+
+/* わかったこと：文で読めるよう1件1行の箇条にし、高さを広くとる */
+.factsCount { font-size: var(--text-xs); font-weight: 800; letter-spacing: 0; padding: 0 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.factList { list-style: none; display: grid; gap: var(--space-1); max-height: min(34vh, 22rem); overflow-y: auto; padding-right: 2px; }
+.fact { position: relative; padding: 0.45rem 0.7rem 0.45rem 1.4rem; border-radius: var(--r-sm); background: var(--surface-2); font-size: var(--text-sm); line-height: 1.65; color: var(--ink); animation: rise 400ms var(--ease); }
+.fact::before { content: ""; position: absolute; left: 0.6rem; top: 0.95rem; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.fact:first-child { background: var(--accent-soft); }

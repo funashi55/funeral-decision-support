@@ -66,18 +66,20 @@ export function Transcript({ state, extracting, onAdd, onEdit }: TranscriptProps
       <div className={s.facts} aria-live="polite">
         <h3>
           わかったこと
+          {state.circumstances.length > 0 && <span className={s.factsCount}>{state.circumstances.length}</span>}
           {extracting && <span className={s.thinking}>整理中</span>}
         </h3>
         {state.circumstances.length === 0 ? (
           <p className={s.factsEmpty}>ご遺族の言葉から、家族の事情をここに拾い上げます</p>
         ) : (
-          <div className={s.chips}>
-            {state.circumstances.map((c) => (
-              <span key={c.id} className={s.chip}>
+          <ul className={s.factList}>
+            {/* 新しくわかったことを上に出す（スクロールしなくても目に入るように） */}
+            {[...state.circumstances].reverse().map((c) => (
+              <li key={c.id} className={s.fact}>
                 {c.text}
-              </span>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
       <div className={s.scroll} aria-live="polite">
