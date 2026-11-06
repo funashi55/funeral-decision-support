@@ -242,3 +242,4 @@
   .body { overflow: visible; grid-template-columns: 1fr; }
   .col { min-height: 60vh; }
 }
+.orderActions { display: inline-flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; justify-content: flex-end; }

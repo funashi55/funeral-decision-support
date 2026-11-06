@@ -2,6 +2,7 @@ import type { CaseState } from "../engine/case";
 import type { FarewellResult } from "../engine/farewell";
 import type { FamilyView } from "../engine/familyView";
 import type { Paperwork } from "../engine/paperwork";
+import type { OrderSheetMap } from "../server/orderSheetStore";
 import type { PlanFitResult } from "../engine/planFit";
 import type { QuickFit } from "../engine/quickFit";
 
@@ -28,6 +29,8 @@ export const api = {
   quickFit: (caseId: string) => post<QuickFit>(`/api/cases/${caseId}/quick-fit`),
   paperwork: (caseId: string) => call<Paperwork | null>(`/api/cases/${caseId}/paperwork`),
   makePaperwork: (caseId: string) => post<Paperwork>(`/api/cases/${caseId}/paperwork`),
+  orderSheets: (caseId: string) => call<OrderSheetMap>(`/api/cases/${caseId}/order-sheets`),
+  makeOrderSheet: (caseId: string, orderId: string) => post<OrderSheetMap>(`/api/cases/${caseId}/order-sheets`, { orderId }),
   confirm: (caseId: string, decisionId: string, value: string) => post<CaseState>(`/api/cases/${caseId}/decisions`, { decisionId, value }),
   todo: (caseId: string, body: { action: "add"; text: string } | { action: "done"; id: string; done: boolean } | { action: "remove"; id: string }) =>
     post<CaseState>(`/api/cases/${caseId}/todos`, body),
