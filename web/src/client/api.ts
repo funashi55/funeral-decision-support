@@ -2,6 +2,7 @@ import type { CaseState } from "../engine/case";
 import type { FarewellResult } from "../engine/farewell";
 import type { FamilyView } from "../engine/familyView";
 import type { Paperwork } from "../engine/paperwork";
+import type { PlanFitResult } from "../engine/planFit";
 import type { QuickFit } from "../engine/quickFit";
 
 interface Envelope<T> {
@@ -23,6 +24,7 @@ export const api = {
   addUtterance: (caseId: string, u: { speaker: string; speakerLabel: string; text: string; at: number }) => post<CaseState>(`/api/cases/${caseId}/utterances`, u),
   extract: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/extract`),
   farewell: (caseId: string) => post<FarewellResult & { basedOn?: number }>(`/api/cases/${caseId}/farewell`),
+  planFit: (caseId: string) => post<PlanFitResult & { basedOn?: number }>(`/api/cases/${caseId}/plan-fit`),
   quickFit: (caseId: string) => post<QuickFit>(`/api/cases/${caseId}/quick-fit`),
   paperwork: (caseId: string) => call<Paperwork | null>(`/api/cases/${caseId}/paperwork`),
   makePaperwork: (caseId: string) => post<Paperwork>(`/api/cases/${caseId}/paperwork`),

@@ -4,6 +4,8 @@ import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
 import { ConfirmControl } from "./DecisionBoard";
 import { GriefCareLane } from "./GriefCareLane";
+import { PlanFitCard } from "./PlanFitCard";
+import type { PlanFitProposal } from "../../engine/planFit";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
 import c from "./console.module.css";
 import s from "./staff.module.css";
@@ -13,6 +15,8 @@ interface NowViewProps {
   readonly impacted: ReadonlySet<string>;
   readonly oversights: readonly OversightAlert[];
   readonly farewell: FarewellResult | null;
+  /** プランの見立て（費用の話ができる段階に入ってから出る） */
+  readonly planFit: PlanFitProposal | null;
   /** 推奨を考えている途中か */
   readonly thinking: boolean;
   readonly onConfirm: (decisionId: string, value: string) => void;
@@ -27,7 +31,7 @@ const FIT_TEXT = { suits: "合う", consider: "尋ねてみる" } as const;
  * 「いま」：打合せの最中に担当者が見る 1 枚。
  * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）
  */
-export function NowView({ state, impacted, oversights, farewell, thinking, onConfirm, onFeedback, children }: NowViewProps) {
+export function NowView({ state, impacted, oversights, farewell, planFit, thinking, onConfirm, onFeedback, children }: NowViewProps) {
   const rec = farewell?.ok ? farewell.recommendation : null;
   const proposals = (rec?.options ?? []).filter((o) => o.fit !== "not_now").sort((a, b) => (a.fit === b.fit ? 0 : a.fit === "suits" ? -1 : 1));
   // 推奨が挙げた注意。決まりごとの検出と同じ項目は重ねて出さない
@@ -64,6 +68,7 @@ export function NowView({ state, impacted, oversights, farewell, thinking, onCon
                   </li>
                 ))}
               </ul>
+              {planFit && <PlanFitCard state={state} proposal={planFit} />}
               {rec.timeAdvice && (
                 <p className={c.timeAdvice}>
                   <small>日程について</small>

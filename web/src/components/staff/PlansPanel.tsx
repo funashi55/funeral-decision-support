@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
 import { PHASE_LABEL, type Phase } from "../../domain/decisions";
-import { yen } from "../../domain/pricing";
+import { yen, type Range } from "../../domain/pricing";
 import type { CaseState } from "../../engine/case";
 import { allowsPrices } from "../../engine/phase";
+import type { PlanFitProposal } from "../../engine/planFit";
 import { buildPlanProposals } from "../../engine/plans";
 import { AltarPreview } from "../AltarPreview";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
@@ -12,11 +13,13 @@ import s from "./staff.module.css";
 interface PlansPanelProps {
   readonly state: CaseState;
   readonly phase: Phase;
+  /** この家族に合うところ・確かめたいこと（プランの見立て） */
+  readonly planFit: PlanFitProposal | null;
   readonly onFeedback: FeedbackHandler;
 }
 
 /** 3つの幅の案。金額はすべて価格表から計算し、含まれないものを先に見せる */
-export function PlansPanel({ state, phase, onFeedback }: PlansPanelProps) {
+export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProps) {
   const [showAnyway, setShowAnyway] = useState(false);
   if (!allowsPrices(phase) && !showAnyway) {
     return (
@@ -41,9 +44,11 @@ export function PlansPanel({ state, phase, onFeedback }: PlansPanelProps) {
             <h3>
               <span className={`${s.fit} ${s.fitConsider}`}>{p.rangeLabel}</span>
               {p.planLabel}
+              {planFit?.bestRange === p.range && <span className={`${s.fit} ${s.fitSuits}`}>この家族に合いそう</span>}
             </h3>
             <span className={s.price}>{yen(p.estimate.total)}</span>
           </div>
+          <PlanFitNote planFit={planFit} range={p.range} />
           <div className={s.can}>
             <div>
               <b>プランに含まれるもの</b>
@@ -103,5 +108,18 @@ export function PlansPanel({ state, phase, onFeedback }: PlansPanelProps) {
       ))}
       <p className={s.empty}>お布施は葬儀社の見積もりに含まれません。金額は架空の価格表によるものです。</p>
     </div>
+  );
+}
+
+/** 幅ごとの、この家族に合うところ・確かめたいこと。いちばん合いそうな幅には切り出し方も添える */
+function PlanFitNote({ planFit, range }: { readonly planFit: PlanFitProposal | null; readonly range: Range }) {
+  const fit = planFit?.ranges.find((r) => r.range === range);
+  if (!planFit || !fit) return null;
+  return (
+    <p className={s.reason}>
+      {fit.fitsBecause && <span style={{ display: "block" }}>合うところ：{fit.fitsBecause}</span>}
+      {fit.watchOut && <span style={{ display: "block" }}>確かめたいこと：{fit.watchOut}</span>}
+      {planFit.bestRange === range && <span style={{ display: "block" }}>こう切り出しましょう：「{planFit.howToRaise}」</span>}
+    </p>
   );
 }

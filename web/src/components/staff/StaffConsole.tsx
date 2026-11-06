@@ -10,7 +10,8 @@ import { DEMO_SCRIPT } from "../../engine/fixtures/demoScript";
 import { DECISIONS } from "../../domain/decisions";
 import { buildOrders } from "../../engine/orders";
 import { detectOversights } from "../../engine/oversight";
-import { detectPhase } from "../../engine/phase";
+import { allowsPrices, detectPhase } from "../../engine/phase";
+import type { PlanFitResult } from "../../engine/planFit";
 import { fitsChanged, type QuickFit } from "../../engine/quickFit";
 import { roleplayHref } from "../system/SystemBar";
 import { DecisionBoard } from "./DecisionBoard";
@@ -27,6 +28,8 @@ import s from "./staff.module.css";
 const LINE_INTERVAL_MS = 2800;
 /** 見立てが変わらなくても、理由を書いてからこの数だけ発言が増えたら書き直す */
 const REWRITE_AFTER_LINES = 3;
+/** プランの提案を書き直すまでの、ご家族の発言の数 */
+const PLAN_REWRITE_AFTER = 3;
 
 type View = "now" | "decisions" | "plans" | "orders";
 const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon: string }[] = [
@@ -72,6 +75,36 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       setExtracting(false);
     }
   }, [caseId]);
+
+  /**
+   * プランの提案：費用の話ができる段階（お別れの仕方以降）に入ってから作り、ご家族の発言が増えたら書き直す。
+   * 走っている間は重ねて呼ばない
+   */
+  const [planFit, setPlanFit] = useState<PlanFitResult | null>(null);
+  const planFitRunning = useRef(false);
+  const planFitAt = useRef(0);
+  const runPlanFit = useCallback(
+    async (familyLines: number): Promise<void> => {
+      if (planFitRunning.current) return;
+      planFitRunning.current = true;
+      planFitAt.current = familyLines;
+      try {
+        setPlanFit(await api.planFit(caseId));
+      } catch (e) {
+        setError(message(e));
+      } finally {
+        planFitRunning.current = false;
+      }
+    },
+    [caseId],
+  );
+  const utterances = state?.utterances;
+  useEffect(() => {
+    if (!utterances || utterances.length === 0) return;
+    if (!allowsPrices(detectPhase(utterances).phase)) return;
+    const familyLines = utterances.filter((u) => u.speaker !== "staff").length;
+    if (planFitAt.current === 0 || familyLines - planFitAt.current >= PLAN_REWRITE_AFTER) void runPlanFit(familyLines);
+  }, [utterances, runPlanFit]);
 
   /** 理由づけ（推奨）がどの発言までを見て書かれたか */
   const [farewellBasedOn, setFarewellBasedOn] = useState(0);
@@ -219,6 +252,8 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     setPlaying(false);
     step.current = 0;
     setFarewell(null);
+    setPlanFit(null);
+    planFitAt.current = 0;
     setQuick(null);
     setFarewellBasedOn(0);
     reasonedFits.current = null;
@@ -320,6 +355,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               thinking={farewellLoading || listening}
               oversights={oversights}
               farewell={farewell}
+              planFit={planFit?.ok ? planFit.proposal : null}
               onConfirm={(id, v) => void confirm(id, v)}
               onFeedback={(t, v) => void feedback(t, v)}
             >
@@ -334,7 +370,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           {view === "plans" && (
             <div className={c.view}>
               <h1 className={c.viewTitle}>プランの案</h1>
-              <PlansPanel state={state} phase={phase.phase} onFeedback={(t, v) => void feedback(t, v)} />
+              <PlansPanel state={state} phase={phase.phase} planFit={planFit?.ok ? planFit.proposal : null} onFeedback={(t, v) => void feedback(t, v)} />
             </div>
           )}
           {view === "orders" && (

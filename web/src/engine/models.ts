@@ -17,6 +17,7 @@ import {
   type FamilyReply,
 } from "./hearing";
 import { PaperworkDraftSchema, type PaperworkDraft } from "./paperwork";
+import { PlanFitDraftSchema, type PlanFitDraft, type PlanFitProposal } from "./planFit";
 import { QuickFitSchema, type QuickFitDraft } from "./quickFit";
 
 interface ParsedResponse<T> {
@@ -136,3 +137,27 @@ export const hearingExtractModel: ExtractModel = async (system, prompt) => {
   });
   return unwrap(response as ParsedResponse<Extraction>);
 };
+
+/** プランの提案（幅ごとの合う・合わない、切り出し方）。推奨と同じく考える量はふつう */
+export async function generatePlanFit(system: string, prompt: string): Promise<PlanFitDraft> {
+  const response = await getClient().messages.parse({
+    model: MODEL_REASONING,
+    max_tokens: 4000,
+    system,
+    output_config: { effort: "medium", format: zodOutputFormat(PlanFitDraftSchema) },
+    messages: [{ role: "user", content: prompt }],
+  });
+  return unwrap(response as ParsedResponse<PlanFitDraft>);
+}
+
+/** プランの提案を、推奨と同じ判定役で点検する */
+export async function judgePlanFit(proposal: PlanFitProposal): Promise<GuardViolation[]> {
+  const response = await getClient().messages.parse({
+    model: MODEL_REASONING,
+    max_tokens: 4000,
+    system: `${JUDGE_SYSTEM}\n\n次はプランの提案（3つの幅のうち、どれが合うかと、その切り出し方）です。ご家族の言葉に結びついた具体的な提案は止めません。費用を抑える幅の工夫が添えられているか、格上げを迫っていないかを見てください。`,
+    output_config: { effort: "low", format: zodOutputFormat(JudgeSchema) },
+    messages: [{ role: "user", content: JSON.stringify(proposal, null, 2) }],
+  });
+  return unwrap(response as ParsedResponse<z.infer<typeof JudgeSchema>>).violations;
+}
