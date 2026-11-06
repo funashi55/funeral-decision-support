@@ -76,7 +76,7 @@
 .stateCand { background: var(--warn-soft); color: var(--warn); }
 .stateDone { background: var(--safe-soft); color: var(--safe); }
 .stateOpen { background: var(--surface-3); color: var(--ink-3); }
-.confirm { font-size: 0.7rem; font-weight: 700; padding: 0.28rem 0.75rem; border-radius: 999px; background: var(--ink); color: #fff; box-shadow: var(--shadow-sm); transition: transform var(--duration-fast); }
+.confirm { font-size: 0.7rem; font-weight: 700; padding: 0.28rem 0.75rem; border-radius: 999px; background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); transition: transform var(--duration-fast); }
 .confirm:active { transform: scale(0.96); }
 
 /* お別れの仕方 */

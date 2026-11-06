@@ -13,7 +13,7 @@ interface DecisionBoardProps {
 }
 
 /** 候補を確定する。言い間違いや聞き取りの誤りは、直してから確定できる */
-function ConfirmControl({ item, value, onConfirm }: { item: DecisionItem; value: string; onConfirm: DecisionBoardProps["onConfirm"] }) {
+export function ConfirmControl({ item, value, onConfirm }: { item: DecisionItem; value: string; onConfirm: DecisionBoardProps["onConfirm"] }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   if (editing) {

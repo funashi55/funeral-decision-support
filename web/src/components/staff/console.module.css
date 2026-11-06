@@ -150,3 +150,60 @@
 .careMore cite { font-style: normal; font-family: var(--font-inter); font-size: var(--text-xs); color: var(--ink-3); }
 .careSay { display: inline-block; margin-right: var(--space-2); }
 .careNote { font-size: var(--text-xs); color: var(--ink-3); margin-top: var(--space-1); }
+
+/* ---- いま：左に提案と確認・注意、右にやることリスト ---- */
+.topbar { justify-content: flex-end; }
+.nowGrid { display: grid; grid-template-columns: minmax(0, 1fr) clamp(240px, 22vw, 300px); gap: var(--space-5); align-items: start; }
+.nowMain { display: grid; gap: var(--space-6); min-width: 0; }
+.block { display: grid; gap: var(--space-3); }
+.blockTitle { display: flex; align-items: baseline; gap: var(--space-2); font-size: var(--text-lg); font-weight: 900; }
+.thinking { font-size: var(--text-xs); font-weight: 600; color: var(--accent); animation: pulse 1.6s infinite; }
+
+.wishBand { padding: var(--space-4) var(--space-5); border-radius: var(--r-md); background: var(--night); color: #f3f0e8; font-size: var(--text-base); line-height: 1.8; animation: rise 400ms var(--ease); }
+.wishBand small { display: block; font-size: var(--text-xs); letter-spacing: 0.08em; color: #b9c3c6; font-weight: 700; margin-bottom: 2px; }
+
+.proposals { list-style: none; display: grid; gap: var(--space-3); }
+.proposal { padding: var(--space-4) var(--space-5); border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); box-shadow: var(--shadow-sm); animation: rise 400ms var(--ease); }
+.proposalHead { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.proposalHead b { font-size: var(--text-lg); }
+.fitSuits, .fitAsk { font-size: var(--text-xs); font-weight: 700; padding: 1px 8px; border-radius: 999px; }
+.fitSuits { background: var(--safe-soft); color: var(--safe); }
+.fitAsk { background: var(--accent-soft); color: var(--accent); }
+.raise { font-size: var(--text-base); font-weight: 600; line-height: 1.8; }
+.raise small, .timeAdvice small { display: block; font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; color: var(--accent); }
+.reason { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--ink-2); line-height: 1.75; }
+.timeAdvice { padding: var(--space-3) var(--space-4); border-radius: var(--r-md); background: var(--surface-2); font-size: var(--text-sm); line-height: 1.75; }
+.more > summary { cursor: pointer; font-size: var(--text-sm); color: var(--ink-3); padding: var(--space-1) 0; }
+.more > summary:hover { color: var(--ink); }
+.more[open] > summary { margin-bottom: var(--space-3); }
+
+.tagWarn, .tagAsk { display: inline-block; margin-right: var(--space-2); font-size: 0.68rem; font-weight: 800; padding: 0 6px; border-radius: 4px; vertical-align: 1px; }
+.tagWarn { background: var(--warn); color: #fff; }
+.tagAsk { background: var(--ink-2); color: #fff; }
+.questions li::before { content: none; }
+
+/* やることリスト：右に置き、打合せのあいだ見えるようにする */
+.todo { position: sticky; top: var(--space-4); display: grid; gap: var(--space-2); padding: var(--space-4); border-radius: var(--r-lg); background: var(--surface-2); border: 1px solid var(--line); max-height: calc(100vh - 120px); overflow-y: auto; }
+.todoCount { font-size: var(--text-sm); color: var(--ink-2); }
+.todoCount b { font-family: var(--font-inter); font-size: 1.6rem; font-weight: 800; color: var(--ink); margin-right: 2px; }
+.todoBar { height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.todoBar i { display: block; height: 100%; background: var(--safe); transition: width var(--duration-normal) var(--ease); }
+.todoGroup { margin-top: var(--space-3); font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.08em; color: var(--ink-3); }
+.todoList { list-style: none; display: grid; gap: 2px; }
+.todoItem { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: var(--space-2); align-items: start; padding: var(--space-2); border-radius: var(--r-sm); font-size: var(--text-sm); line-height: 1.6; }
+.todoMark { color: var(--line-2); font-size: 0.8rem; line-height: 1.9; }
+.todoText small { display: block; font-size: var(--text-xs); color: var(--ink-2); }
+.todoWaiting { background: var(--surface); box-shadow: var(--shadow-sm); animation: rise 400ms var(--ease); }
+.todoWaiting .todoMark { color: var(--accent); }
+.todoImpacted { box-shadow: inset 3px 0 0 var(--warn); }
+.todoDone { color: var(--ink-3); }
+.todoDone .todoMark { color: var(--safe); font-weight: 900; }
+.todoItem :global(button) { font-size: var(--text-xs); }
+
+@media (max-width: 1100px) {
+  .nowGrid { grid-template-columns: minmax(0, 1fr); }
+  .todo { position: static; max-height: none; order: -1; }
+}
+/* 行を低く：直す・確定するは文字の下に並べる */
+.todoItem { grid-template-columns: 16px minmax(0, 1fr); }
+.todoItem > :nth-child(3) { grid-column: 2; justify-self: start; }

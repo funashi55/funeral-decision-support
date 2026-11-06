@@ -19,7 +19,6 @@ import { FamilyInbox } from "./FamilyInbox";
 import { FarewellPanel } from "./FarewellPanel";
 import type { NewLine } from "./InputDock";
 import { OrdersPanel } from "./OrdersPanel";
-import { PhaseBar } from "./PhaseBar";
 import { PlansPanel } from "./PlansPanel";
 import { Transcript } from "./Transcript";
 import c from "./console.module.css";
@@ -299,7 +298,6 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
 
       <div className={c.main}>
         <header className={c.topbar}>
-          <PhaseBar reading={phase} />
           <div className={c.demo} role="group" aria-label="デモの操作">
             <span className={c.demoLabel}>デモ</span>
             <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => setPlaying((p) => !p)} disabled={finished}>
@@ -318,8 +316,8 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           {view === "now" && (
             <NowView
               state={state}
-              phase={phase}
               impacted={impacted}
+              thinking={farewellLoading || listening}
               oversights={oversights}
               farewell={farewell}
               onConfirm={(id, v) => void confirm(id, v)}
