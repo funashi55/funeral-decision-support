@@ -237,22 +237,6 @@ export function FarewellPanel({ state, result, resultBasedOn, quick, listening, 
               <h3>火葬までの時間の使い方</h3>
               <p>{result.recommendation.timeAdvice}</p>
             </div>
-            {result.recommendation.questionsToAsk.length > 0 && (
-              <div className={s.advice}>
-                <h3>家族に尋ねてみる</h3>
-                <ul>
-                  {result.recommendation.questionsToAsk.map((q) => (
-                    <li key={q}>{q}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {result.recommendation.cautions.map((c) => (
-              <div key={c.decisionId + c.message} className={`${s.advice} ${s.caution}`}>
-                <h3>見落とし注意：{c.label}</h3>
-                <p>{c.message}</p>
-              </div>
-            ))}
           </>
         )}
       </div>

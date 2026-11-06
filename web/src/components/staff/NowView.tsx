@@ -30,8 +30,11 @@ export function NowView({ state, phase, impacted, oversights, farewell, onConfir
   const candidates = DECISIONS.filter((d) => state.decisions[d.id]?.status === "candidate" || impacted.has(d.id));
   const confirmed = DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed");
   const questions = farewell?.ok ? farewell.recommendation.questionsToAsk : [];
+  // 推奨が挙げた見落とし。決まりごとの検出と同じ項目は重ねて出さない
+  const aiCautions = (farewell?.ok ? farewell.recommendation.cautions : []).filter((x) => !oversights.some((o) => o.decisionLabel === x.label));
+  const alertCount = oversights.length + aiCautions.length;
   const step = STEPS.indexOf(phase.phase as (typeof STEPS)[number]);
-  const nothingYet = candidates.length === 0 && oversights.length === 0 && questions.length === 0;
+  const nothingYet = candidates.length === 0 && alertCount === 0 && questions.length === 0;
 
   return (
     <div className={c.view}>
@@ -62,11 +65,11 @@ export function NowView({ state, phase, impacted, oversights, farewell, onConfir
         </h2>
         {nothingYet && <p className={c.quiet}>会話が進むと、確かめること・確定を待つ候補・見落としがここに並びます。</p>}
 
-        {oversights.length > 0 && (
+        {alertCount > 0 && (
           <div className={c.lane} data-testid="oversights">
             <h3 className={c.laneTitle}>
               <span className={c.dotWarn} aria-hidden="true" />
-              見落とし注意<span className={c.laneCount}>{oversights.length}</span>
+              見落とし注意<span className={c.laneCount}>{alertCount}</span>
             </h3>
             {oversights.map((a) => (
               <article key={a.id} className={c.alert}>
@@ -77,6 +80,15 @@ export function NowView({ state, phase, impacted, oversights, farewell, onConfir
                     <span className={s.tag}>きっかけ：「{state.utterances.find((u) => u.id === a.utteranceIds.at(-1))?.text.slice(0, 18)}…」</span>
                   )}
                   <FeedbackButtons state={state} target={`oversight:${a.id}`} onFeedback={onFeedback} />
+                </div>
+              </article>
+            ))}
+            {aiCautions.map((x) => (
+              <article key={x.decisionId + x.message} className={c.alert}>
+                <h4>{x.label}</h4>
+                <p>{x.message}</p>
+                <div className={s.meta2}>
+                  <span className={s.tag}>推奨から</span>
                 </div>
               </article>
             ))}
