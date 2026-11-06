@@ -9,7 +9,7 @@
   padding: 0 clamp(1rem, 0.5rem + 2vw, 2rem);
   min-height: 52px;
   background: var(--night);
-  color: #e9e1d4;
+  color: #ece6da;
 }
 .brand { font-weight: 900; letter-spacing: 0.04em; color: #fff; text-decoration: none; white-space: nowrap; }
 .items { display: flex; gap: 0.25rem; list-style: none; margin: 0; padding: 0; }
@@ -19,7 +19,7 @@
   align-items: center;
   min-height: 52px;
   padding: 0 0.9rem;
-  color: #b9ae9e;
+  color: #b9c3c6;
   font-weight: 600;
   text-decoration: none;
   transition: color var(--duration-fast, 150ms);

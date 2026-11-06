@@ -1,29 +1,36 @@
 :root {
-  --bg: #f4f1eb;
-  --surface: #ffffff;
-  --surface-2: #fbfaf7;
-  --surface-3: #f1ede6;
-  --ink: #16140f;
-  --ink-2: #4a463e;
-  --ink-3: #8a8478;
-  --line: #e7e2d8;
-  --line-2: #d9d2c4;
-  --accent: #c2410c;
-  --accent-2: #ea7a3b;
-  --accent-soft: #fdeee4;
-  --safe: #3f6b4f;
-  --safe-soft: #e6f0e8;
-  --warn: #9a6b00;
-  --warn-soft: #fbf1d6;
-  --night: #121110;
+  /* 色：生成りの紙と木、深い青を主にした落ち着いた配色。赤は不安をあおるので使わない */
+  --bg: #f6f2e9;
+  --surface: #fffdf8;
+  --surface-2: #faf7f0;
+  --surface-3: #efe9dc;
+  --ink: #2b2f2e;
+  --ink-2: #4c4c4c;
+  --ink-3: #6f6c63;
+  --line: #e6dfd0;
+  --line-2: #d6cdb9;
+  /* 主色：深い青（AI が今出したもの・要対応・選択中） */
+  --accent: #2c698a;
+  --accent-2: #4f8fb0;
+  --accent-soft: #e6f0f5;
+  /* 安心・確定：青緑 */
+  --safe: #2f7a6e;
+  --safe-soft: #e3f1ee;
+  /* 注意：くすんだ黄土 */
+  --warn: #8a6200;
+  --warn-soft: #fcf0d2;
+  /* ご遺族への配慮：くすんだ薔薇色 */
+  --care: #9e5252;
+  /* 帯：深い藍 */
+  --night: #1f3a47;
   --font: var(--font-inter), var(--font-noto), "Hiragino Sans", system-ui, sans-serif;
   --r-lg: 18px;
   --r-md: 12px;
   --r-sm: 8px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 24px 48px -32px rgba(60, 40, 20, 0.35);
-  --shadow-sm: 0 1px 2px rgba(40, 28, 14, 0.06), 0 1px 1px rgba(40, 28, 14, 0.04);
-  --shadow-md: 0 1px 2px rgba(40, 28, 14, 0.05), 0 12px 28px -14px rgba(40, 28, 14, 0.22);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 24px 48px -32px rgba(31, 58, 71, 0.28);
+  --shadow-sm: 0 1px 2px rgba(31, 58, 71, 0.06), 0 1px 1px rgba(31, 58, 71, 0.04);
+  --shadow-md: 0 1px 2px rgba(31, 58, 71, 0.05), 0 12px 28px -14px rgba(31, 58, 71, 0.2);
   --text-xs: 0.72rem;
   --text-sm: 0.8rem;
   --text-base: 0.9rem;
