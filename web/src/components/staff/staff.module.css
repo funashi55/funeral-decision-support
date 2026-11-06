@@ -146,7 +146,7 @@
 
 /* 打合せの段階 */
 .phaseBar { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-2) var(--space-5); background: var(--surface); border-bottom: 1px solid var(--line); font-size: var(--text-xs); }
-.phaseBar ol { display: flex; list-style: none; gap: var(--space-1); align-items: center; }
+.phaseBar ul { display: flex; list-style: none; gap: var(--space-1); align-items: center; }
 .phaseBar li { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.65rem 0.2rem 0.25rem; border-radius: 999px; color: var(--ink-3); transition: background var(--duration-normal), color var(--duration-normal); }
 .phaseBar li + li::before { content: ""; width: 10px; height: 1px; background: var(--line-2); margin-right: 0.35rem; margin-left: -0.3rem; }
 .phaseDot { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line-2); font-size: 0.6rem; font-family: var(--font-inter); }

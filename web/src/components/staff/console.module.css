@@ -126,3 +126,8 @@
 .topbar > nav::-webkit-scrollbar { display: none; }
 .demo { flex: none; }
 .main { grid-template-columns: minmax(0, 1fr); }
+
+/* 話題の並び：順番や済みの印は付けず、いまの話題だけを示す */
+.topbar > nav ul { gap: var(--space-1); }
+.topbar > nav li { padding: 0.22rem 0.75rem; }
+.topbar > nav li + li::before { display: none; }

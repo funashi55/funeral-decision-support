@@ -8,8 +8,6 @@ import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
 import c from "./console.module.css";
 import s from "./staff.module.css";
 
-const STEPS = ["trust", "hearing", "farewell", "schedule", "plan", "logistics"] as const;
-
 interface NowViewProps {
   readonly state: CaseState;
   readonly phase: PhaseReading;
@@ -33,15 +31,12 @@ export function NowView({ state, phase, impacted, oversights, farewell, onConfir
   // 推奨が挙げた見落とし。決まりごとの検出と同じ項目は重ねて出さない
   const aiCautions = (farewell?.ok ? farewell.recommendation.cautions : []).filter((x) => !oversights.some((o) => o.decisionLabel === x.label));
   const alertCount = oversights.length + aiCautions.length;
-  const step = STEPS.indexOf(phase.phase as (typeof STEPS)[number]);
   const nothingYet = candidates.length === 0 && alertCount === 0 && questions.length === 0;
 
   return (
     <div className={c.view}>
       <section className={c.hero} aria-labelledby="now-phase">
-        <p className={c.heroEyebrow}>
-          いまの段階{step >= 0 ? `・${step + 1} / ${STEPS.length}` : ""}
-        </p>
+        <p className={c.heroEyebrow}>いま話していること</p>
         <h1 id="now-phase" className={c.heroTitle}>
           {phase.label}
         </h1>

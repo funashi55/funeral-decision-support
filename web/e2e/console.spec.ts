@@ -5,7 +5,7 @@ test.beforeEach(async ({ request }) => resetCase(request));
 
 test("メモ入力で発言を足すと、段階が変わり、見落としの注意が出る", async ({ page }) => {
   await page.goto(`/staff/${CASE_ID}`);
-  const phase = page.getByRole("navigation", { name: "打合せの段階" });
+  const phase = page.getByRole("navigation", { name: "いまの話題" });
   await expect(phase.locator("[aria-current=step]")).toContainText("信頼関係");
 
   await page.getByRole("textbox", { name: "発言の要点" }).fill("新聞のお悔やみ欄にも出したほうがいいんでしょうか");

@@ -4,21 +4,18 @@ import s from "./staff.module.css";
 
 const STEPS: readonly Phase[] = ["trust", "hearing", "farewell", "schedule", "plan", "logistics"];
 
-/** 打合せの今の段階と、その段階でベテランが気をつけること */
+/** いま話している話題。決まった順はないので、番号や「済み」は付けず、話題を並べて今のものだけを示す */
 export function PhaseBar({ reading }: { readonly reading: PhaseReading }) {
   const current = STEPS.indexOf(reading.phase);
   return (
-    <nav className={s.phaseBar} aria-label="打合せの段階">
-      <ol>
+    <nav className={s.phaseBar} aria-label="いまの話題">
+      <ul>
         {STEPS.map((p, i) => (
-          <li key={p} className={i === current ? s.phaseNow : i < current ? s.phaseDone : undefined} aria-current={i === current ? "step" : undefined}>
-            <span className={s.phaseDot} aria-hidden="true">
-              {i < current ? "✓" : i + 1}
-            </span>
+          <li key={p} className={i === current ? s.phaseNow : undefined} aria-current={i === current ? "step" : undefined}>
             {PHASE_LABEL[p]}
           </li>
         ))}
-      </ol>
+      </ul>
       <p data-testid="phase-hint">{PHASE_HINT[reading.phase]}</p>
     </nav>
   );

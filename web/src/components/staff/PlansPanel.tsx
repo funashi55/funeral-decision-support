@@ -22,7 +22,7 @@ export function PlansPanel({ state, phase, onFeedback }: PlansPanelProps) {
     return (
       <div className={s.scroll}>
         <p className={s.empty}>
-          今は「{PHASE_LABEL[phase]}」の段階です。費用の話は、ご家族の気持ちとお別れの仕方を伺ってからにします。
+          いまは「{PHASE_LABEL[phase]}」の話をしています。費用の話は、ご家族の気持ちとお別れの仕方を伺ってからにします。
         </p>
         <button type="button" className={s.btn} onClick={() => setShowAnyway(true)}>
           それでも案を見る（担当者の準備用）
