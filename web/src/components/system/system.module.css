@@ -33,3 +33,6 @@
 .item:focus-visible, .brand:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 @media (max-width: 480px) { .brand { display: none; } }
 .spacer { height: 52px; }
+.account { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; color: #b9c3c6; }
+.account button { color: #fff; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); background: transparent; cursor: pointer; }
+.account button:hover { background: rgba(255, 255, 255, 0.1); }

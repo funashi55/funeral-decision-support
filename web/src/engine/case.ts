@@ -1,3 +1,4 @@
+import type { Registration } from "./registration";
 import type { FamilyProfile } from "../domain/similarFamilies";
 
 export type Speaker = "staff" | "chief_mourner" | "family";
@@ -54,7 +55,8 @@ export type AuditKind =
   | "request_reply" // 担当者が返事をした
   | "family_chat_handoff" // 窓口の対話が担当者に回した
   | "export" // 基幹システム向けに書き出した
-  | "todo"; // 担当者が自分でやることを足した・済ませた・消した
+  | "todo" // 担当者が自分でやることを足した・済ませた・消した
+  | "register"; // 喪家を登録した
 
 /** 監査ログ。誰が・いつ・何をしたかを残す（AI の判定の結果も含む） */
 export interface AuditEntry {
@@ -119,4 +121,6 @@ export interface CaseState {
   readonly audit: readonly AuditEntry[];
   /** 担当者が自分で足したやること（前から保存されている案件にはないことがある） */
   readonly customTodos?: readonly CustomTodo[];
+  /** 喪家の登録で受付が入れた内容（デモ・試用の案件にはない） */
+  readonly registration?: Registration;
 }

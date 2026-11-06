@@ -13,7 +13,7 @@ import { detectOversights } from "../../engine/oversight";
 import { allowsPrices, detectPhase } from "../../engine/phase";
 import { speaksAboutBudget, type PlanFitResult } from "../../engine/planFit";
 import { fitsChanged, type QuickFit } from "../../engine/quickFit";
-import { roleplayHref } from "../system/SystemBar";
+import { roleplayHref } from "../system/links";
 import { DecisionBoard } from "./DecisionBoard";
 import { NowView, type TodoAction } from "./NowView";
 import { FamilyInbox } from "./FamilyInbox";
@@ -52,6 +52,15 @@ const message = (e: unknown): string => (e instanceof Error ? e.message : "問�
 export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const { state, connected } = useCaseStream(caseId);
   const [playing, setPlaying] = useState(false);
+  // ログインしている担当者の名前（ログインの設定がなければ null のまま）
+  const [staffName, setStaffName] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void api.me().then((me) => alive && setStaffName(me?.name ?? null));
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [extracting, setExtracting] = useState(false);
   const [farewell, setFarewell] = useState<FarewellResult | null>(null);
   const [farewellLoading, setFarewellLoading] = useState(false);
@@ -322,7 +331,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       <nav className={c.rail} aria-label="画面の切り替え">
         <div className={c.brand}>
           <span className={c.brandFamily}>{state.familyName}</span>
-          <span className={c.brandMeta}>担当：新人（2年目）</span>
+          <span className={c.brandMeta}>{staffName ? `担当：${staffName}` : "担当：新人（2年目）"}</span>
           {!connected && <span className={c.reconnect}>再接続中…</span>}
         </div>
         <div className={c.navList} role="tablist" aria-orientation="vertical" aria-label="画面">
@@ -344,6 +353,10 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           ))}
         </div>
         <div className={c.railFoot}>
+          <Link href="/staff" className={c.navItem} title="ご家族の一覧・新しいご家族の登録">
+            <Icon d="M3 6h18M3 12h18M3 18h18" />
+            <span>ご家族の一覧</span>
+          </Link>
           <Link href={roleplayHref(caseId)} className={c.navItem} title="架空のご家族と打合せの練習をする">
             <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
             <span>ロールプレイ</span>

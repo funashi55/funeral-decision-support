@@ -5,6 +5,7 @@
 import { randomBytes } from "node:crypto";
 import type { CaseState } from "../engine/case";
 import { DEMO_CASE } from "../engine/fixtures/demoCase";
+import { caseFromRegistration, type Registration } from "../engine/registration";
 import { getKv, type Kv } from "./kv";
 
 export interface CaseStore {
@@ -16,8 +17,18 @@ export interface CaseStore {
   reset(caseId: string): Promise<CaseState | undefined>;
   /** 試してもらう人ごとに、デモと同じ条件の新しい案件を作る */
   createTrial(): Promise<CaseState>;
+  /** 喪家を登録して、新しい案件を作る */
+  createCase(registration: Registration): Promise<CaseState>;
+  /** 登録した喪家の一覧（新しい順） */
+  listCases(): Promise<CaseSummary[]>;
   /** 更新のたびに増える番号。画面への配信が変化に気づくために使う */
   revision(caseId: string): Promise<number>;
+}
+
+export interface CaseSummary {
+  readonly caseId: string;
+  readonly familyName: string;
+  readonly registeredAt: number;
 }
 
 /** 案件の形を変えたら版を上げる（古い形のまま残ったデータを読まないように） */
@@ -25,8 +36,11 @@ const STORE_VERSION = 6;
 const caseKey = (id: string): string => `v${STORE_VERSION}:case:${id}`;
 const revKey = (id: string): string => `v${STORE_VERSION}:rev:${id}`;
 const tokenKey = (token: string): string => `v${STORE_VERSION}:token:${token}`;
+const INDEX_KEY = `v${STORE_VERSION}:cases`;
 
 export const TRIAL_PREFIX = "trial-";
+/** 喪家の登録で作った案件 */
+export const CASE_PREFIX = "case-";
 
 function seedFor(caseId: string, familyToken: string): CaseState {
   return { ...DEMO_CASE, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 } };
@@ -41,7 +55,7 @@ function demoToken(): string {
 }
 
 function isKnownCase(caseId: string): boolean {
-  return caseId === DEMO_CASE.caseId || caseId.startsWith(TRIAL_PREFIX);
+  return caseId === DEMO_CASE.caseId || caseId.startsWith(TRIAL_PREFIX) || caseId.startsWith(CASE_PREFIX);
 }
 
 export function createCaseStore(kv: Kv): CaseStore {
@@ -74,6 +88,8 @@ export function createCaseStore(kv: Kv): CaseStore {
       const current = await kv.get<CaseState>(caseKey(caseId));
       if (!current && caseId !== DEMO_CASE.caseId) return undefined;
       const token = caseId === DEMO_CASE.caseId ? demoToken() : (current?.familyToken ?? "");
+      // 登録した喪家は、登録したときの内容（受付で聞いた事実）に戻す
+      if (current?.registration) return save(caseFromRegistration(caseId, token, current.registration));
       const seed = seedFor(caseId, token);
       // 試用・ロールプレイの案件は、家族の名前と条件を作ったときのまま残す
       return save(current ? { ...seed, familyName: current.familyName, profile: current.profile } : seed);
@@ -82,6 +98,13 @@ export function createCaseStore(kv: Kv): CaseStore {
       const id = `${TRIAL_PREFIX}${randomBytes(6).toString("base64url")}`;
       return save(seedFor(id, randomBytes(12).toString("base64url")));
     },
+    createCase: async (registration) => {
+      const id = `${CASE_PREFIX}${randomBytes(6).toString("base64url")}`;
+      const state = await save(caseFromRegistration(id, randomBytes(12).toString("base64url"), registration));
+      await kv.push(INDEX_KEY, { caseId: id, familyName: state.familyName, registeredAt: registration.registeredAt } satisfies CaseSummary);
+      return state;
+    },
+    listCases: async () => [...(await kv.list<CaseSummary>(INDEX_KEY))].reverse(),
     revision: async (caseId) => Number((await kv.get<number>(revKey(caseId))) ?? 0),
   };
 }

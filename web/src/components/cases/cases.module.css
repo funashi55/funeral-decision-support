@@ -1,0 +1,45 @@
+/* 喪家の一覧と登録。打合せの画面と同じ色と余白で、受付の流れ（一覧 → 登録 → 打合せ）を見せる */
+.page { min-height: 100vh; background: var(--surface-2); padding: var(--space-6) clamp(1rem, 0.5rem + 3vw, 3rem) 4rem; }
+.column { max-width: 880px; margin: 0 auto; display: grid; gap: var(--space-5); }
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.eyebrow { font-size: var(--text-xs); font-weight: 800; letter-spacing: 0.14em; color: var(--accent); }
+.title { font-size: clamp(1.4rem, 1.1rem + 1.2vw, 2rem); font-weight: 900; letter-spacing: 0.02em; color: var(--ink); }
+.lead { font-size: var(--text-sm); color: var(--ink-3); line-height: 1.8; }
+.primary { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0.8rem 1.4rem; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; text-decoration: none; box-shadow: var(--shadow-md); transition: transform var(--duration-fast) var(--ease), background var(--duration-fast); }
+.primary:hover { background: color-mix(in oklab, var(--accent) 88%, black); transform: translateY(-1px); }
+.primary:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 3px; }
+.primary:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+.ghost { color: var(--ink-3); font-weight: 700; text-decoration: none; font-size: var(--text-sm); }
+.ghost:hover { color: var(--accent); }
+
+.list { list-style: none; display: grid; gap: var(--space-2); }
+.case { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); text-decoration: none; color: inherit; box-shadow: var(--shadow-sm); transition: border-color var(--duration-fast), transform var(--duration-fast) var(--ease); }
+.case:hover { border-color: var(--accent-2); transform: translateY(-1px); }
+.case:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+.caseName { font-size: var(--text-lg); font-weight: 800; }
+.caseMeta { display: block; font-size: var(--text-xs); color: var(--ink-3); margin-top: 2px; }
+.tag { font-size: 0.66rem; font-weight: 800; padding: 1px 8px; border-radius: 999px; background: var(--surface-3); color: var(--ink-3); margin-left: var(--space-2); vertical-align: 2px; }
+.arrow { color: var(--accent); font-weight: 900; }
+.empty { padding: var(--space-5); border: 1px dashed var(--line-2); border-radius: var(--r-md); color: var(--ink-3); font-size: var(--text-sm); text-align: center; }
+
+/* 登録の用紙 */
+.form { display: grid; gap: var(--space-4); }
+.section { display: grid; gap: var(--space-3); padding: var(--space-5); border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.section > h2 { font-size: var(--text-base); font-weight: 900; color: var(--ink); display: flex; align-items: baseline; gap: var(--space-2); }
+.section > h2 small { font-size: var(--text-xs); font-weight: 600; color: var(--ink-3); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3) var(--space-4); }
+.field { display: grid; gap: 4px; font-size: var(--text-sm); font-weight: 700; color: var(--ink-2); }
+.field small { font-weight: 500; color: var(--ink-3); }
+.req { color: var(--care); margin-left: 4px; font-size: var(--text-xs); }
+.field input, .field textarea, .field select { font: inherit; font-weight: 500; font-size: var(--text-base); padding: 0.6rem 0.8rem; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); }
+.field input:focus-visible, .field textarea:focus-visible, .field select:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 1px; border-color: transparent; }
+.choices { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.choice { position: relative; }
+.choice input { position: absolute; opacity: 0; inset: 0; }
+.choice span { display: inline-block; padding: 0.45rem 1rem; border-radius: 999px; border: 1px solid var(--line-2); font-size: var(--text-sm); font-weight: 700; color: var(--ink-2); background: var(--surface); cursor: pointer; transition: all var(--duration-fast); }
+.choice input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
+.choice input:focus-visible + span { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.legend { font-size: var(--text-sm); font-weight: 700; color: var(--ink-2); margin-bottom: 4px; }
+.actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-4); position: sticky; bottom: 0; padding: var(--space-3) 0; background: linear-gradient(transparent, var(--surface-2) 30%); }
+.error { padding: var(--space-3) var(--space-4); border-radius: var(--r-sm); background: color-mix(in oklab, var(--care) 10%, white); color: var(--care); font-size: var(--text-sm); font-weight: 700; }
+.note { font-size: var(--text-xs); color: var(--ink-3); line-height: 1.7; }

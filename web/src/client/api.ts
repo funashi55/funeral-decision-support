@@ -22,6 +22,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 const post = <T,>(path: string, body?: unknown): Promise<T> => call<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
 
 export const api = {
+  me: () => call<{ email: string; name: string } | null>("/api/auth/me").catch(() => null),
   addUtterance: (caseId: string, u: { speaker: string; speakerLabel: string; text: string; at: number }) => post<CaseState>(`/api/cases/${caseId}/utterances`, u),
   extract: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/extract`),
   farewell: (caseId: string) => post<FarewellResult & { basedOn?: number }>(`/api/cases/${caseId}/farewell`),

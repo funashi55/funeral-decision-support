@@ -6,7 +6,7 @@ export const ACCESS_COOKIE = "fds_access";
 export const ACCESS_MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
 
 /** 合言葉なしで開ける場所：入口そのもの、ご家族の窓口（窓口のリンク自体が推測されにくい合言葉）、静的ファイル */
-const OPEN_PREFIXES = ["/gate", "/api/gate", "/f/", "/api/family/", "/_next/", "/favicon", "/altar/", "/robots.txt"];
+const OPEN_PREFIXES = ["/gate", "/api/gate", "/login", "/api/auth/", "/f/", "/api/family/", "/_next/", "/favicon", "/altar/", "/robots.txt"];
 
 export function isOpenPath(pathname: string): boolean {
   return OPEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p));

@@ -1,21 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { Account } from "./Account";
+import { meetingHref, roleplayHref } from "./links";
 import s from "./system.module.css";
 
 /** 担当者の画面と同じ暗い帯。システムの中の画面どうしを行き来する */
-export type SystemSection = "meeting" | "roleplay";
-
-const CASE_ID = /^[A-Za-z0-9_-]{1,64}$/;
-
-/** 戻り先の打合せ。URL から来るので、案件の ID の形のものだけを受け付ける */
-export function meetingHref(caseId: string | undefined): string {
-  return caseId && CASE_ID.test(caseId) ? `/staff/${caseId}` : "/";
-}
-
-export function roleplayHref(caseId: string | undefined): string {
-  return caseId && CASE_ID.test(caseId)
-    ? `/veteran?from=${caseId}`
-    : "/veteran";
-}
+export type SystemSection = "families" | "meeting" | "roleplay";
 
 export function SystemBar({
   current,
@@ -29,6 +19,7 @@ export function SystemBar({
     readonly label: string;
     readonly href: string;
   }[] = [
+    { id: "families", label: "ご家族の一覧", href: "/staff" },
     { id: "meeting", label: "打合せ", href: meetingHref(caseId) },
     { id: "roleplay", label: "ロールプレイ", href: roleplayHref(caseId) },
   ];
@@ -53,6 +44,9 @@ export function SystemBar({
             ))}
           </ul>
         </nav>
+        <Suspense fallback={null}>
+          <Account />
+        </Suspense>
       </header>
       <div className={s.spacer} aria-hidden="true" />
     </>

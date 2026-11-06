@@ -28,8 +28,8 @@ export default function Home() {
               <span aria-hidden="true">→</span>
             </button>
           </form>
-          <Link className={s.ctaSub} href="/staff/demo-yamada">
-            共用のデモを見る
+          <Link className={s.ctaSub} href="/staff">
+            ご家族の一覧（受付・登録）
           </Link>
         </div>
         <p className={s.ctaNote}>あなた専用の打合せ（山田家・架空）を作ります。「▶ 打合せを再生」で会話が流れ、推奨と根拠が出ます。</p>
