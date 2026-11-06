@@ -52,7 +52,7 @@ export function ManualEntry({ item, onConfirm }: { readonly item: DecisionItem; 
   if (!open) {
     return (
       <button type="button" className={c.todoEnter} onClick={() => setOpen(true)}>
-        入れる
+        記入する
       </button>
     );
   }
