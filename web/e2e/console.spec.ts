@@ -6,13 +6,13 @@ test.beforeEach(async ({ request }) => resetCase(request));
 test("メモ入力で発言を足すと、段階が変わり、見落としの注意が出る", async ({ page }) => {
   await page.goto(`/staff/${CASE_ID}`);
   const phase = page.getByRole("navigation", { name: "打合せの段階" });
-  await expect(phase.locator("[aria-current=step]")).toHaveText("信頼関係");
+  await expect(phase.locator("[aria-current=step]")).toContainText("信頼関係");
 
   await page.getByRole("textbox", { name: "発言の要点" }).fill("新聞のお悔やみ欄にも出したほうがいいんでしょうか");
   await page.getByRole("button", { name: "追加" }).click();
 
   await expect(page.getByText("新聞のお悔やみ欄にも出したほうがいいんでしょうか")).toBeVisible();
-  await expect(phase.locator("[aria-current=step]")).toHaveText("手配と書類");
+  await expect(phase.locator("[aria-current=step]")).toContainText("手配と書類");
   const oversights = page.getByTestId("oversights");
   await expect(oversights.getByText(/掲載すると取り消せません/)).toBeVisible();
 
@@ -51,7 +51,7 @@ test("確定したものだけが手配に回り、CSV に書き出される", a
   await expect(orders.getByText("寺院への連絡").locator("..")).toContainText("確定待ち");
 
   const download = page.waitForEvent("download");
-  await page.getByRole("link", { name: /基幹システム向けに書き出す/ }).click();
+  await page.getByRole("link", { name: /基幹システム向け/ }).click();
   const file = await download;
   const path = await file.path();
   const { readFileSync } = await import("node:fs");
@@ -81,7 +81,7 @@ test("窓口のリンクを止めると、遺族のスマホでは開けなく�
 
 test("マイクでの聞き取りは、ご家族の同意を確かめるまで始まらない", async ({ page }) => {
   await page.goto(`/staff/${CASE_ID}`);
-  await page.getByRole("tab", { name: "マイクで聞き取る" }).click();
+  await page.getByRole("button", { name: "マイクで聞き取る" }).click();
   await expect(page.getByRole("group", { name: "録音の同意" })).toContainText("音声そのものは保存しません");
   await expect(page.getByRole("button", { name: "聞き取りを始める" })).toHaveCount(0);
   await page.getByRole("button", { name: "ご家族の同意をいただいた" }).click();

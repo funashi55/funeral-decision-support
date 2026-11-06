@@ -49,24 +49,27 @@ function ConfirmControl({ item, value, onConfirm }: { item: DecisionItem; value:
   );
 }
 
-/** 項目に添える実績（施行の記録の集計）と知見。数字は集計表から出す */
+/** 項目に添える実績（施行の記録の集計）と知見。数字は集計表から出す。長いので、開いたときだけ見せる */
 function Grounding({ decisionId }: { readonly decisionId: string }) {
   const evidence = evidenceFor(decisionId);
   const tip = tipsFor(decisionId)[0];
   if (!evidence && !tip) return null;
   return (
-    <span className={s.grounding}>
+    <details className={s.grounding}>
+      <summary>{evidence ? "実績と知見" : "ベテランの知見"}</summary>
       {evidence && (
-        <span title={`${EVIDENCE_SOURCE}・${evidence.count}件`}>
-          実績（参考）：{evidence.text}
-        </span>
+        <p title={`${EVIDENCE_SOURCE}・${evidence.count}件`}>
+          <b>実績（参考）</b>
+          {evidence.text}
+        </p>
       )}
       {tip && (
-        <span title={`根拠：${tip.source}`}>
-          知見：{tip.when}は、{tip.do}
-        </span>
+        <p title={`根拠：${tip.source}`}>
+          <b>知見</b>
+          {tip.when}は、{tip.do}
+        </p>
       )}
-    </span>
+    </details>
   );
 }
 
@@ -76,7 +79,10 @@ function Item({ item, state, impacted, onConfirm }: { item: DecisionItem } & Pic
   return (
     <div className={className}>
       <span>
-        <span className={item.hard ? s.itemHard : undefined}>{item.label}</span>
+        <span className={s.itemLabel}>
+          {item.label}
+          {item.hard && <span className={s.hardTag}>迷いやすい</span>}
+        </span>
         <span className={s.itemVal}>{d ? `${d.status === "candidate" ? "候補：" : ""}${d.value}` : impacted.has(item.id) ? "見直しが必要です" : "未定"}</span>
         {d?.status !== "confirmed" && <Grounding decisionId={item.id} />}
       </span>
@@ -103,19 +109,21 @@ export function DecisionBoard(props: DecisionBoardProps) {
         <h2 id="board-title">決めることボード</h2>
         <span className={s.count}>全 {DECISIONS.length} 項目</span>
       </div>
-      <div className={s.summary}>
-        <div className={`${s.sum} ${s.sumToday}`}>
-          <b>{todayOpen.length}</b>
-          <span>今日決める</span>
+      <div className={s.progress} aria-label={`今日決める ${todayOpen.length} 項目・確定 ${confirmed.length} 項目`}>
+        <div className={s.progressNums}>
+          <span>
+            今日決める<b className={s.progressToday}>{todayOpen.length}</b>
+          </span>
+          <span>
+            明日以降<b>{DECISIONS.length - todayOpen.length - confirmed.length}</b>
+          </span>
+          <span>
+            確定<b className={s.progressDone}>{confirmed.length}</b>
+          </span>
         </div>
-        <div className={s.sum}>
-          <b>{DECISIONS.length - todayOpen.length - confirmed.length}</b>
-          <span>明日以降でよい</span>
-        </div>
-        <div className={s.sum}>
-          <b>{confirmed.length}</b>
-          <span>確定済み</span>
-        </div>
+        <span className={s.progressBar}>
+          <i style={{ width: `${(confirmed.length / DECISIONS.length) * 100}%` }} />
+        </span>
       </div>
       <div className={s.scroll}>
         {props.oversights.length > 0 && (
@@ -151,14 +159,14 @@ export function DecisionBoard(props: DecisionBoardProps) {
         )}
         <div className={s.group}>
           <h3>
-            今日決める・迷いやすい項目<span>{hardOpen.length}</span>
+            今日決める・迷いやすい項目<span>{hardOpen.filter((d) => !touched.includes(d)).length}</span>
           </h3>
           {hardOpen
             .filter((d) => !touched.includes(d))
             .map((item) => (
-              <div key={item.id} className={s.item}>
+              <div key={item.id} className={`${s.item} ${s.itemQuiet}`}>
                 <span>
-                  <span className={s.itemHard}>{item.label}</span>
+                  <span className={s.itemLabel}>{item.label}</span>
                   <span className={s.itemVal}>{PHASE_LABEL[item.phase]}</span>
                   <Grounding decisionId={item.id} />
                 </span>

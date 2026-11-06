@@ -224,22 +224,27 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   return (
     <div className={s.shell}>
       <header className={s.top}>
-        <span className={s.family}>{state.familyName}</span>
-        <span className={s.meta}>担当：新人（2年目）{connected ? "" : "／再接続中…"}</span>
-        <span className={s.spacer} />
-        <span className={`${s.rec} ${recording ? s.recOn : ""}`}>{recording ? "収録音声を再生中（デモ）" : "待機中"}</span>
-        <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={() => setPlaying((p) => !p)} disabled={finished}>
-          {playing ? "一時停止" : "▶ 打合せを再生"}
-        </button>
-        <button type="button" className={s.btn} onClick={() => void advance()} disabled={playing || finished}>
-          1行すすめる
-        </button>
+        <div className={s.identity}>
+          <span className={s.family}>{state.familyName}</span>
+          <span className={s.meta}>担当：新人（2年目）</span>
+          {!connected && <span className={s.reconnect}>再接続中…</span>}
+        </div>
+        <div className={s.demo} role="group" aria-label="デモの操作">
+          <span className={s.demoLabel}>デモ</span>
+          <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => setPlaying((p) => !p)} disabled={finished}>
+            {recording && <span className={s.recDot} aria-hidden="true" />}
+            {playing ? "一時停止" : "▶ 打合せを再生"}
+          </button>
+          <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => void advance()} disabled={playing || finished}>
+            1行すすめる
+          </button>
+          <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => void reset()}>
+            最初から
+          </button>
+        </div>
         <button type="button" className={`${s.btn} ${s.inboxBtn}`} onClick={() => setInboxOpen((o) => !o)} aria-expanded={inboxOpen}>
           ご家族の窓口
           {openRequests > 0 && <span className={s.badge} aria-label={`未対応 ${openRequests} 件`}>{openRequests}</span>}
-        </button>
-        <button type="button" className={s.btn} onClick={() => void reset()}>
-          最初から
         </button>
       </header>
       <PhaseBar reading={phase} />

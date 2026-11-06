@@ -102,8 +102,11 @@ export function VeteranForm() {
       </label>
 
       <div className={s.progress} aria-live="polite">
-        <span>
-          答えた場面 {done} / {SCENES.length}
+        <span className={s.progressText}>
+          答えた場面 <b>{done}</b> / {SCENES.length}
+          <span className={s.progressBar} aria-hidden="true">
+            <i style={{ width: `${(done / SCENES.length) * 100}%` }} />
+          </span>
         </span>
         <button className={s.button} type="submit" disabled={status === "sending" || done === 0}>
           {status === "sending" ? "送っています…" : "ここまでの答えを送る"}
@@ -122,11 +125,13 @@ export function VeteranForm() {
               <span className={s.sceneMeta}>
                 故人 {scene.deceasedAge}歳{scene.daysUntilFuneral !== undefined ? `・葬儀まで${scene.daysUntilFuneral}日` : ""}
               </span>
+              {isComplete(answer) && <span className={s.sceneDone}>✓ 答えました</span>}
             </div>
             <ul className={s.lines}>
               {scene.lines.map((line, i) => (
-                <li key={i}>
-                  <span className={s.speaker}>{line.label}</span>「{line.text}」
+                <li key={i} className={line.who === "staff" ? s.lineStaff : undefined}>
+                  <span className={s.speaker}>{line.label}</span>
+                  <span className={s.lineText}>{line.text}</span>
                 </li>
               ))}
             </ul>

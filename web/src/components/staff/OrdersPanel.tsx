@@ -14,28 +14,27 @@ export function OrdersPanel({ state }: { readonly state: CaseState }) {
   const ready = orders.filter((o) => o.status === "ready").length;
   return (
     <div className={s.scroll}>
-      <div className={s.summary} style={{ padding: "0 0 0.6rem" }}>
-        <div className={`${s.sum} ${s.sumToday}`}>
-          <b>{dueToday.length}</b>
-          <span>今日決める（未確定）</span>
-        </div>
-        <div className={s.sum}>
-          <b>{ready}</b>
-          <span>手配できる</span>
-        </div>
-        <div className={s.sum}>
-          <b>{orders.length}</b>
-          <span>発注・手配の項目</span>
-        </div>
+      <div className={s.progressNums} style={{ marginBottom: "var(--space-3)" }}>
+        <span>
+          今日決める（未確定）<b className={s.progressToday}>{dueToday.length}</b>
+        </span>
+        <span>
+          手配できる<b className={s.progressDone}>{ready}</b>
+        </span>
+        <span>
+          発注・手配<b>{orders.length}</b>
+        </span>
       </div>
       <PaperworkSection state={state} />
-      <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/nenkai`} target="_blank" rel="noopener">
-        年回表（中陰月日表）を作る
-      </a>
-      <a className={`${s.btn} ${s.btnPrimary}`} href={`/api/cases/${encodeURIComponent(state.caseId)}/export`} download>
-        基幹システム向けに書き出す（CSV）
-      </a>
-      <p className={s.empty}>書き出すのは確定した項目だけです。AI が拾っただけの候補は含めません。</p>
+      <div className={s.linkRow}>
+        <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/nenkai`} target="_blank" rel="noopener">
+          年回表（中陰月日表）
+        </a>
+        <a className={s.btn} href={`/api/cases/${encodeURIComponent(state.caseId)}/export`} download>
+          基幹システム向け CSV
+        </a>
+      </div>
+      <p className={s.empty}>CSV に書き出すのは確定した項目だけです。AI が拾っただけの候補は含めません。</p>
 
       <div className={s.group}>
         <h3>

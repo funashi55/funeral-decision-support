@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CaseState, Utterance } from "../../engine/case";
 import { InputDock, type NewLine } from "./InputDock";
 import s from "./staff.module.css";
@@ -16,18 +16,17 @@ const mmss = (sec: number): string => `${String(Math.floor(sec / 60)).padStart(2
 function Line({ u, onEdit }: { readonly u: Utterance; readonly onEdit: TranscriptProps["onEdit"] }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(u.text);
+  const isStaff = u.speaker === "staff";
   return (
-    <div className={`${s.utt} ${u.speaker === "staff" ? s.uttStaff : ""}`} data-testid={`utt-${u.id}`}>
+    <div className={`${s.utt} ${isStaff ? s.uttStaff : ""}`} data-testid={`utt-${u.id}`}>
       <span className={s.uttWho}>
         <span>{u.speakerLabel}</span>
-        <span>
-          {mmss(u.at)}
-          {!editing && (
-            <button type="button" className={s.linkBtn} onClick={() => setEditing(true)} aria-label={`${u.id}の字幕を直す`}>
-              直す
-            </button>
-          )}
-        </span>
+        <span>{mmss(u.at)}</span>
+        {!editing && (
+          <button type="button" className={s.uttEdit} onClick={() => setEditing(true)} aria-label={`${u.id}の字幕を直す`}>
+            直す
+          </button>
+        )}
       </span>
       {editing ? (
         <form
@@ -44,36 +43,56 @@ function Line({ u, onEdit }: { readonly u: Utterance; readonly onEdit: Transcrip
           </button>
         </form>
       ) : (
-        <p>{u.text}</p>
+        <p className={s.bubble}>{u.text}</p>
       )}
     </div>
   );
 }
 
 export function Transcript({ state, extracting, onAdd, onEdit }: TranscriptProps) {
+  const end = useRef<HTMLDivElement>(null);
+  const count = state.utterances.length;
+  // 新しい発言が届いたら、いちばん下まで送る
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [count]);
+
   return (
     <section className={s.col} aria-labelledby="transcript-title">
       <div className={s.colHead}>
         <h2 id="transcript-title">会話</h2>
-        <span className={s.count}>{state.utterances.length} 発話</span>
+        <span className={s.count}>{count} 発話</span>
+      </div>
+      <div className={s.facts} aria-live="polite">
+        <h3>
+          わかったこと
+          {extracting && <span className={s.thinking}>整理中</span>}
+        </h3>
+        {state.circumstances.length === 0 ? (
+          <p className={s.factsEmpty}>ご遺族の言葉から、家族の事情をここに拾い上げます</p>
+        ) : (
+          <div className={s.chips}>
+            {state.circumstances.map((c) => (
+              <span key={c.id} className={s.chip}>
+                {c.text}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div className={s.scroll} aria-live="polite">
-        {state.utterances.length === 0 && <p className={s.empty}>打合せを始めると、会話が文字になって流れます。録音しない場合は、下のメモ入力で要点を打てます。</p>}
+        {count === 0 && (
+          <div className={s.emptyState}>
+            <p className={s.emptyTitle}>まだ会話がありません</p>
+            <p>上の「▶ 打合せを再生」でデモが始まります。録音しないときは、下の欄にご遺族の言葉を打ってください。</p>
+          </div>
+        )}
         {state.utterances.map((u) => (
           <Line key={`${u.id}:${u.text}`} u={u} onEdit={onEdit} />
         ))}
+        <div ref={end} />
       </div>
       <InputDock onAdd={onAdd} />
-      <div className={s.facts}>
-        <h3>拾い上げた家族の事情 {extracting && <span className={s.thinking}>（整理中…）</span>}</h3>
-        <div className={s.chips}>
-          {state.circumstances.map((c) => (
-            <span key={c.id} className={s.chip}>
-              {c.text}
-            </span>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }

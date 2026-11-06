@@ -12,6 +12,9 @@ export function PhaseBar({ reading }: { readonly reading: PhaseReading }) {
       <ol>
         {STEPS.map((p, i) => (
           <li key={p} className={i === current ? s.phaseNow : i < current ? s.phaseDone : undefined} aria-current={i === current ? "step" : undefined}>
+            <span className={s.phaseDot} aria-hidden="true">
+              {i < current ? "✓" : i + 1}
+            </span>
             {PHASE_LABEL[p]}
           </li>
         ))}

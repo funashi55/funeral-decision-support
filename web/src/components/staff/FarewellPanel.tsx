@@ -34,27 +34,41 @@ function Price({ option }: { readonly option: OptionFacts }) {
   );
 }
 
-/** できること・できないこと・期限。サーバーが持つ事実で、モデルは書かない */
+/** できること・できないこと。サーバーが持つ事実で、モデルは書かない */
+function CanList({ option }: { readonly option: OptionFacts }) {
+  return (
+    <div className={s.can}>
+      <ul>
+        <b>できること</b>
+        {option.canDo.map((c) => (
+          <li key={c}>・{c}</li>
+        ))}
+      </ul>
+      <ul>
+        <b>できないこと</b>
+        {option.cannotDo.map((c) => (
+          <li key={c}>・{c}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FactTags({ option }: { readonly option: OptionFacts }) {
+  return (
+    <>
+      <span className={`${s.tag} ${option.reversible ? "" : s.tagWarn}`}>{option.reversible ? "後から変更できる" : "後から取り消せない"}</span>
+      <span className={s.tag}>決める期限：{option.deadline}</span>
+    </>
+  );
+}
+
 function FactsBody({ option }: { readonly option: OptionFacts }) {
   return (
     <>
-      <div className={s.can}>
-        <ul>
-          <b>できること</b>
-          {option.canDo.map((c) => (
-            <li key={c}>・{c}</li>
-          ))}
-        </ul>
-        <ul>
-          <b>できないこと</b>
-          {option.cannotDo.map((c) => (
-            <li key={c}>・{c}</li>
-          ))}
-        </ul>
-      </div>
+      <CanList option={option} />
       <div className={s.meta2}>
-        <span className={`${s.tag} ${option.reversible ? "" : s.tagWarn}`}>{option.reversible ? "後から変更できる" : "後から取り消せない"}</span>
-        <span className={s.tag}>決める期限：{option.deadline}</span>
+        <FactTags option={option} />
       </div>
     </>
   );
@@ -85,27 +99,26 @@ function OptionCard({ option, state, onFeedback }: { option: EnrichedOption; sta
         <Price option={option} />
       </div>
       <p className={s.reason}>{option.reason}</p>
-      <FactsBody option={option} />
       <div className={s.meta2}>
+        <FactTags option={option} />
         <FeedbackButtons state={state} target={`farewell:${option.id}`} onFeedback={onFeedback} />
       </div>
-      {(quotes.length > 0 || option.evidence.rules.length > 0) && (
-        <details className={s.evidence}>
-          <summary>根拠を見る</summary>
-          {quotes.map((u) => (
-            <blockquote key={u.id}>
-              {u.speakerLabel}：「{u.text}」
-            </blockquote>
-          ))}
-          {option.evidence.rules.map((r) => (
-            <blockquote key={r.id}>
-              ベテランの知見（{r.id}）：{r.do}
-              <br />
-              元のメモ：「{r.source}」
-            </blockquote>
-          ))}
-        </details>
-      )}
+      <details className={s.evidence}>
+        <summary>できること・できないこと{quotes.length > 0 || option.evidence.rules.length > 0 ? "と根拠" : ""}</summary>
+        <CanList option={option} />
+        {quotes.map((u) => (
+          <blockquote key={u.id}>
+            {u.speakerLabel}：「{u.text}」
+          </blockquote>
+        ))}
+        {option.evidence.rules.map((r) => (
+          <blockquote key={r.id}>
+            ベテランの知見（{r.id}）：{r.do}
+            <br />
+            元のメモ：「{r.source}」
+          </blockquote>
+        ))}
+      </details>
     </article>
   );
 }
@@ -124,7 +137,7 @@ function QuickStrip({ quick, listening, stale }: { readonly quick: QuickFit | nu
       {quick && (
         <ul className={s.quickList}>
           {FAREWELL_OPTIONS.map((o) => (
-            <li key={o.id}>
+            <li key={o.id} data-fit={quick.fits[o.id]}>
               <span className={`${s.fit} ${FIT_CLASS[quick.fits[o.id]]}`}>{FIT_LABEL[quick.fits[o.id]]}</span>
               {o.label}
             </li>
@@ -136,6 +149,18 @@ function QuickStrip({ quick, listening, stale }: { readonly quick: QuickFit | nu
   );
 }
 
+/** 推奨を書いている間の仮の枠。文字だけの「考えています…」より、どこに何が出るかがわかる */
+function Skeleton() {
+  return (
+    <div className={s.skeleton} aria-label="推奨を書いています" role="status">
+      <i className={s.skWish} />
+      <i />
+      <i />
+      <i className={s.skShort} />
+    </div>
+  );
+}
+
 export function FarewellPanel({ state, result, resultBasedOn, quick, listening, loading, error, onRun, onFeedback }: FarewellPanelProps) {
   const stale = Boolean(result?.ok && quick && loading && quick.basedOn > resultBasedOn);
   return (
@@ -143,19 +168,19 @@ export function FarewellPanel({ state, result, resultBasedOn, quick, listening, 
       <QuickStrip quick={quick} listening={listening} stale={stale} />
       <div className={s.toolbar}>
         <span className={s.count}>となりのベテランから</span>
-        <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={onRun} disabled={loading || state.utterances.length === 0}>
+        <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={onRun} disabled={loading || state.utterances.length === 0}>
           {loading ? "考えています…" : result ? "考え直す" : "お別れの仕方を考える"}
         </button>
       </div>
       {error && <p className={s.error} role="alert">{error}</p>}
       <div className={s.scroll} aria-live="polite">
         {!result && !loading && (
-          <p className={s.empty}>
-            家族の事情が見えてきたら、お別れの仕方の選択肢を、家族の言葉・ベテランの知見・似た家族の選び方と並べて示します。
-            <br />
-            推奨はこの画面にだけ出ます。伝えるかどうかは担当者が決めます。
-          </p>
+          <div className={s.emptyState}>
+            <p className={s.emptyTitle}>会話が進むと、ここに推奨が出ます</p>
+            <p>お別れの仕方の選択肢を、ご遺族の言葉・ベテランの知見・似た家族の選び方と並べて示します。推奨はこの画面にだけ出ます。伝えるかどうかは担当者が決めます。</p>
+          </div>
         )}
+        {!result && loading && <Skeleton />}
         {result && !result.ok && (
           <>
             <p className={s.error} role="alert">

@@ -62,20 +62,23 @@ export function PlansPanel({ state, phase, onFeedback }: PlansPanelProps) {
               </ul>
             </div>
           </div>
-          <table className={s.lines}>
-            <tbody>
-              {p.estimate.lines.map((l) => (
-                <tr key={l.label}>
-                  <th scope="row">
-                    {l.label}
-                    {l.returnable && <span className={s.tag}>返品できる</span>}
-                  </th>
-                  <td>{l.quantity > 1 ? `${yen(l.unitPrice)} × ${l.quantity}` : ""}</td>
-                  <td>{yen(l.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <details className={s.evidence}>
+            <summary>見積もりの明細</summary>
+            <table className={s.lines}>
+              <tbody>
+                {p.estimate.lines.map((l) => (
+                  <tr key={l.label}>
+                    <th scope="row">
+                      {l.label}
+                      {l.returnable && <span className={s.tag}>返品できる</span>}
+                    </th>
+                    <td>{l.quantity > 1 ? `${yen(l.unitPrice)} × ${l.quantity}` : ""}</td>
+                    <td>{yen(l.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
           {p.additions.length > 0 && (
             <details className={s.evidence}>
               <summary>見積もりに足した理由</summary>
