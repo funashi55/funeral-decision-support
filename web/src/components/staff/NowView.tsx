@@ -1,5 +1,7 @@
-import { DECISIONS } from "../../domain/decisions";
+import { useState } from "react";
+import { DECISIONS, type DecisionItem } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
+import { TODO_TEXT_MAX, todosOf } from "../../engine/todos";
 import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
 import { ConfirmControl } from "./DecisionBoard";
@@ -20,10 +22,15 @@ interface NowViewProps {
   /** 推奨を考えている途中か */
   readonly thinking: boolean;
   readonly onConfirm: (decisionId: string, value: string) => void;
+  /** 担当者が自分で足すやること（足す・済みにする・消す） */
+  readonly onTodo: TodoHandler;
   readonly onFeedback: FeedbackHandler;
   /** お別れの仕方の詳しい比較と根拠（FarewellPanel）。畳んで置く */
   readonly children: React.ReactNode;
 }
+
+export type TodoAction = { readonly action: "add"; readonly text: string } | { readonly action: "done"; readonly id: string; readonly done: boolean } | { readonly action: "remove"; readonly id: string };
+export type TodoHandler = (body: TodoAction) => void;
 
 const FIT_TEXT = { suits: "合う", consider: "尋ねてみる" } as const;
 
@@ -31,7 +38,7 @@ const FIT_TEXT = { suits: "合う", consider: "尋ねてみる" } as const;
  * 「いま」：打合せの最中に担当者が見る 1 枚。
  * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）
  */
-export function NowView({ state, impacted, oversights, farewell, planFit, thinking, onConfirm, onFeedback, children }: NowViewProps) {
+export function NowView({ state, impacted, oversights, farewell, planFit, thinking, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
   const rec = farewell?.ok ? farewell.recommendation : null;
   const proposals = (rec?.options ?? []).filter((o) => o.fit !== "not_now").sort((a, b) => (a.fit === b.fit ? 0 : a.fit === "suits" ? -1 : 1));
   // 推奨が挙げた注意。決まりごとの検出と同じ項目は重ねて出さない
@@ -126,28 +133,33 @@ export function NowView({ state, impacted, oversights, farewell, planFit, thinki
         </section>
       </div>
 
-      <TodoList state={state} impacted={impacted} onConfirm={onConfirm} />
+      <TodoList state={state} impacted={impacted} onConfirm={onConfirm} onTodo={onTodo} />
     </div>
   );
 }
 
-/** 今日決めることを打合せの順に並べる。会話から候補が入ると上がり、確定すると ✓ が付く */
-function TodoList({ state, impacted, onConfirm }: Pick<NowViewProps, "state" | "impacted" | "onConfirm">) {
+/**
+ * 今日決めることを打合せの順に並べる。会話から候補が入ると上がり、確定すると ✓ が付く。
+ * まだの項目は手でも入れられ、一覧にない用事は自分で足せる
+ */
+function TodoList({ state, impacted, onConfirm, onTodo }: Pick<NowViewProps, "state" | "impacted" | "onConfirm" | "onTodo">) {
   const today = DECISIONS.filter((d) => d.urgency === "today");
   const done = today.filter((d) => state.decisions[d.id]?.status === "confirmed");
   const waiting = DECISIONS.filter((d) => state.decisions[d.id]?.status === "candidate" || (impacted.has(d.id) && state.decisions[d.id]?.status !== "confirmed"));
   const open = today.filter((d) => !state.decisions[d.id] && !impacted.has(d.id));
-  const left = today.length - done.length;
+  const customs = todosOf(state);
+  const total = today.length + customs.length;
+  const finished = done.length + customs.filter((t) => t.done).length;
   return (
     <aside className={c.todo} aria-labelledby="todo-title">
       <h2 id="todo-title" className={c.blockTitle}>
         やることリスト
       </h2>
       <p className={c.todoCount}>
-        残り <b>{left}</b> / {today.length}
+        残り <b>{total - finished}</b> / {total}
       </p>
       <div className={c.todoBar} aria-hidden="true">
-        <i style={{ width: `${(done.length / Math.max(today.length, 1)) * 100}%` }} />
+        <i style={{ width: `${(finished / Math.max(total, 1)) * 100}%` }} />
       </div>
 
       {waiting.length > 0 && (
@@ -163,7 +175,7 @@ function TodoList({ state, impacted, onConfirm }: Pick<NowViewProps, "state" | "
                     {d.label}
                     <small>{impacted.has(d.id) ? "見直しが必要です" : value}</small>
                   </span>
-                  {value && <ConfirmControl item={d} value={value} onConfirm={onConfirm} />}
+                  {value ? <ConfirmControl item={d} value={value} onConfirm={onConfirm} /> : <ManualEntry item={d} onConfirm={onConfirm} />}
                 </li>
               );
             })}
@@ -179,11 +191,36 @@ function TodoList({ state, impacted, onConfirm }: Pick<NowViewProps, "state" | "
               <li key={d.id} className={c.todoItem}>
                 <span className={c.todoMark} aria-hidden="true">○</span>
                 <span className={c.todoText}>{d.label}</span>
+                <ManualEntry item={d} onConfirm={onConfirm} />
               </li>
             ))}
           </ul>
         </>
       )}
+
+      <h3 className={c.todoGroup}>自分で足したこと {customs.length > 0 ? customs.length : ""}</h3>
+      {customs.length > 0 && (
+        <ul className={c.todoList}>
+          {customs.map((t) => (
+            <li key={t.id} className={`${c.todoItem} ${t.done ? c.todoDone : ""}`}>
+              <button
+                type="button"
+                className={c.todoCheck}
+                aria-pressed={t.done}
+                aria-label={t.done ? `「${t.text}」を未済に戻す` : `「${t.text}」を済みにする`}
+                onClick={() => onTodo({ action: "done", id: t.id, done: !t.done })}
+              >
+                {t.done ? "✓" : ""}
+              </button>
+              <span className={c.todoText}>{t.text}</span>
+              <button type="button" className={c.todoRemove} aria-label={`「${t.text}」を消す`} onClick={() => onTodo({ action: "remove", id: t.id })}>
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <AddTodo onAdd={(text) => onTodo({ action: "add", text })} />
 
       {done.length > 0 && (
         <>
@@ -202,5 +239,59 @@ function TodoList({ state, impacted, onConfirm }: Pick<NowViewProps, "state" | "
         </>
       )}
     </aside>
+  );
+}
+
+/** まだの項目に、担当者が手で内容を入れて確定する */
+function ManualEntry({ item, onConfirm }: { readonly item: DecisionItem; readonly onConfirm: NowViewProps["onConfirm"] }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  if (!open) {
+    return (
+      <button type="button" className={c.todoEnter} onClick={() => setOpen(true)}>
+        入れる
+      </button>
+    );
+  }
+  return (
+    <form
+      className={c.todoForm}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!value.trim()) return;
+        onConfirm(item.id, value.trim());
+        setOpen(false);
+        setValue("");
+      }}
+    >
+      <input aria-label={`${item.label}の内容`} value={value} maxLength={200} autoFocus onChange={(e) => setValue(e.target.value)} />
+      <button type="submit" disabled={!value.trim()}>
+        確定
+      </button>
+      <button type="button" className={c.todoCancel} onClick={() => setOpen(false)}>
+        やめる
+      </button>
+    </form>
+  );
+}
+
+/** 一覧にない用事を、自分で足す */
+function AddTodo({ onAdd }: { readonly onAdd: (text: string) => void }) {
+  const [text, setText] = useState("");
+  return (
+    <form
+      className={c.todoForm}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!text.trim()) return;
+        onAdd(text.trim());
+        setText("");
+      }}
+    >
+      <input aria-label="やることを足す" placeholder="やることを足す（例：親戚に到着時刻を確かめる）" value={text} maxLength={TODO_TEXT_MAX} onChange={(e) => setText(e.target.value)} />
+      <button type="submit" disabled={!text.trim()}>
+        足す
+      </button>
+    </form>
   );
 }

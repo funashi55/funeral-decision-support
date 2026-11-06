@@ -15,7 +15,7 @@ import type { PlanFitResult } from "../../engine/planFit";
 import { fitsChanged, type QuickFit } from "../../engine/quickFit";
 import { roleplayHref } from "../system/SystemBar";
 import { DecisionBoard } from "./DecisionBoard";
-import { NowView } from "./NowView";
+import { NowView, type TodoAction } from "./NowView";
 import { FamilyInbox } from "./FamilyInbox";
 import { FarewellPanel } from "./FarewellPanel";
 import type { NewLine } from "./InputDock";
@@ -224,6 +224,14 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     }
   };
 
+  const todo = async (body: TodoAction): Promise<void> => {
+    try {
+      await api.todo(caseId, body);
+    } catch (e) {
+      setError(message(e));
+    }
+  };
+
   const feedback = async (target: string, verdict: FeedbackVerdict): Promise<void> => {
     try {
       await api.feedback(caseId, target, verdict);
@@ -357,6 +365,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               farewell={farewell}
               planFit={planFit?.ok ? planFit.proposal : null}
               onConfirm={(id, v) => void confirm(id, v)}
+              onTodo={(body) => void todo(body)}
               onFeedback={(t, v) => void feedback(t, v)}
             >
               {farewellPanel}

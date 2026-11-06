@@ -53,7 +53,8 @@ export type AuditKind =
   | "family_request" // 遺族の窓口から届いた
   | "request_reply" // 担当者が返事をした
   | "family_chat_handoff" // 窓口の対話が担当者に回した
-  | "export"; // 基幹システム向けに書き出した
+  | "export" // 基幹システム向けに書き出した
+  | "todo"; // 担当者が自分でやることを足した・済ませた・消した
 
 /** 監査ログ。誰が・いつ・何をしたかを残す（AI の判定の結果も含む） */
 export interface AuditEntry {
@@ -92,6 +93,14 @@ export interface FamilyNote {
   readonly at: number;
 }
 
+/** 担当者が自分で足したやること（決めることの一覧にない用事） */
+export interface CustomTodo {
+  readonly id: string;
+  readonly text: string;
+  readonly done: boolean;
+  readonly at: number;
+}
+
 export interface CaseState {
   readonly caseId: string;
   readonly familyName: string;
@@ -108,4 +117,6 @@ export interface CaseState {
   readonly familyChat: readonly ChatTurn[];
   readonly familyNotes: readonly FamilyNote[];
   readonly audit: readonly AuditEntry[];
+  /** 担当者が自分で足したやること（前から保存されている案件にはないことがある） */
+  readonly customTodos?: readonly CustomTodo[];
 }

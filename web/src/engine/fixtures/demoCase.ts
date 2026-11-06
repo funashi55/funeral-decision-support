@@ -25,5 +25,6 @@ export const DEMO_CASE: CaseState = {
   feedback: [],
   familyChat: [],
   familyNotes: [],
+  customTodos: [],
   audit: [],
 };

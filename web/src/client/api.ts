@@ -29,6 +29,8 @@ export const api = {
   paperwork: (caseId: string) => call<Paperwork | null>(`/api/cases/${caseId}/paperwork`),
   makePaperwork: (caseId: string) => post<Paperwork>(`/api/cases/${caseId}/paperwork`),
   confirm: (caseId: string, decisionId: string, value: string) => post<CaseState>(`/api/cases/${caseId}/decisions`, { decisionId, value }),
+  todo: (caseId: string, body: { action: "add"; text: string } | { action: "done"; id: string; done: boolean } | { action: "remove"; id: string }) =>
+    post<CaseState>(`/api/cases/${caseId}/todos`, body),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
   acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),
   editUtterance: (caseId: string, utteranceId: string, text: string) =>
