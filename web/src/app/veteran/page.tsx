@@ -1,27 +1,25 @@
 import type { Metadata } from "next";
-import { VeteranForm } from "../../components/trial/VeteranForm";
+import { HearingApp } from "../../components/trial/hearing/HearingApp";
 import s from "../../components/trial/trial.module.css";
 
-export const metadata: Metadata = { title: "判断の場面への回答｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "打合せのロールプレイ｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
 
 export default function VeteranPage() {
   return (
     <main className={s.page}>
       <div className={s.column}>
-        <p className={s.eyebrow}>FOR VETERANS</p>
-        <h1 className={s.title}>打合せの場面ごとに、お別れの仕方をどう見るか教えてください</h1>
+        <p className={s.eyebrow}>ROLEPLAY</p>
+        <h1 className={s.title}>いつもの打合せを、架空のご家族と</h1>
         <p className={s.lead}>
-          10の場面があります。それぞれ、4つのお別れの仕方について「合う」「尋ねてみる」「今回は合わない」から選んでください。
-          正解はありません。いつも現場でされている判断のままで構いません。答えは AI の推奨と見比べて、知見を直すのに使います。
-          途中で閉じても、この端末に答えが残ります。
+          Claude がご家族を演じます。あなたは担当者として、いつもどおりに打合せをしてください。終わったら、聞き手が「なぜそうしたか」を2〜3問だけ伺います。
+          ご家族は、葬儀社の実際の記録で多い組み合わせ（年齢・続柄・葬儀の形など）をもとにした10組です。年代も家族の事情もさまざまです。経験の長い方にも短い方にも同じご家族と打合せをしていただき、尋ね方や決め方の違いを比べます。
+          1組8分ほどで、1組だけでも十分に役立ちます。答え方は「チャット」と「声」から選べ、途中で切り替えられます。
         </p>
         <p className={s.notice}>
-          場面の家族と会話はすべて架空です。理由の欄に、実在のご家族や会社がわかる名前・事情は書かないでください。
+          場面のご家族と事情はすべて架空です。実在のご家族や会社がわかる名前・事情は話さないでください。声は文字にするだけで、音声は保存しません。
+          ここでの打合せの記録は、AI の推奨と見比べて知見を直すためだけに使います。
         </p>
-        <p className={s.lead}>
-          <a href="/veteran/hearing">設問に答える代わりに、架空のご家族と打合せのロールプレイをして答えることもできます（チャットか声で、1場面8分ほど）→</a>
-        </p>
-        <VeteranForm />
+        <HearingApp />
       </div>
     </main>
   );

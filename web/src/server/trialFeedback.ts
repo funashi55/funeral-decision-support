@@ -1,5 +1,5 @@
 /**
- * 試してもらった人から集めるもの：ベテランの場面への答え（/veteran）と、画面のどこからでも送れる感想。
+ * 試してもらった人から集めるもの：ベテランの場面への答え（以前の設問形式）と、ロールプレイの聞き取り（/veteran）と、画面のどこからでも送れる感想。
  * 保存先は kv.ts（本番は Upstash Redis）。取り出しは scripts/trial-pull.ts で docs/private/ に書き出す。
  */
 import { z } from "zod";
@@ -61,7 +61,7 @@ export async function listNotes(kv: Kv = getKv()): Promise<TrialNote[]> {
   return kv.list<TrialNote>(NOTES_KEY);
 }
 
-// ---- ロールプレイの聞き取り（/veteran/hearing） ----
+// ---- ロールプレイの聞き取り（/veteran） ----
 
 export const HEARINGS_KEY = "trial:veteran-hearings";
 

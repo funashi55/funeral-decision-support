@@ -3,7 +3,7 @@
  * 各場面で、ベテランなら選択肢をどう見るか（合う／尋ねる／今回は合わない）を答えとして持つ。
  *
  * answeredBy が "provisional" の答えは、作者（元フューネラルプランナー）の仮の答え。
- * ベテランには /veteran のページで同じ場面に答えてもらい（仮の答えは見せない）、
+ * ベテランには以前の設問形式のページで同じ場面に答えてもらい（仮の答えは見せない）、
  * その答えで知見の前後比較（npm run compare:knowledge）をやり直す。
  */
 import type { FarewellOptionId } from "../domain/farewell";

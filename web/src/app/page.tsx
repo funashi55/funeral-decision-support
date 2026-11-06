@@ -45,9 +45,9 @@ export default function Home() {
         </ul>
 
         <Link className={s.linkCard} href="/veteran">
-          <div className={s.linkEyebrow}>ベテランの方へ</div>
-          <div className={s.linkTitle}>判断の場面に答える →</div>
-          <div className={s.linkSub}>10 の架空の場面で、お別れの仕方をどう見るかを選んでいただきます（15 分ほど）。AI の推奨より先に答えてください。</div>
+          <div className={s.linkEyebrow}>葬儀の担当者の方へ</div>
+          <div className={s.linkTitle}>架空のご家族と打合せをする →</div>
+          <div className={s.linkSub}>Claude が演じるご家族と、いつもどおりに打合せをしていただきます（1組8分ほど・チャットか声）。経験の違う方どうしの尋ね方や決め方を比べます。</div>
         </Link>
 
         <p className={s.notice}>試していただくときは、実在のご家族・故人・会社がわかる名前や事情を入力しないでください。</p>
