@@ -279,6 +279,16 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     await api.reset(caseId);
   };
 
+  /** 再生・一時停止。最後まで流したあとは、最初に戻してから流し直す */
+  const togglePlay = async (): Promise<void> => {
+    if (playing) {
+      setPlaying(false);
+      return;
+    }
+    if (state && state.utterances.length >= DEMO_SCRIPT.length) await reset();
+    setPlaying(true);
+  };
+
   if (!state) return <p className={s.empty} style={{ padding: "2rem" }}>読み込み中…</p>;
   const finished = state.utterances.length >= DEMO_SCRIPT.length;
   const openRequests = state.requests.filter((r) => r.status === "open").length;
@@ -351,9 +361,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
         <header className={c.topbar}>
           <div className={c.demo} role="group" aria-label="デモの操作">
             <span className={c.demoLabel}>デモ</span>
-            <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => setPlaying((p) => !p)} disabled={finished}>
+            <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => void togglePlay()}>
               {recording && <span className={s.recDot} aria-hidden="true" />}
-              {playing ? "一時停止" : "▶ 打合せを再生"}
+              {playing ? "一時停止" : finished ? "↻ もう一度再生" : "▶ 打合せを再生"}
             </button>
             <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => void advance()} disabled={playing || finished}>
               1行すすめる
