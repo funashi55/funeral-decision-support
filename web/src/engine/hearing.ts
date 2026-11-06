@@ -64,7 +64,7 @@ ${hidden}
 // ---- ふりかえりの聞き手 ----
 
 export const InterviewerReplySchema = z.object({
-  question: z.string().describe("次に尋ねる一問。ベテラン本人の発言を短く引いてから尋ねる。終わるときはお礼の一言"),
+  question: z.string().describe("次に尋ねる一問だけ（問いは1つ、全体で100字以内）。ベテラン本人の発言を短く引いてから尋ねる。終わるときはお礼の一言"),
   done: z.boolean().describe("ふりかえりを終えるなら true"),
 });
 export type InterviewerReply = z.infer<typeof InterviewerReplySchema>;
@@ -77,7 +77,7 @@ export function interviewerSystem(): string {
 ${DEBRIEF_FOCUS.map((f) => `- ${f}`).join("\n")}
 
 ## 尋ね方
-- 一度に一問。短く、答えやすく。「なぜ」だけでなく「そのとき何に気づいたか」「新人ならここで何をしがちか」「何がわかっていたら別の判断をしたか」も使う
+- 一度に尋ねるのは一問だけ。「また」「あわせて」で問いを足さない。全体で100字以内にし、答えやすくする。「なぜ」だけでなく「そのとき何に気づいたか」「新人ならここで何をしがちか」「何がわかっていたら別の判断をしたか」も使う
 - ベテランが実際に言ったこと・したことを引く。言っていないことを前提にしない
 - 評価や感想（「素晴らしいですね」など）は言わない。お礼は最後に一度だけ
 - ${DEBRIEF_QUESTIONS}問尋ねたら、または十分に聞けたら done を true にして、お礼の一言で終える
@@ -89,7 +89,7 @@ ${DEBRIEF_FOCUS.map((f) => `- ${f}`).join("\n")}
 export const ExtractedJudgmentSchema = z.object({
   when: z.string().describe("どんなとき（家族の様子・条件）"),
   do: z.string().describe("ベテランはどうする・どう言う"),
-  why: z.string().describe("ベテランが話した理由。理由を話していなければ空文字"),
+  why: z.string().describe("ベテランがこの判断の理由として自分で話したことだけ。ほかの発言をつなげて理由を推し量らない。話していなければ空文字"),
   quote: z.string().describe("根拠にしたベテランの発言の一部を、一字一句そのまま引用（20〜80字）"),
 });
 export const ExtractionSchema = z.object({
@@ -102,6 +102,7 @@ export type Extraction = z.infer<typeof ExtractionSchema>;
 export const EXTRACT_SYSTEM = `あなたは、葬儀のベテラン担当者のロールプレイとふりかえりの記録から、その人の判断を取り出す役です。
 「こういうときは、こうする（こう言う）」の形で書き、必ずベテラン本人の発言を一字一句そのまま引用して根拠にしてください。
 - ベテランが言っていないこと、家族や聞き手が言ったことを、ベテランの判断として書かない
+- 理由（why）は、ベテランがその判断の理由として話したときだけ書く。別の話題の発言を理由に結びつけない
 - 一般論や教科書的なまとめにしない。この人の言葉と順番に出た、具体的なやり方を書く
 - 高いプランや有料の選択肢を勧めることそのものは、判断として取り出さない（家族の望みを確かめる尋ね方は取り出してよい）
 - 実在の人や会社の名前は書かない`;

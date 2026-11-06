@@ -29,7 +29,8 @@ function revealTiming(h: HearingSubmission, hiddenIds: readonly string[]): Recor
 }
 
 function main(): void {
-  const hearings = JSON.parse(readFileSync(path.join(DIR, "hearings.json"), "utf8")) as HearingSubmission[];
+  // 動作確認で送った記録（回答者名が「動作確認」で始まる）は比べない
+  const hearings = (JSON.parse(readFileSync(path.join(DIR, "hearings.json"), "utf8")) as HearingSubmission[]).filter((h) => !h.respondent.startsWith("動作確認"));
   const lines: string[] = ["# ロールプレイの聞き取り：経験ごとの比較（事実のみ）", "", `記録 ${hearings.length} 件。同じ人が同じペルソナを何度か送ったときは最後のものを使う。`, ""];
   for (const scene of HEARING_SCENES) {
     const latest = new Map<string, HearingSubmission>();
