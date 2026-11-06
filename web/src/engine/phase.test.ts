@@ -9,7 +9,16 @@ const asUtterances = (n: number): Utterance[] =>
 
 describe("打合せの段階の判定", () => {
   test("デモ台本の各場面で、正しい段階を判定する", () => {
-    const expected = ["trust", "trust", "trust", "hearing", "hearing", "hearing", "schedule", "farewell", "plan", "logistics"];
+    const expected = [
+      ...["trust", "trust", "trust", "trust"], // お悔やみ・経緯・お別れの様子
+      ...["hearing", "hearing", "hearing", "hearing", "hearing"], // 人柄・来てほしい人
+      "schedule", // 孫の到着
+      "farewell", // 顔を見てお別れさせたい
+      ...["hearing", "hearing"], // お寺
+      ...["schedule", "schedule"], // 火葬場の空き
+      "plan",
+      "logistics",
+    ];
     const actual = DEMO_SCRIPT.map((_, i) => detectPhase(asUtterances(i + 1)).phase);
     expect(actual).toEqual(expected);
   });
@@ -26,8 +35,8 @@ describe("打合せの段階の判定", () => {
   });
 
   test("判定の根拠の発言を返す", () => {
-    const r = detectPhase(asUtterances(9));
-    expect(r.utteranceIds).toContain("U9");
+    const r = detectPhase(asUtterances(16));
+    expect(r.utteranceIds).toContain("U16");
     expect(r.label).toBe("プランと費用");
   });
 
