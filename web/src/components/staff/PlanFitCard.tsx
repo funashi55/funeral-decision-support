@@ -8,7 +8,7 @@ import c from "./console.module.css";
  * プランの見立て：いちばん合いそうな幅を、ご家族の言葉に結びつけた切り出し方と一緒に示す。
  * 費用を抑える工夫と、決めるのはご家族だと伝える問いを必ず添える。金額は価格表から出す
  */
-export function PlanFitCard({ state, proposal }: { readonly state: CaseState; readonly proposal: PlanFitProposal }) {
+export function PlanFitCard({ state, proposal, actions }: { readonly state: CaseState; readonly proposal: PlanFitProposal; readonly actions?: React.ReactNode }) {
   const plans = buildPlanProposals(state);
   const best = plans.find((p) => p.range === proposal.bestRange);
   const quote = (ids: readonly string[]): string | undefined => state.utterances.find((u) => u.id === ids.at(-1))?.text;
@@ -52,6 +52,7 @@ export function PlanFitCard({ state, proposal }: { readonly state: CaseState; re
         })}
       </ul>
       <p className={c.planFitNote}>並びは費用を抑える順です。どの幅にするかを決めるのはご家族です。</p>
+      {actions}
     </article>
   );
 }

@@ -80,7 +80,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
    * プランの提案：費用の話ができる段階（お別れの仕方以降）に入ってから作り、ご家族の発言が増えたら書き直す。
    * 走っている間は重ねて呼ばない
    */
-  const [planFit, setPlanFit] = useState<PlanFitResult | null>(null);
+  const [planFit, setPlanFit] = useState<(PlanFitResult & { readonly basedOn?: number }) | null>(null);
   const planFitRunning = useRef(false);
   const planFitAt = useRef(0);
   const runPlanFit = useCallback(
@@ -224,6 +224,14 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     }
   };
 
+  /** 「いま」から呼ぶ記録。会話で触れた提案を自動で記録するため、描画のたびに変わらない関数にする */
+  const recordFeedback = useCallback(
+    (target: string, verdict: FeedbackVerdict | "clear"): void => {
+      api.feedback(caseId, target, verdict).catch((e: unknown) => setError(message(e)));
+    },
+    [caseId],
+  );
+
   const todo = async (body: TodoAction): Promise<void> => {
     try {
       await api.todo(caseId, body);
@@ -232,7 +240,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     }
   };
 
-  const feedback = async (target: string, verdict: FeedbackVerdict): Promise<void> => {
+  const feedback = async (target: string, verdict: FeedbackVerdict | "clear"): Promise<void> => {
     try {
       await api.feedback(caseId, target, verdict);
     } catch (e) {
@@ -364,9 +372,11 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               oversights={oversights}
               farewell={farewell}
               planFit={planFit?.ok ? planFit.proposal : null}
+              farewellBasedOn={farewellBasedOn}
+              planFitBasedOn={planFit?.basedOn ?? 0}
               onConfirm={(id, v) => void confirm(id, v)}
               onTodo={(body) => void todo(body)}
-              onFeedback={(t, v) => void feedback(t, v)}
+              onFeedback={recordFeedback}
             >
               {farewellPanel}
             </NowView>

@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DECISIONS, type DecisionItem } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
 import { TODO_TEXT_MAX, todosOf } from "../../engine/todos";
 import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
+import { getGriefPrinciple } from "../../domain/griefCare";
+import { FAREWELL_CUES, FAREWELL_DECISION, HANDLED_LABEL, PLAN_CUES, handledBy, textKey, type HandledBy, type HandledCheck } from "../../engine/handled";
 import { ConfirmControl } from "./DecisionBoard";
 import { GriefCareLane } from "./GriefCareLane";
 import { PlanFitCard } from "./PlanFitCard";
@@ -19,6 +21,9 @@ interface NowViewProps {
   readonly farewell: FarewellResult | null;
   /** プランの見立て（費用の話ができる段階に入ってから出る） */
   readonly planFit: PlanFitProposal | null;
+  /** 推奨・プランの提案が、何番目の発言までを見て出たか（そのあと担当者が触れたら済んだとみなす） */
+  readonly farewellBasedOn: number;
+  readonly planFitBasedOn: number;
   /** 推奨を考えている途中か */
   readonly thinking: boolean;
   readonly onConfirm: (decisionId: string, value: string) => void;
@@ -34,17 +39,49 @@ export type TodoHandler = (body: TodoAction) => void;
 
 const FIT_TEXT = { suits: "合う", consider: "尋ねてみる" } as const;
 
+/** 済んだ提案（画面の下に畳む） */
+interface DoneItem {
+  readonly target: string;
+  readonly kind: string;
+  readonly label: string;
+  readonly by: HandledBy;
+}
+
 /**
  * 「いま」：打合せの最中に担当者が見る 1 枚。
- * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）
+ * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）。
+ * 伝えた提案・確定した項目に関わる提案・会話で触れた提案は、下の「済んだこと」に畳む
  */
-export function NowView({ state, impacted, oversights, farewell, planFit, thinking, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
+export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
   const rec = farewell?.ok ? farewell.recommendation : null;
-  const proposals = (rec?.options ?? []).filter((o) => o.fit !== "not_now").sort((a, b) => (a.fit === b.fit ? 0 : a.fit === "suits" ? -1 : 1));
+  const done: DoneItem[] = [];
+  /** 済んでいれば done に積んで false、まだなら true */
+  const active = (check: HandledCheck, kind: string, label: string): boolean => {
+    const by = handledBy(state, check);
+    if (by) done.push({ target: check.target, kind, label, by });
+    return by === null;
+  };
+
+  const proposals = (rec?.options ?? [])
+    .filter((o) => o.fit !== "not_now")
+    .sort((a, b) => (a.fit === b.fit ? 0 : a.fit === "suits" ? -1 : 1))
+    .filter((o) => active({ target: `farewell:${o.id}`, decisionId: FAREWELL_DECISION[o.id], cues: FAREWELL_CUES[o.id], basedOn: farewellBasedOn }, "提案", o.label));
+  const showPlan = planFit !== null && active({ target: "plan:fit", decisionId: "altar_plan", cues: PLAN_CUES, basedOn: planFitBasedOn }, "提案", "プラン");
+  const care = (rec?.griefCare ?? []).filter((g) => active({ target: `care:${g.principleId}` }, "声かけ", getGriefPrinciple(g.principleId).name));
+  const alerts = oversights.filter((a) => active({ target: `oversight:${a.id}`, decisionId: a.decisionId }, "注意", a.decisionLabel));
   // 推奨が挙げた注意。決まりごとの検出と同じ項目は重ねて出さない
-  const aiCautions = (rec?.cautions ?? []).filter((x) => !oversights.some((o) => o.decisionLabel === x.label));
-  const questions = rec?.questionsToAsk ?? [];
-  const checkCount = oversights.length + aiCautions.length + questions.length;
+  const aiCautions = (rec?.cautions ?? [])
+    .filter((x) => !oversights.some((o) => o.decisionLabel === x.label))
+    .filter((x) => active({ target: `caution:${x.decisionId}`, decisionId: x.decisionId }, "注意", x.label));
+  const questions = (rec?.questionsToAsk ?? []).filter((q) => active({ target: `question:${textKey(q)}` }, "確認", q));
+  const checkCount = alerts.length + aiCautions.length + questions.length;
+  const told = (target: string): React.ReactNode => <FeedbackButtons state={state} target={target} onFeedback={onFeedback} />;
+  // 会話で触れた提案は「伝えた」として記録に残す（推奨が書き直されても戻らないように）
+  const spoken = done.filter((d) => d.by === "spoken").map((d) => d.target);
+  const spokenKey = spoken.join("|");
+  useEffect(() => {
+    if (spokenKey) for (const t of spokenKey.split("|")) onFeedback(t, "told");
+  }, [spokenKey, onFeedback]);
 
   return (
     <div className={`${c.view} ${c.wide} ${c.nowGrid}`}>
@@ -72,10 +109,11 @@ export function NowView({ state, impacted, oversights, farewell, planFit, thinki
                       <small>こう切り出しましょう</small>「{o.howToRaise}」
                     </p>
                     <p className={c.reason}>{o.reason}</p>
+                    <div className={c.itemActions}>{told(`farewell:${o.id}`)}</div>
                   </li>
                 ))}
               </ul>
-              {planFit && <PlanFitCard state={state} proposal={planFit} />}
+              {showPlan && planFit && <PlanFitCard state={state} proposal={planFit} actions={<div className={c.itemActions}>{told("plan:fit")}</div>} />}
               {rec.timeAdvice && (
                 <p className={c.timeAdvice}>
                   <small>日程について</small>
@@ -84,7 +122,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, thinki
               )}
             </>
           )}
-          <GriefCareLane state={state} items={rec?.griefCare ?? []} />
+          <GriefCareLane state={state} items={care} actions={(id) => <div className={c.itemActions}>{told(`care:${id}`)}</div>} />
           <details className={c.more}>
             <summary>選択肢の比較と根拠をすべて見る</summary>
             {children}
@@ -96,7 +134,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, thinki
             確認・注意<span className={c.laneCount}>{checkCount}</span>
           </h2>
           {checkCount === 0 && <p className={c.quiet}>確かめておくことや、取り消せない手配の注意がここに出ます。</p>}
-          {oversights.map((a) => (
+          {alerts.map((a) => (
             <article key={a.id} className={c.alert}>
               <h4>
                 <span className={c.tagWarn}>注意</span>
@@ -107,7 +145,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, thinki
                 {a.utteranceIds.length > 0 && (
                   <span className={s.tag}>きっかけ：「{state.utterances.find((u) => u.id === a.utteranceIds.at(-1))?.text.slice(0, 18)}…」</span>
                 )}
-                <FeedbackButtons state={state} target={`oversight:${a.id}`} onFeedback={onFeedback} />
+                {told(`oversight:${a.id}`)}
               </div>
             </article>
           ))}
@@ -118,6 +156,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, thinki
                 {x.label}
               </h4>
               <p>{x.message}</p>
+              <div className={c.itemActions}>{told(`caution:${x.decisionId}`)}</div>
             </article>
           ))}
           {questions.length > 0 && (
@@ -126,11 +165,34 @@ export function NowView({ state, impacted, oversights, farewell, planFit, thinki
                 <li key={q}>
                   <span className={c.tagAsk}>確認</span>
                   {q}
+                  <div className={c.itemActions}>{told(`question:${textKey(q)}`)}</div>
                 </li>
               ))}
             </ul>
           )}
         </section>
+
+        {done.length > 0 && (
+          <details className={c.doneBox} data-testid="handled">
+            <summary>
+              済んだこと<span className={c.laneCount}>{done.length}</span>
+            </summary>
+            <ul>
+              {done.map((d) => (
+                <li key={d.target}>
+                  <span className={c.doneKind}>{d.kind}</span>
+                  <span className={c.doneLabel}>{d.label}</span>
+                  <span className={c.doneBy}>{HANDLED_LABEL[d.by]}</span>
+                  {(d.by === "told" || d.by === "unused") && (
+                    <button type="button" className={c.doneUndo} onClick={() => onFeedback(d.target, "clear")}>
+                      戻す
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
 
       <TodoList state={state} impacted={impacted} onConfirm={onConfirm} onTodo={onTodo} />

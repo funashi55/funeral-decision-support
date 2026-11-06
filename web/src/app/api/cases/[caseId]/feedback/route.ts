@@ -4,11 +4,12 @@ import { store } from "../../../../../server/store";
 import { fail, handleError, ok } from "../../../../../server/http";
 
 const BodySchema = z.object({
-  target: z.string().regex(/^(farewell|oversight|plan):[a-z_]+$/),
-  verdict: z.enum(["told", "unused"]),
+  target: z.string().regex(/^(farewell|oversight|plan|care|question|caution):[a-z0-9_-]{1,60}$/),
+  /** clear は記録を消して、提案を元に戻す（押し間違いのため） */
+  verdict: z.enum(["told", "unused", "clear"]),
 });
 
-const VERDICT_LABEL = { told: "家族に伝えた", unused: "使わなかった" } as const;
+const VERDICT_LABEL = { told: "家族に伝えた", unused: "使わなかった", clear: "記録を戻した" } as const;
 
 /** 推奨や知らせを、担当者が家族に伝えたか・使わなかったかを記録する（知見の改善に使う） */
 export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/feedback">): Promise<Response> {
@@ -18,7 +19,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     if (!state) return fail("案件が見つかりません", 404);
     const { target, verdict } = BodySchema.parse(await req.json());
     const at = Date.now();
-    const feedback = [...state.feedback.filter((f) => f.target !== target), { target, verdict, at }];
+    const kept = state.feedback.filter((f) => f.target !== target);
+    const feedback = verdict === "clear" ? kept : [...kept, { target, verdict, at }];
     const next = appendAudit({ ...state, feedback }, { at, actor: "staff", kind: "feedback", summary: VERDICT_LABEL[verdict], refs: [target] });
     return ok(await store.save(next));
   } catch (error) {

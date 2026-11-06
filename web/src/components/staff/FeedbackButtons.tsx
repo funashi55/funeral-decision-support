@@ -1,7 +1,7 @@
 import type { CaseState, FeedbackVerdict } from "../../engine/case";
 import s from "./staff.module.css";
 
-export type FeedbackHandler = (target: string, verdict: FeedbackVerdict) => void;
+export type FeedbackHandler = (target: string, verdict: FeedbackVerdict | "clear") => void;
 
 interface FeedbackButtonsProps {
   readonly state: CaseState;

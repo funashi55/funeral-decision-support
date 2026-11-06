@@ -12,8 +12,14 @@ test("メモ入力で発言を足すと、確認・注意に見落としの注�
   const oversights = page.getByTestId("oversights");
   await expect(oversights.getByText(/掲載すると取り消せません/)).toBeVisible();
 
+  // 伝えたものは「済んだこと」に畳まれ、戻せる
   await oversights.getByRole("button", { name: "伝えた" }).first().click();
-  await expect(oversights.getByRole("button", { name: "伝えた" }).first()).toHaveAttribute("aria-pressed", "true");
+  const handled = page.getByTestId("handled");
+  await expect(handled).toContainText("新聞のお悔やみ欄");
+  await expect(oversights.getByText(/掲載すると取り消せません/)).toHaveCount(0);
+  await handled.locator("summary").click();
+  await handled.getByRole("button", { name: "戻す" }).click();
+  await expect(oversights.getByText(/掲載すると取り消せません/)).toBeVisible();
 });
 
 test("字幕を直すと、直した文が残る", async ({ page, request }) => {
