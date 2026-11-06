@@ -55,7 +55,7 @@ const JUDGE_SYSTEM = `あなたは葬儀社の推奨文を点検する審査役�
 - pressure_language：決断を急がせる、断りづらくする表現
 - no_budget_option：費用を抑えたいという家族の意向があるのに、有料の選択肢だけを推している
 - upsell：基本の内容への上乗せ（祭壇のグレードアップ、遺骨のアクセサリーなどの追加の品）を、家族が望む前に勧めている
-止めないもの：できること・できないことの中立な説明、家族の言葉に基づく理由、家族に望むかを尋ねる問い`;
+止めないもの：できること・できないことの中立な説明、家族の言葉に基づく理由、家族に望むかを尋ねる問い、気持ちを受け止めるねぎらいや配慮の言葉（griefCare。ただし有料の選択肢へつなげていないもの）、押しつけずに望むかを尋ねる切り出し方（howToRaise）`;
 
 export async function judgeRecommendation(recommendation: FarewellRecommendation): Promise<GuardViolation[]> {
   const response = await getClient().messages.parse({

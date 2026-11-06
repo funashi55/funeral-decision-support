@@ -99,6 +99,11 @@ function OptionCard({ option, state, onFeedback }: { option: EnrichedOption; sta
         <Price option={option} />
       </div>
       <p className={s.reason}>{option.reason}</p>
+      {option.howToRaise && (
+        <p className={s.raise}>
+          <small>{option.fit === "not_now" ? "触れるなら" : "切り出し方の例"}</small>「{option.howToRaise}」
+        </p>
+      )}
       <div className={s.meta2}>
         <FactTags option={option} />
         <FeedbackButtons state={state} target={`farewell:${option.id}`} onFeedback={onFeedback} />

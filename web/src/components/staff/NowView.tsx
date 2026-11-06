@@ -4,6 +4,7 @@ import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
 import { PHASE_HINT, type PhaseReading } from "../../engine/phase";
 import { DecisionRow } from "./DecisionBoard";
+import { GriefCareLane } from "./GriefCareLane";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
 import c from "./console.module.css";
 import s from "./staff.module.css";
@@ -22,16 +23,17 @@ interface NowViewProps {
 
 /**
  * 「いま」：打合せの最中に担当者が見る 1 枚。
- * 今の段階と、次にすること（確定を待つ候補・見落とし・ご家族に尋ねること）を先に出し、推奨はその下に置く
+ * いま話していることと、次にすること（見落とし・ご遺族への配慮・確定を待つ候補・ご家族に尋ねること）を先に出し、推奨はその下に置く
  */
 export function NowView({ state, phase, impacted, oversights, farewell, onConfirm, onFeedback, children }: NowViewProps) {
   const candidates = DECISIONS.filter((d) => state.decisions[d.id]?.status === "candidate" || impacted.has(d.id));
   const confirmed = DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed");
   const questions = farewell?.ok ? farewell.recommendation.questionsToAsk : [];
+  const griefCare = farewell?.ok ? farewell.recommendation.griefCare : [];
   // 推奨が挙げた見落とし。決まりごとの検出と同じ項目は重ねて出さない
   const aiCautions = (farewell?.ok ? farewell.recommendation.cautions : []).filter((x) => !oversights.some((o) => o.decisionLabel === x.label));
   const alertCount = oversights.length + aiCautions.length;
-  const nothingYet = candidates.length === 0 && alertCount === 0 && questions.length === 0;
+  const nothingYet = candidates.length === 0 && alertCount === 0 && questions.length === 0 && griefCare.length === 0;
 
   return (
     <div className={c.view}>
@@ -59,6 +61,8 @@ export function NowView({ state, phase, impacted, oversights, farewell, onConfir
           次にすること
         </h2>
         {nothingYet && <p className={c.quiet}>会話が進むと、確かめること・確定を待つ候補・見落としがここに並びます。</p>}
+
+        <GriefCareLane state={state} items={griefCare} />
 
         {alertCount > 0 && (
           <div className={c.lane} data-testid="oversights">

@@ -5,14 +5,15 @@ import { DEMO_CASE } from "./fixtures/demoCase";
 const goodDraft: FarewellDraft = {
   familyWish: "お風呂が好きだったお母さまを清めて送り出し、お孫さんにも顔を見てお別れさせたいと望まれているようです",
   options: [
-    { optionId: "standard_laying", fit: "consider", reason: "費用を抑えたいご意向に合います", utteranceIds: ["U5"], ruleIds: [] },
-    { optionId: "yukan", fit: "suits", reason: "お風呂に入りたがっていたお母さまを、ご家族の手で清めて送り出せます", utteranceIds: ["U2"], ruleIds: ["R-farewell-03"] },
-    { optionId: "extend_resting", fit: "suits", reason: "お孫さんの到着を待ってから、顔を見てお別れできます", utteranceIds: ["U3", "U4"], ruleIds: ["R-farewell-02"] },
-    { optionId: "embalming", fit: "not_now", reason: "日を延ばす方法で、お孫さんのお別れには間に合いそうです", utteranceIds: ["U3"], ruleIds: ["R-farewell-02"] },
+    { optionId: "standard_laying", fit: "consider", reason: "費用を抑えたいご意向に合います", howToRaise: "身支度を整えてお棺にお納めする形でも、愛用の品を一緒に入れて差し上げられます", utteranceIds: ["U5"], ruleIds: [] },
+    { optionId: "yukan", fit: "suits", reason: "お風呂に入りたがっていたお母さまを、ご家族の手で清めて送り出せます", howToRaise: "お風呂がお好きだったとおっしゃっていましたね。納棺の前に、お体を清めて差し上げる形もあります。ご家族も手を添えたいですか", utteranceIds: ["U2"], ruleIds: ["R-farewell-03"] },
+    { optionId: "extend_resting", fit: "suits", reason: "お孫さんの到着を待ってから、顔を見てお別れできます", howToRaise: "お孫さんが着かれてから、ゆっくりお顔を見ていただく日取りにもできます", utteranceIds: ["U3", "U4"], ruleIds: ["R-farewell-02"] },
+    { optionId: "embalming", fit: "not_now", reason: "日を延ばす方法で、お孫さんのお別れには間に合いそうです", howToRaise: "今回は触れなくてよさそうです", utteranceIds: ["U3"], ruleIds: ["R-farewell-02"] },
   ],
   referenceIds: ["REF-1", "REF-2"],
   timeAdvice: "火葬を急がず、お孫さんが着いてから納棺と湯灌を行う流れを提案できます",
   questionsToAsk: ["湯灌のとき、ご家族も手を添えたいですか", "お孫さんの到着の時刻は分かりますか"],
+  griefCare: [{ principleId: "continuing_bonds", observation: "お母さまのお風呂好きを繰り返し話されているようです", words: "お母さまは、お風呂の時間を大事にされていたのですね", utteranceIds: ["U2"] }],
   cautions: [{ decisionId: "cremation_date", message: "お寺と斎場の都合を確認してから火葬の日時を確定してください" }],
 };
 
@@ -83,5 +84,35 @@ describe("お別れの仕方の推奨", () => {
     expect(result.facts[0]?.price).toBeNull();
     const json = JSON.stringify(result.facts);
     for (const o of goodDraft.options) expect(json).not.toContain(o.reason);
+  });
+
+  test("切り出し方とご遺族への配慮を、そのまま担当者向けに返す", async () => {
+    const result = await recommendFarewell(DEMO_CASE, async () => goodDraft, async () => []);
+    if (!result.ok) throw new Error("推奨が出なかった");
+    expect(result.recommendation.options.find((o) => o.id === "yukan")?.howToRaise).toContain("手を添えたいですか");
+    expect(result.recommendation.griefCare[0]).toMatchObject({ principleId: "continuing_bonds", utteranceIds: ["U2"] });
+  });
+
+  test("配慮の言葉で有料の選択肢に触れた案は止める（気持ちへの配慮を販売の理由にしない）", async () => {
+    const selling: FarewellDraft = { ...goodDraft, griefCare: [{ ...goodDraft.griefCare[0], words: "お母さまのために、湯灌でさっぱりさせて差し上げましょう" }] };
+    const result = await recommendFarewell(DEMO_CASE, async () => selling, async () => []);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.violations.map((v) => v.rule)).toContain("upsell");
+  });
+
+  test("切り出し方で後悔を先回りする案は止める", async () => {
+    const pushing: FarewellDraft = {
+      ...goodDraft,
+      options: goodDraft.options.map((o) => (o.optionId === "yukan" ? { ...o, howToRaise: "やっておかないと後悔しますよ" } : o)),
+    };
+    const result = await recommendFarewell(DEMO_CASE, async () => pushing, async () => []);
+    expect(result.ok).toBe(false);
+  });
+
+  test("配慮の考え方は、材料に ID・考え方・避けたい言葉が入る", () => {
+    const ctx = buildFarewellContext(DEMO_CASE);
+    expect(ctx.prompt).toContain("[continuing_bonds]");
+    expect(ctx.prompt).toContain("避けたい言葉");
   });
 });

@@ -10,6 +10,7 @@ import { FAREWELL_OPTIONS, getFarewellOption, type FarewellOptionId } from "../d
 import { getCatalogItem } from "../domain/pricing";
 import { yukanReferences, type Reference } from "../domain/similarFamilies";
 import { DECISIONS, getDecision } from "../domain/decisions";
+import { GRIEF_PRINCIPLES, GRIEF_PRINCIPLE_IDS, type GriefPrincipleId } from "../domain/griefCare";
 import { loadKnowledge, rulesFor, withRecordRules, type Knowledge, type Rule } from "../knowledge/rules";
 import type { CaseState } from "./case";
 import { checkBudgetOption, checkText, type GuardViolation } from "./guard";
@@ -26,6 +27,11 @@ export const FarewellDraftSchema = z.object({
         optionId: z.enum(OPTION_IDS),
         fit: z.enum(["suits", "consider", "not_now"]).describe("suits=家族の望みに合う / consider=尋ねてみる価値がある / not_now=今回は合わない"),
         reason: z.string().describe("この家族にとっての理由。金額や割合の数字は書かない"),
+        howToRaise: z
+          .string()
+          .describe(
+            "この会話の流れで担当者が自然に切り出すときの言い方の例（担当者がそのまま、または言い換えて使う）。話し言葉で1〜2文に収め、できること・できないことの説明は繰り返さない（画面に別に出る）。ご家族の言葉につなげ、望むかを尋ねる形にする。not_now は、押しつけずに軽く触れる言い方か、触れずにおくなら『今回は触れなくてよさそうです』と書く",
+          ),
         utteranceIds: z.array(z.string()),
         ruleIds: z.array(z.string()),
       }),
@@ -34,6 +40,16 @@ export const FarewellDraftSchema = z.object({
   referenceIds: z.array(z.string()).describe("担当者に見せる似た家族の参考値の ID。家族の事情に近いものだけ"),
   timeAdvice: z.string().describe("火葬までの時間の使い方についての助言。数字は書かない"),
   questionsToAsk: z.array(z.string()).describe("担当者が家族に尋ねるとよい問い。最大3つ"),
+  griefCare: z
+    .array(
+      z.object({
+        principleId: z.enum(GRIEF_PRINCIPLE_IDS),
+        observation: z.string().describe("会話のどこから、この配慮が要ると見たか。断定せず『〜のようです』の形で"),
+        words: z.string().describe("この場面で担当者がかけるとよい言葉の例。話し言葉で1〜2文。ご家族の言葉や故人の呼び方に合わせる。選択肢（湯灌・エンバーミングなど）や費用に触れない"),
+        utteranceIds: z.array(z.string()),
+      }),
+    )
+    .describe("ご遺族への配慮（グリーフケア）。この会話で特に大事なものを最大3つ。当てはまるものがなければ空"),
   cautions: z
     .array(z.object({ decisionId: z.enum(DECISION_IDS).describe("決定項目の ID（お別れの選択肢の ID ではない）"), message: z.string() }))
     .describe("取り返しのつかない見落としの注意。なければ空"),
@@ -66,6 +82,9 @@ export function buildFarewellContext(state: CaseState, knowledge: Knowledge = wi
     "# ベテランの知見",
     ...rules.map((r) => `[${r.id}] ${r.when}は、${r.do}。理由：${r.why}`),
     "",
+    "# ご遺族への配慮の考え方（死別の研究に基づく。ID で選び、言葉は場面に合わせて書く）",
+    ...GRIEF_PRINCIPLES.map((p) => `[${p.id}] ${p.name}：${p.principle} 当てはまる様子：${p.signals}。避けたい言葉：${p.avoid.map((a) => `「${a.words}」`).join("")}`),
+    "",
     "# 似た家族の選び方（参考値。数字はサーバーが表示するので、あなたは ID だけを選ぶ）",
     ...[...references].map(([id, r]) => `[${id}] ${r.cohort}・${r.measure}`),
   ];
@@ -89,6 +108,9 @@ export const FAREWELL_SYSTEM = `あなたは葬儀社のベテラン担当者と
 - 費用のかからない通常の納棺を必ず選択肢として評価する
 - 金額・割合・件数の数字を文章に書かない（サーバーが正しい値を差し込む）
 - 根拠にした発言と知見の ID を必ず添える。材料にない ID を作らない
+- 選択肢ごとに、この会話の流れで自然に切り出す言い方の例（howToRaise）を添える。ご家族が口にした言葉につなげ、望むかを尋ねる形にする。「今回は合わない」ものは無理に勧めず、軽く触れるか触れずにおく
+- ご遺族への配慮（griefCare）は、材料の「配慮の考え方」から会話に当てはまるものだけを選び、かける言葉の例を書く。悲しみ方に順番はないので、段階に当てはめない。配慮の言葉で選択肢や費用に触れない（気持ちへの配慮を販売の理由にしない）
+- 言葉はすべて例。使うか、どう言うかは担当者が決める
 - あなたの出力は担当者だけが見る。家族への伝え方は担当者が決める`;
 
 /** 選択肢の事実（モデルが書かない部分）。推奨を出せないときも、これだけは並べられる */
@@ -125,6 +147,8 @@ export function allOptionFacts(): OptionFacts[] {
 export interface EnrichedOption extends OptionFacts {
   readonly fit: FarewellDraft["options"][number]["fit"];
   readonly reason: string;
+  /** この会話の流れでの切り出し方の例 */
+  readonly howToRaise: string;
   readonly evidence: { readonly utteranceIds: readonly string[]; readonly rules: readonly Rule[] };
 }
 
@@ -135,13 +159,18 @@ export interface FarewellRecommendation {
   readonly referenceSource: string;
   readonly timeAdvice: string;
   readonly questionsToAsk: readonly string[];
+  /** 理論の説明・出典・避けたい言葉は domain/griefCare.ts から画面で引く（判定役に避けたい言葉を誤検出させない） */
+  readonly griefCare: readonly { readonly principleId: GriefPrincipleId; readonly observation: string; readonly words: string; readonly utteranceIds: readonly string[] }[];
   readonly cautions: readonly { readonly decisionId: string; readonly label: string; readonly message: string }[];
 }
+
+/** 配慮の言葉に出てきてはいけない語（有料の選択肢と費用） */
+const PAID_OPTION_WORDS = ["湯灌", "エンバーミング", "安置", "延ば", "費用", "料金", "円", "プラン"] as const;
 
 /** モデルの出力が材料に沿っているか、守る線を外していないかを検査する */
 export function validateDraft(draft: FarewellDraft, ctx: FarewellContext): GuardViolation[] {
   const problems: GuardViolation[] = [];
-  const texts = [draft.familyWish, draft.timeAdvice, ...draft.questionsToAsk, ...draft.options.map((o) => o.reason), ...draft.cautions.map((c) => c.message)];
+  const texts = [draft.familyWish, draft.timeAdvice, ...draft.questionsToAsk, ...draft.options.flatMap((o) => [o.reason, o.howToRaise]), ...draft.griefCare.flatMap((g) => [g.observation, g.words]), ...draft.cautions.map((c) => c.message)];
   for (const t of texts) problems.push(...checkText(t));
 
   const shown = draft.options.filter((o) => o.fit !== "not_now");
@@ -151,6 +180,11 @@ export function validateDraft(draft: FarewellDraft, ctx: FarewellContext): Guard
   for (const o of draft.options) {
     for (const id of o.utteranceIds) if (!ctx.utteranceIds.has(id)) problems.push(unknown("発言", id));
     for (const id of o.ruleIds) if (!ctx.rules.has(id)) problems.push(unknown("知見", id));
+  }
+  for (const g of draft.griefCare) {
+    for (const id of g.utteranceIds) if (!ctx.utteranceIds.has(id)) problems.push(unknown("発言", id));
+    const mentioned = PAID_OPTION_WORDS.find((w) => g.words.includes(w));
+    if (mentioned) problems.push({ rule: "upsell", message: "ご遺族への配慮の言葉で、有料の選択肢に触れています（気持ちへの配慮を販売の理由にしない）", quote: mentioned });
   }
   for (const id of draft.referenceIds) if (!ctx.references.has(id)) problems.push(unknown("参考値", id));
   for (const c of draft.cautions) {
@@ -173,6 +207,7 @@ export function enrichDraft(draft: FarewellDraft, ctx: FarewellContext, referenc
         ...optionFacts(o.optionId),
         fit: o.fit,
         reason: o.reason,
+        howToRaise: o.howToRaise,
         evidence: { utteranceIds: o.utteranceIds, rules: o.ruleIds.map((id) => ctx.rules.get(id) as Rule) },
       }),
     );
@@ -183,6 +218,7 @@ export function enrichDraft(draft: FarewellDraft, ctx: FarewellContext, referenc
     referenceSource,
     timeAdvice: draft.timeAdvice,
     questionsToAsk: draft.questionsToAsk.slice(0, 3),
+    griefCare: draft.griefCare.slice(0, 3),
     cautions: draft.cautions.map((c) => ({ ...c, label: getDecision(c.decisionId).label })),
   };
 }

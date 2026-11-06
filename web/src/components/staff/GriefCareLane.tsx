@@ -1,0 +1,71 @@
+import { getGriefPrinciple } from "../../domain/griefCare";
+import type { CaseState } from "../../engine/case";
+import type { FarewellRecommendation } from "../../engine/farewell";
+import c from "./console.module.css";
+
+interface GriefCareLaneProps {
+  readonly state: CaseState;
+  readonly items: FarewellRecommendation["griefCare"];
+}
+
+/**
+ * ご遺族への配慮（グリーフケア）。会話から当てはまる考え方を選び、かける言葉の例を出す。
+ * 理論・出典・避けたい言葉はサーバーではなく domain の固定の記述から出す。言葉は例で、使うかは担当者が決める
+ */
+export function GriefCareLane({ state, items }: GriefCareLaneProps) {
+  if (items.length === 0) return null;
+  return (
+    <div className={c.lane} data-testid="grief-care">
+      <h3 className={c.laneTitle}>
+        <span className={c.dotCare} aria-hidden="true" />
+        ご遺族への配慮<span className={c.laneCount}>{items.length}</span>
+      </h3>
+      {items.map((g) => {
+        const p = getGriefPrinciple(g.principleId);
+        const quote = state.utterances.find((u) => u.id === g.utteranceIds.at(-1));
+        return (
+          <article key={g.principleId} className={c.care}>
+            <h4>{p.name}</h4>
+            <p className={c.careWhy}>
+              {g.observation}
+              {quote && <span className={c.careQuote}>（「{quote.text.slice(0, 24)}{quote.text.length > 24 ? "…" : ""}」）</span>}
+            </p>
+            <p className={c.careWords}>
+              <small>かける言葉の例</small>「{g.words}」
+            </p>
+            <details className={c.careMore}>
+              <summary>ほかの言い方・避けたい言葉・拠りどころ</summary>
+              <dl>
+                <dt>考え方</dt>
+                <dd>{p.principle}</dd>
+                <dt>ほかの言い方</dt>
+                <dd>
+                  {p.sayExamples.map((w) => (
+                    <span key={w} className={c.careSay}>「{w}」</span>
+                  ))}
+                </dd>
+                <dt>避けたい言葉</dt>
+                <dd>
+                  <ul>
+                    {p.avoid.map((a) => (
+                      <li key={a.words}>
+                        <s>「{a.words}」</s> — {a.why}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+                <dt>拠りどころ</dt>
+                <dd>
+                  {p.theory}
+                  <br />
+                  <cite>{p.source}</cite>
+                </dd>
+              </dl>
+            </details>
+          </article>
+        );
+      })}
+      <p className={c.careNote}>言葉はどれも例です。使うか、どう言い換えるかは担当者が決めてください。打合せでの配慮であって、心のケアの専門的な支援の代わりではありません。</p>
+    </div>
+  );
+}
