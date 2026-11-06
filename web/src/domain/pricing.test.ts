@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { ALTAR_PLANS, RANGE_LABEL, buildEstimate, yen } from "./pricing";
+import catalog from "../data/product-catalog.json";
+import { ALTAR_PLANS, CATALOG, RANGE_LABEL, buildEstimate, getCatalogItem, getPlan, yen } from "./pricing";
 
 describe("プラン", () => {
   test("3つの幅がそれぞれ1つずつある", () => {
@@ -14,7 +15,7 @@ describe("プラン", () => {
 describe("見積もり", () => {
   test("プランだけなら、プランの金額がそのまま合計になる", () => {
     const e = buildEstimate("altar_simple", []);
-    expect(e.total).toBe(411_500);
+    expect(e.total).toBe(getPlan("altar_simple").price);
     expect(e.lines).toHaveLength(1);
   });
 
@@ -23,7 +24,7 @@ describe("見積もり", () => {
       { itemId: "yukan", quantity: 1 },
       { itemId: "resting_fee", quantity: 2 },
     ]);
-    expect(e.total).toBe(636_500 + 65_000 + 33_000 * 2);
+    expect(e.total).toBe(getPlan("altar_standard").price + getCatalogItem("yukan").unitPrice + getCatalogItem("resting_fee").unitPrice * 2);
   });
 
   test("足した品目は「含まれないもの」から消え、足していないものは残る", () => {
@@ -41,7 +42,7 @@ describe("見積もり", () => {
 
   test("香典返しは返品できる品目として明細に出る", () => {
     const e = buildEstimate("altar_simple", [{ itemId: "return_gift", quantity: 50 }]);
-    expect(e.lines[1]).toMatchObject({ returnable: true, amount: 100_000 });
+    expect(e.lines[1]).toMatchObject({ returnable: true, amount: getCatalogItem("return_gift").unitPrice * 50 });
   });
 
   test("不正な数量や未定義の品目はエラーになる", () => {
@@ -51,7 +52,15 @@ describe("見積もり", () => {
   });
 
   test("一般価格では、プランの一式が一般の価格になる", () => {
-    expect(buildEstimate("altar_simple", [], "general").total).toBe(472_000);
+    expect(buildEstimate("altar_simple", [], "general").total).toBe(getPlan("altar_simple").generalPrice);
+    expect(getPlan("altar_simple").generalPrice).toBeGreaterThan(getPlan("altar_simple").price);
+  });
+
+  test("価格表は集計の JSON から読み、祭壇の価格は小・中・大の順に上がる", () => {
+    expect(CATALOG.length).toBe(catalog.items.length);
+    const [s, m, l] = ALTAR_PLANS.map((p) => p.price);
+    expect(s! < m! && m! < l!).toBe(true);
+    for (const item of CATALOG) expect(item.unitPrice % 500).toBe(0);
   });
 
   test("円表記", () => {

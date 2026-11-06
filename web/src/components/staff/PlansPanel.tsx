@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PHASE_LABEL, type Phase } from "../../domain/decisions";
-import { yen, type Range } from "../../domain/pricing";
+import { CATALOG_SOURCE, yen, type Range } from "../../domain/pricing";
 import type { CaseState } from "../../engine/case";
 import { allowsPrices } from "../../engine/phase";
 import type { PlanFitProposal } from "../../engine/planFit";
@@ -85,16 +85,22 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
             </table>
           </details>
           {p.additions.length > 0 && (
-            <details className={s.evidence}>
-              <summary>見積もりに足した理由</summary>
+            <div className={s.autoItems}>
+              <b>会話から見積もりに入れた品目</b>
               <ul>
                 {p.additions.map((a) => (
                   <li key={a.label}>
-                    {a.label}：{a.why}
+                    <span className={s.autoItemHead}>
+                      {a.label}
+                      {a.quantity > 1 && <span className={s.count}> × {a.quantity}</span>}
+                      {a.source && <span className={`${s.tag} ${a.source.status === "confirmed" ? "" : s.tagWarn}`}>{a.source.status === "confirmed" ? "確定" : "候補（確定前）"}</span>}
+                    </span>
+                    <span className={s.itemVal}>{a.why}</span>
+                    {a.source?.quote && <span className={s.autoQuote}>「{a.source.quote.length > 40 ? `${a.source.quote.slice(0, 40)}…` : a.source.quote}」</span>}
                   </li>
                 ))}
               </ul>
-            </details>
+            </div>
           )}
           <div className={s.meta2}>
             {p.pendingCounts.map((x) => (
@@ -106,7 +112,7 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
           </div>
         </article>
       ))}
-      <p className={s.empty}>お布施は葬儀社の見積もりに含まれません。金額は架空の価格表によるものです。</p>
+      <p className={s.empty}>お布施は葬儀社の見積もりに含まれません。単価は{CATALOG_SOURCE}です。</p>
     </div>
   );
 }

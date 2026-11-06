@@ -13,8 +13,8 @@ export interface PlanProposal {
   readonly planLabel: string;
   readonly includes: readonly string[];
   readonly estimate: Estimate;
-  /** 見積もりに足した品目と、その理由（担当者が家族に説明できるように） */
-  readonly additions: readonly { readonly label: string; readonly why: string }[];
+  /** 見積もりに足した品目と、その理由（担当者が家族に説明できるように）。会話から読んだものは、その発言と状態を添える */
+  readonly additions: readonly AdditionNote[];
   /** 人数などが決まっていないため、まだ金額に入れていない品目 */
   readonly pendingCounts: readonly string[];
 }
@@ -31,43 +31,88 @@ export function readCount(value: string | undefined): number | null {
 const decisionValue = (state: CaseState, id: string): string | undefined => state.decisions[id]?.value;
 const chose = (state: CaseState, id: string, pattern: RegExp): boolean => pattern.test(decisionValue(state, id) ?? "");
 
-interface Addition {
-  readonly option: EstimateOption;
+/** 見積もりの品目が、会話のどこから来たか */
+export interface AdditionSource {
+  readonly decisionId: string;
+  /** candidate：会話から拾った候補（まだ確定していない）／confirmed：担当者が確定した */
+  readonly status: "candidate" | "confirmed";
+  readonly quote: string | null;
+}
+
+export interface AdditionNote {
   readonly label: string;
   readonly why: string;
+  readonly quantity: number;
+  readonly source: AdditionSource | null;
 }
+
+interface Addition extends AdditionNote {
+  readonly option: EstimateOption;
+}
+
+/** 決定の値と、それを拾った発言 */
+function sourceOf(state: CaseState, decisionId: string): AdditionSource | null {
+  const d = state.decisions[decisionId];
+  if (!d) return null;
+  const id = d.utteranceIds.at(-1);
+  return { decisionId, status: d.status === "confirmed" ? "confirmed" : "candidate", quote: state.utterances.find((u) => u.id === id)?.text ?? null };
+}
+
+const QUESTION = /(?:か|かね|でしょうか|ですか)[。？?]?\s*$|[？?]\s*$/;
+
+/**
+ * 有料のオプションを見積もりに入れてよいか。高いものへ誘導しないため、会話からの推測では入れない：
+ * 確定しているか、ご家族がその言葉をはっきり口にした（問いかけではない）ときだけ
+ */
+function asked(state: CaseState, decisionId: string, value: RegExp, words: RegExp): boolean {
+  const d = state.decisions[decisionId];
+  if (!d || !value.test(d.value)) return false;
+  if (d.status === "confirmed") return true;
+  const quote = sourceOf(state, decisionId)?.quote ?? "";
+  return words.test(quote) && !QUESTION.test(quote);
+}
+
+/** 火葬場への送迎車の台数：1台にお乗りいただける人数 */
+const CAR_SEATS = 9;
 
 function additionsFor(state: CaseState, plan: AltarPlan): { additions: Addition[]; pending: string[] } {
   const additions: Addition[] = [];
   const pending: string[] = [];
+  const add = (itemId: string, quantity: number, label: string, why: string, decisionId: string | null): void => {
+    if (quantity <= 0) return;
+    additions.push({ option: { itemId, quantity }, label, why, quantity, source: decisionId ? sourceOf(state, decisionId) : null });
+  };
+
+  // 安置とドライアイス：火葬までの日数が、プランに含まれる日数を超えた分
   const days = state.profile.daysUntilFuneral;
   const extraDays = days === undefined ? 0 : Math.max(0, days - plan.includedDays);
-  if (extraDays > 0) {
-    additions.push({ option: { itemId: "dry_ice", quantity: extraDays }, label: "ドライアイスの追加", why: "火葬までの日数がプランに含まれる日数を超えるため" });
-    if (!chose(state, "resting_place", /自宅/)) {
-      additions.push({ option: { itemId: "resting_fee", quantity: extraDays }, label: "会館での安置料", why: "会館で安置する日数がプランに含まれる日数を超えるため" });
-    }
+  add("dry_ice", extraDays, "ドライアイスの追加", `火葬までの日数（${days ?? "?"}日）がプランに含まれる${plan.includedDays}日を超えるため`, "cremation_date");
+  if (!chose(state, "resting_place", /自宅/) && days !== undefined) {
+    add("resting_fee", Math.max(0, days - 1), "会館での安置", `火葬の前日まで会館で安置するため（${Math.max(0, days - 1)}泊）`, "resting_place");
   }
-  if (state.profile.funeralStyle !== "火葬式") {
-    additions.push({ option: { itemId: "hall_fee", quantity: 1 }, label: "会場使用料", why: "式を会館で行うため" });
+  if (state.profile.funeralStyle !== "火葬式" && !chose(state, "funeral_style", /火葬式|直葬/)) {
+    add("hall_fee", chose(state, "wake_held", /行わない|しない|なし/) || chose(state, "funeral_style", /一日葬/) ? 1 : 2, "会場使用料", "式を会館で行うため（通夜と葬儀で2日、一日葬なら1日）", "funeral_style");
   }
-  if (chose(state, "laying_in_style", /湯灌/)) {
-    additions.push({ option: { itemId: "yukan", quantity: 1 }, label: "湯灌", why: "ご家族が湯灌を選んだため" });
-  }
-  if (chose(state, "embalming", /行う|する|希望/) && !chose(state, "embalming", /行わない|しない/)) {
-    additions.push({ option: { itemId: "embalming", quantity: 1 }, label: "エンバーミング", why: "ご家族がエンバーミングを選んだため" });
-  }
+
+  // お別れの仕方
+  if (asked(state, "laying_in_style", /湯灌/, /湯灌/)) add("yukan", 1, "湯灌", "ご家族が湯灌を選んだため", "laying_in_style");
+  if (asked(state, "embalming", /^(?!.*(?:行わない|しない)).*(?:行う|する|希望)/, /エンバーミング/)) add("embalming", 1, "エンバーミング", "ご家族がエンバーミングを選んだため", "embalming");
+  if (asked(state, "coffin_items", /花/, /花/)) add("coffin_bouquet", 1, "棺上花束", "棺に花を入れてあげたいとお話があったため", "coffin_items");
+
+  // 人数で決まるもの
   const guests = readCount(decisionValue(state, "meals")) ?? readCount(decisionValue(state, "attendees_scope"));
   const gifts = readCount(decisionValue(state, "return_gifts")) ?? readCount(decisionValue(state, "attendees_scope"));
-  if (chose(state, "meals", /なし|しない|行わない/)) {
-    // 会食をしないと決めた
-  } else if (guests !== null) {
-    additions.push({ option: { itemId: "meal", quantity: guests }, label: "会食", why: "参列の人数の目安から" });
-  } else {
-    pending.push("会食（人数が決まってから）");
+  if (!chose(state, "meals", /なし|しない|行わない/)) {
+    if (guests !== null) add("meal", guests, "料理", `${guests}名分（${readCount(decisionValue(state, "meals")) !== null ? "会食の人数" : "参列の人数の目安"}から）`, readCount(decisionValue(state, "meals")) !== null ? "meals" : "attendees_scope");
+    else pending.push("料理（人数が決まってから）");
   }
-  if (gifts !== null) additions.push({ option: { itemId: "return_gift", quantity: gifts }, label: "香典返し", why: "参列の人数の目安から。余った分は返品できます" });
+  if (gifts !== null) add("return_gift", gifts, "香典返し", `${gifts}個（${readCount(decisionValue(state, "return_gifts")) !== null ? "香典返しの数" : "参列の人数の目安"}から）。余った分は返品できます`, readCount(decisionValue(state, "return_gifts")) !== null ? "return_gifts" : "attendees_scope");
   else pending.push("香典返し（人数が決まってから）");
+  const party = readCount(decisionValue(state, "crematorium_party"));
+  if (party !== null) add("crematory_car", Math.ceil(party / CAR_SEATS), "火葬場への送迎車", `火葬場へ行く${party}名を、1台${CAR_SEATS}名で`, "crematorium_party");
+
+  // 手配
+  if (asked(state, "obituary", /^(?!.*(?:なし|不要|しない|載せない|出さない)).*/, /お悔やみ欄|新聞/)) add("obituary", 1, "新聞のお悔やみ欄", "お悔やみ欄に載せるとお話があったため", "obituary");
   return { additions, pending };
 }
 
@@ -90,7 +135,7 @@ export function buildPlanProposals(state: CaseState): PlanProposal[] {
       planLabel: plan.label,
       includes: plan.includes,
       estimate,
-      additions: additions.map(({ label, why }) => ({ label, why })),
+      additions: additions.map(({ label, why, quantity, source }) => ({ label, why, quantity, source })),
       pendingCounts: pending,
     };
   });

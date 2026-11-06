@@ -1,11 +1,12 @@
 /**
- * デモ用の価格表。東北地方の互助会系葬儀社の施行の記録（2021年以降）にある商品の並びと単価の中央値をもとに、
- * 丸めた値で作った。実在の商品名・会場名は使っていない。
- *  - 祭壇は大きさで3つ（小・中・大）。記録では祭壇の大きさごとのプランに、棺・納棺・枕飾り・写真・霊柩車などの一式を組み合わせていた
- *  - 互助会の会員と一般で価格が違う（一式の品目は一般のほうが2〜5割高い）。祭壇は会員・一般で同じ
- *  - 湯灌・エンバーミング・安置・会場費・料理・香典返しは、プランの外で足す
+ * 価格表。品目と単価は data/product-catalog.json（施行の記録の商品別売上から作った集計値）から読む。
+ * 集計は scripts/build_product_catalog.py で行い、品目ごとの中央値と件数だけを置いている（実在の商品名・会場名は持たない）。
+ *  - 祭壇は大きさで3つ（小・中・大）。記録の祭壇の単価の下位25%・中央値・上位25%
+ *  - どのプランにも、記録でほぼすべての施行に入っていた一式（お迎え・枕飾り・納棺処置・仏衣・棺・骨箱・位牌・遺影写真・霊柩車）を含める
+ *  - 互助会の会員と一般で価格が違う品目は、それぞれの中央値を使う
  * 金額の計算はすべてここで行い、モデルには金額を作らせない。
  */
+import catalogData from "../data/product-catalog.json";
 
 export type Range = "simple" | "standard" | "gratitude";
 
@@ -27,12 +28,14 @@ export interface CatalogItem {
   readonly unitPrice: number;
   /** 一般の単価。会員と同じなら省く */
   readonly generalPrice?: number;
-  readonly unit: "式" | "日" | "名" | "個";
+  readonly unit: "式" | "日" | "名" | "個" | "台";
   /** 後から返品・取り消しができるか */
   readonly returnable: boolean;
   /** この品目を足すと埋まる「含まれないもの」（プランの excludes の先頭一致） */
   readonly covers?: string;
   readonly note?: string;
+  /** 単価のもとにした記録の件数 */
+  readonly count?: number;
 }
 
 export interface AltarPlan {
@@ -43,68 +46,84 @@ export interface AltarPlan {
   readonly price: number;
   /** 一般の価格 */
   readonly generalPrice: number;
-  /** ドライアイスと安置料がプランに含まれる日数 */
+  /** ドライアイスがプランに含まれる日数 */
   readonly includedDays: number;
   readonly includes: readonly string[];
   /** プランに含まれず、必要なら追加になるもの（見積もりは「含まれないもの」から示す） */
   readonly excludes: readonly string[];
 }
 
-/**
- * どのプランにも入る一式（記録ではほぼすべての施行に入っていた品目）。会員／一般の単価の中央値を丸めた値：
- * お迎え 38,000／42,000・枕飾り 20,000／25,000・納棺処置と仏衣 33,000／43,000・棺 96,000／116,000・
- * 骨箱 9,500／15,000・位牌 15,000／18,000・遺影写真 20,000／27,500・霊柩車 20,000／25,000
- */
-const BASE_SET = ["お迎え（搬送）", "枕飾り一式", "納棺処置・仏衣", "棺", "骨箱一式", "位牌", "遺影写真", "霊柩車（10kmまで）", "ドライアイス2日分"];
-const BASE_MEMBER = 251_500;
-const BASE_GENERAL = 312_000;
-const EXCLUDES = ["会場使用料", "安置料（3日目以降）", "ドライアイスの追加", "湯灌", "料理", "香典返し", "お布施"];
+interface CatalogRow {
+  readonly id: string;
+  readonly label: string;
+  readonly unit: string;
+  readonly memberPrice: number;
+  readonly generalPrice: number;
+  readonly count: number;
+}
 
-/** 祭壇の価格（記録の祭壇の大きさごとの中央値を丸めた値。会員・一般で同じ） */
-const ALTAR = { small: 160_000, medium: 385_000, large: 600_000 } as const;
+/** 集計にない、品目ごとの扱い（返品できるか・どの「含まれないもの」を埋めるか・説明） */
+const ITEM_META: Readonly<Record<string, Pick<CatalogItem, "returnable" | "covers" | "note">>> = {
+  yukan: { returnable: false, covers: "湯灌", note: "納棺の前に行います" },
+  embalming: { returnable: false, note: "火葬まで日数があく場合に検討します" },
+  dry_ice: { returnable: false, covers: "ドライアイスの追加" },
+  resting_fee: { returnable: false, covers: "安置料" },
+  hall_fee: { returnable: false, covers: "会場使用料" },
+  meal: { returnable: false, covers: "料理", note: "人数は前日まで変更できます" },
+  return_gift: { returnable: true, covers: "香典返し", note: "余った分は返品できます" },
+  obituary: { returnable: false, covers: "お悔やみ欄", note: "掲載すると取り消せません" },
+  crematory_car: { returnable: false, covers: "火葬場への送迎車" },
+  coffin_bouquet: { returnable: false, covers: "棺上花束" },
+};
 
-export const ALTAR_PLANS: readonly AltarPlan[] = [
-  {
-    id: "altar_simple",
-    range: "simple",
-    label: "生花祭壇（小）",
-    price: BASE_MEMBER + ALTAR.small,
-    generalPrice: BASE_GENERAL + ALTAR.small,
-    includedDays: 2,
-    includes: ["生花祭壇（小・幅2間ほど）", ...BASE_SET],
-    excludes: EXCLUDES,
-  },
-  {
-    id: "altar_standard",
-    range: "standard",
-    label: "生花祭壇（中）",
-    price: BASE_MEMBER + ALTAR.medium,
-    generalPrice: BASE_GENERAL + ALTAR.medium,
-    includedDays: 2,
-    includes: ["生花祭壇（中・幅3間ほど）", ...BASE_SET],
-    excludes: EXCLUDES,
-  },
-  {
-    id: "altar_gratitude",
-    range: "gratitude",
-    label: "生花祭壇（大）",
-    price: BASE_MEMBER + ALTAR.large,
-    generalPrice: BASE_GENERAL + ALTAR.large,
-    includedDays: 2,
-    includes: ["生花祭壇（大・幅4間ほど、故人の好きな花を中心に）", ...BASE_SET],
-    excludes: EXCLUDES,
-  },
-];
+const ROWS = (catalogData as { readonly items: readonly CatalogRow[] }).items;
 
-export const CATALOG: readonly CatalogItem[] = [
-  { id: "yukan", label: "湯灌（お体を洗い清める）", unitPrice: 65_000, unit: "式", returnable: false, covers: "湯灌", note: "納棺の前に行います" },
-  { id: "embalming", label: "エンバーミング（防腐・修復の処置）", unitPrice: 160_000, unit: "式", returnable: false, note: "火葬まで日数があく場合に検討します" },
-  { id: "dry_ice", label: "ドライアイスの追加", unitPrice: 10_000, unit: "日", returnable: false, covers: "ドライアイスの追加" },
-  { id: "resting_fee", label: "会館での安置料（1泊）", unitPrice: 33_000, unit: "日", returnable: false, covers: "安置料" },
-  { id: "hall_fee", label: "会場使用料（1日）", unitPrice: 30_000, unit: "式", returnable: false, covers: "会場使用料" },
-  { id: "meal", label: "料理（お一人）", unitPrice: 2_500, unit: "名", returnable: false, covers: "料理", note: "人数は前日まで変更できます" },
-  { id: "return_gift", label: "香典返し（お一つ）", unitPrice: 2_000, unit: "個", returnable: true, covers: "香典返し", note: "余った分は返品できます" },
-];
+export const CATALOG: readonly CatalogItem[] = ROWS.map((r) => ({
+  id: r.id,
+  label: r.label,
+  unitPrice: r.memberPrice,
+  ...(r.generalPrice !== r.memberPrice ? { generalPrice: r.generalPrice } : {}),
+  unit: r.unit as CatalogItem["unit"],
+  count: r.count,
+  returnable: ITEM_META[r.id]?.returnable ?? false,
+  ...(ITEM_META[r.id]?.covers ? { covers: ITEM_META[r.id]?.covers } : {}),
+  ...(ITEM_META[r.id]?.note ? { note: ITEM_META[r.id]?.note } : {}),
+}));
+
+/** 価格表の出どころ（画面の注記に使う） */
+export const CATALOG_SOURCE = `${catalogData.source}・${catalogData.period}の中央値（丸めた値）`;
+
+/** どのプランにも入る一式（記録でほぼすべての施行に入っていた品目） */
+const BASE_SET_IDS = ["pickup", "pillow_set", "laying_care", "robe", "coffin", "urn", "tablet", "portrait", "hearse"] as const;
+const INCLUDED_ICE_DAYS = 2;
+const EXCLUDES = ["会場使用料", "安置料", "ドライアイスの追加", "湯灌", "料理", "香典返し", "お悔やみ欄", "火葬場への送迎車", "棺上花束", "お布施"];
+
+const item = (id: string): CatalogRow => {
+  const row = ROWS.find((r) => r.id === id);
+  if (!row) throw new Error(`価格表に品目がありません: ${id}`);
+  return row;
+};
+const baseTotal = (tier: PriceTier): number =>
+  BASE_SET_IDS.reduce((sum, id) => sum + (tier === "member" ? item(id).memberPrice : item(id).generalPrice), 0) +
+  INCLUDED_ICE_DAYS * (tier === "member" ? item("dry_ice").memberPrice : item("dry_ice").generalPrice);
+const BASE_INCLUDES = [...BASE_SET_IDS.map((id) => item(id).label), `ドライアイス${INCLUDED_ICE_DAYS}日分`];
+
+const ALTAR_SIZE: Readonly<Record<Range, { readonly price: number; readonly label: string; readonly altar: string }>> = {
+  simple: { price: catalogData.altar.small, label: "生花祭壇（小）", altar: "生花祭壇（小・幅2間ほど）" },
+  standard: { price: catalogData.altar.medium, label: "生花祭壇（中）", altar: "生花祭壇（中・幅3間ほど）" },
+  gratitude: { price: catalogData.altar.large, label: "生花祭壇（大）", altar: "生花祭壇（大・幅4間ほど、故人の好きな花を中心に）" },
+};
+
+export const ALTAR_PLANS: readonly AltarPlan[] = (["simple", "standard", "gratitude"] as const).map((range) => ({
+  id: `altar_${range}`,
+  range,
+  label: ALTAR_SIZE[range].label,
+  price: ALTAR_SIZE[range].price + baseTotal("member"),
+  generalPrice: ALTAR_SIZE[range].price + baseTotal("general"),
+  includedDays: INCLUDED_ICE_DAYS,
+  includes: [ALTAR_SIZE[range].altar, ...BASE_INCLUDES],
+  excludes: EXCLUDES,
+}));
 
 const PLAN_BY_ID: ReadonlyMap<string, AltarPlan> = new Map(ALTAR_PLANS.map((p) => [p.id, p]));
 const ITEM_BY_ID: ReadonlyMap<string, CatalogItem> = new Map(CATALOG.map((c) => [c.id, c]));

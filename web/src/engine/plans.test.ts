@@ -45,7 +45,7 @@ describe("3つの幅での案", () => {
 
   test("人数が決まっていなければ、会食と香典返しは金額に入れず「人数が決まってから」と示す", () => {
     const [simple] = buildPlanProposals(DEMO_CASE);
-    expect(simple!.pendingCounts).toEqual(["会食（人数が決まってから）", "香典返し（人数が決まってから）"]);
+    expect(simple!.pendingCounts).toEqual(["料理（人数が決まってから）", "香典返し（人数が決まってから）"]);
     expect(simple!.estimate.notIncluded).toContain("料理");
   });
 
@@ -53,8 +53,8 @@ describe("3つの幅での案", () => {
     const [simple] = buildPlanProposals(decided({ attendees_scope: "15名ほど" }));
     const expected = buildEstimate("altar_simple", [
       { itemId: "dry_ice", quantity: 4 },
-      { itemId: "resting_fee", quantity: 4 },
-      { itemId: "hall_fee", quantity: 1 },
+      { itemId: "resting_fee", quantity: 5 },
+      { itemId: "hall_fee", quantity: 2 },
       { itemId: "meal", quantity: 15 },
       { itemId: "return_gift", quantity: 15 },
     ]);
@@ -64,8 +64,7 @@ describe("3つの幅での案", () => {
 
   test("火葬式なら会場使用料を足さない", () => {
     const [simple] = buildPlanProposals(decided({}, { funeralStyle: "火葬式", daysUntilFuneral: 2 }));
-    expect(simple!.estimate.lines).toHaveLength(1);
-    expect(simple!.estimate.lines[0]?.label).toContain(getPlan("altar_simple").label);
+    expect(simple!.estimate.lines.some((l) => l.label === getCatalogItem("hall_fee").label)).toBe(false);
   });
 
   test("会員でないと決まったら一般価格で見積もり、決まっていなければ会員価格で見積もる", () => {
@@ -75,6 +74,40 @@ describe("3つの幅での案", () => {
     expect(general!.estimate.tier).toBe("general");
     expect(general!.estimate.lines[0]?.unitPrice).toBe(getPlan("altar_simple").generalPrice);
     expect(general!.estimate.total).toBeGreaterThan(member!.estimate.total);
+  });
+
+  test("会話から拾った候補でも品目を足し、どの発言から来たかと、まだ候補であることを添える", () => {
+    const state: CaseState = {
+      ...DEMO_CASE,
+      utterances: [{ id: "U1", speaker: "chief_mourner", speakerLabel: "喪主", text: "新聞のお悔やみ欄には載せてください", at: 0 }],
+      decisions: { obituary: { value: "載せる", status: "candidate", utteranceIds: ["U1"] } },
+    };
+    const [simple] = buildPlanProposals(state);
+    const note = simple!.additions.find((a) => a.label === "新聞のお悔やみ欄");
+    expect(note?.source).toEqual({ decisionId: "obituary", status: "candidate", quote: "新聞のお悔やみ欄には載せてください" });
+  });
+
+  test("有料のオプションは推測では入れない：好きなことの話や、問いかけからは足さない", () => {
+    const state: CaseState = {
+      ...DEMO_CASE,
+      utterances: [
+        { id: "U1", speaker: "chief_mourner", speakerLabel: "喪主", text: "母はお風呂が好きでした", at: 0 },
+        { id: "U2", speaker: "chief_mourner", speakerLabel: "喪主", text: "新聞のお悔やみ欄にも出したほうがいいんでしょうか。", at: 1 },
+      ],
+      decisions: {
+        laying_in_style: { value: "湯灌", status: "candidate", utteranceIds: ["U1"] },
+        obituary: { value: "検討中", status: "candidate", utteranceIds: ["U2"] },
+      },
+    };
+    const [simple] = buildPlanProposals(state);
+    expect(simple!.additions.map((a) => a.label)).not.toContain("湯灌");
+    expect(simple!.additions.map((a) => a.label)).not.toContain("新聞のお悔やみ欄");
+  });
+
+  test("火葬場へ行く人数から送迎車の台数を出し、載せないと決めたお悔やみ欄は足さない", () => {
+    const [simple] = buildPlanProposals(decided({ crematorium_party: "20名", obituary: "載せない" }));
+    expect(simple!.additions.find((a) => a.label === "火葬場への送迎車")?.quantity).toBe(3);
+    expect(simple!.additions.some((a) => a.label === "新聞のお悔やみ欄")).toBe(false);
   });
 
   test("人数を読む", () => {

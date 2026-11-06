@@ -1,0 +1,191 @@
+{
+  "source": "東北地方の互助会系葬儀社の施行の記録（商品別の売上）",
+  "period": "2021年以降",
+  "builtAt": "2026-11-06",
+  "minCount": 30,
+  "note": "単価は品目ごとの中央値を500円単位に丸めた値。祭壇は大きさの下位25%・中央値・上位25%",
+  "altar": {
+    "small": 167000,
+    "medium": 325000,
+    "large": 539000,
+    "count": 887
+  },
+  "items": [
+    {
+      "id": "pickup",
+      "label": "お迎え（ご遺体の搬送）",
+      "unit": "式",
+      "memberPrice": 35000,
+      "generalPrice": 40000,
+      "count": 473
+    },
+    {
+      "id": "pillow_set",
+      "label": "枕飾り一式",
+      "unit": "式",
+      "memberPrice": 20000,
+      "generalPrice": 25000,
+      "count": 482
+    },
+    {
+      "id": "laying_care",
+      "label": "納棺処置",
+      "unit": "式",
+      "memberPrice": 27000,
+      "generalPrice": 27000,
+      "count": 588
+    },
+    {
+      "id": "robe",
+      "label": "仏衣",
+      "unit": "式",
+      "memberPrice": 11000,
+      "generalPrice": 16000,
+      "count": 400
+    },
+    {
+      "id": "coffin",
+      "label": "棺",
+      "unit": "式",
+      "memberPrice": 96000,
+      "generalPrice": 116000,
+      "count": 746
+    },
+    {
+      "id": "urn",
+      "label": "骨箱一式",
+      "unit": "式",
+      "memberPrice": 9500,
+      "generalPrice": 15000,
+      "count": 402
+    },
+    {
+      "id": "tablet",
+      "label": "位牌",
+      "unit": "式",
+      "memberPrice": 15000,
+      "generalPrice": 18000,
+      "count": 375
+    },
+    {
+      "id": "portrait",
+      "label": "遺影写真",
+      "unit": "式",
+      "memberPrice": 20000,
+      "generalPrice": 25000,
+      "count": 378
+    },
+    {
+      "id": "hearse",
+      "label": "霊柩車",
+      "unit": "式",
+      "memberPrice": 20000,
+      "generalPrice": 25000,
+      "count": 377
+    },
+    {
+      "id": "yukan",
+      "label": "湯灌（お体を洗い清める）",
+      "unit": "式",
+      "memberPrice": 65000,
+      "generalPrice": 85000,
+      "count": 372
+    },
+    {
+      "id": "embalming",
+      "label": "エンバーミング（防腐・修復の処置）",
+      "unit": "式",
+      "memberPrice": 160000,
+      "generalPrice": 196000,
+      "count": 147
+    },
+    {
+      "id": "dry_ice",
+      "label": "ドライアイス（1日）",
+      "unit": "日",
+      "memberPrice": 10000,
+      "generalPrice": 10000,
+      "count": 589
+    },
+    {
+      "id": "resting_fee",
+      "label": "会館での安置（1泊）",
+      "unit": "日",
+      "memberPrice": 36000,
+      "generalPrice": 36500,
+      "count": 461
+    },
+    {
+      "id": "hall_fee",
+      "label": "会場使用料（1日）",
+      "unit": "式",
+      "memberPrice": 30000,
+      "generalPrice": 33000,
+      "count": 222
+    },
+    {
+      "id": "farewell_flowers",
+      "label": "出棺花",
+      "unit": "式",
+      "memberPrice": 9000,
+      "generalPrice": 9000,
+      "count": 501
+    },
+    {
+      "id": "coffin_bouquet",
+      "label": "棺上花束",
+      "unit": "式",
+      "memberPrice": 7000,
+      "generalPrice": 7000,
+      "count": 319
+    },
+    {
+      "id": "toba",
+      "label": "塔婆一式",
+      "unit": "式",
+      "memberPrice": 7500,
+      "generalPrice": 8000,
+      "count": 427
+    },
+    {
+      "id": "koden_book",
+      "label": "香典帳一式",
+      "unit": "式",
+      "memberPrice": 3000,
+      "generalPrice": 3000,
+      "count": 152
+    },
+    {
+      "id": "crematory_car",
+      "label": "火葬場への送迎車",
+      "unit": "台",
+      "memberPrice": 20000,
+      "generalPrice": 25000,
+      "count": 281
+    },
+    {
+      "id": "obituary",
+      "label": "新聞のお悔やみ欄（掲載）",
+      "unit": "式",
+      "memberPrice": 152000,
+      "generalPrice": 152000,
+      "count": 401
+    },
+    {
+      "id": "meal",
+      "label": "料理（お一人）",
+      "unit": "名",
+      "memberPrice": 2500,
+      "generalPrice": 2500,
+      "count": 2851
+    },
+    {
+      "id": "return_gift",
+      "label": "香典返し（お一つ）",
+      "unit": "個",
+      "memberPrice": 2000,
+      "generalPrice": 2000,
+      "count": 4954
+    }
+  ]
+}

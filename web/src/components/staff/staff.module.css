@@ -250,3 +250,11 @@
 .fact { position: relative; padding: 0.45rem 0.7rem 0.45rem 1.4rem; border-radius: var(--r-sm); background: var(--surface-2); font-size: var(--text-sm); line-height: 1.65; color: var(--ink); animation: rise 400ms var(--ease); }
 .fact::before { content: ""; position: absolute; left: 0.6rem; top: 0.95rem; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
 .fact:first-child { background: var(--accent-soft); }
+
+/* 会話から見積もりに入れた品目 */
+.autoItems { margin-top: var(--space-3); padding: var(--space-3); border-radius: var(--r-md); background: var(--surface-2); }
+.autoItems > b { display: block; font-size: var(--text-xs); letter-spacing: 0.08em; color: var(--ink-3); margin-bottom: var(--space-2); }
+.autoItems ul { list-style: none; display: grid; gap: var(--space-2); }
+.autoItems li { display: grid; gap: 2px; font-size: var(--text-sm); }
+.autoItemHead { display: flex; align-items: center; gap: var(--space-2); font-weight: 700; }
+.autoQuote { font-size: var(--text-xs); color: var(--accent); }
