@@ -3,18 +3,20 @@ import { confirmDecision, resetCase } from "./helpers";
 
 test.beforeEach(async ({ request }) => resetCase(request));
 
-test("担当者の画面に3つの列が出る", async ({ page }) => {
+test("担当者の画面は「いま」から始まり、決めることに切り替えられる", async ({ page }) => {
   await page.goto("/staff/demo-yamada");
   await expect(page.getByText("山田家")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "次にすること" })).toBeVisible();
+  await page.getByRole("tab", { name: /決めること/ }).click();
   await expect(page.getByRole("heading", { name: "決めることボード" })).toBeVisible();
   await expect(page.getByRole("button", { name: "▶ 打合せを再生" })).toBeEnabled();
 });
 
 test("確定した決定はボードに『確定』と出る", async ({ page, request }) => {
   await page.goto("/staff/demo-yamada");
-  await expect(page.getByRole("heading", { name: "決めることボード" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "次にすること" })).toBeVisible();
   await confirmDecision(request, "funeral_style", "家族葬");
-  await expect(page.getByText("家族葬").first()).toBeVisible();
+  await expect(page.getByLabel("決まったこと")).toContainText("家族葬");
 });
 
 test("ご家族の窓口を開くと、共有のリンクと QR コードが出る", async ({ page }) => {

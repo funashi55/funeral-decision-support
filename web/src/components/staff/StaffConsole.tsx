@@ -6,10 +6,13 @@ import { impactedBy } from "../../domain/decisions";
 import type { FeedbackVerdict } from "../../engine/case";
 import type { FarewellResult } from "../../engine/farewell";
 import { DEMO_SCRIPT } from "../../engine/fixtures/demoScript";
+import { DECISIONS } from "../../domain/decisions";
+import { buildOrders } from "../../engine/orders";
 import { detectOversights } from "../../engine/oversight";
 import { detectPhase } from "../../engine/phase";
 import { fitsChanged, type QuickFit } from "../../engine/quickFit";
 import { DecisionBoard } from "./DecisionBoard";
+import { NowView } from "./NowView";
 import { FamilyInbox } from "./FamilyInbox";
 import { FarewellPanel } from "./FarewellPanel";
 import type { NewLine } from "./InputDock";
@@ -17,18 +20,28 @@ import { OrdersPanel } from "./OrdersPanel";
 import { PhaseBar } from "./PhaseBar";
 import { PlansPanel } from "./PlansPanel";
 import { Transcript } from "./Transcript";
+import c from "./console.module.css";
 import s from "./staff.module.css";
 
 const LINE_INTERVAL_MS = 2800;
 /** 見立てが変わらなくても、理由を書いてからこの数だけ発言が増えたら書き直す */
 const REWRITE_AFTER_LINES = 3;
 
-type Tab = "farewell" | "plans" | "orders";
-const TABS: readonly { readonly id: Tab; readonly label: string }[] = [
-  { id: "farewell", label: "お別れの仕方" },
-  { id: "plans", label: "プランの案" },
-  { id: "orders", label: "手配と書き出し" },
+type View = "now" | "decisions" | "plans" | "orders";
+const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon: string }[] = [
+  { id: "now", label: "いま", icon: "M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" },
+  { id: "decisions", label: "決めること", icon: "M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" },
+  { id: "plans", label: "プランの案", icon: "M4 6h16M4 12h16M4 18h10" },
+  { id: "orders", label: "手配と書き出し", icon: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6ZM14 3v6h6M8 13h8M8 17h5" },
 ];
+
+function Icon({ d }: { readonly d: string }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  );
+}
 
 const message = (e: unknown): string => (e instanceof Error ? e.message : "問題が起きました");
 
@@ -41,7 +54,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [impacted, setImpacted] = useState<ReadonlySet<string>>(new Set());
   const [inboxOpen, setInboxOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>("farewell");
+  const [view, setView] = useState<View>("now");
   /** 次に流す台本の行（描画には使わない。表示は案件の発話数から導く） */
   const step = useRef(0);
   useEffect(() => {
@@ -221,69 +234,117 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const phase = detectPhase(state.utterances);
   const oversights = detectOversights(state);
 
+  const todayOpen = DECISIONS.filter((d) => d.urgency === "today" && state.decisions[d.id]?.status !== "confirmed").length;
+  const readyOrders = buildOrders(state).filter((o) => o.status === "ready").length;
+  const badge: Record<View, number> = { now: oversights.length, decisions: todayOpen, plans: 0, orders: readyOrders };
+
+  const farewellPanel = (
+    <FarewellPanel
+      state={state}
+      result={farewell}
+      resultBasedOn={farewellBasedOn}
+      quick={quick}
+      listening={listening}
+      loading={farewellLoading}
+      error={error}
+      onRun={() => void runFarewell()}
+      onFeedback={(t, v) => void feedback(t, v)}
+    />
+  );
+
   return (
-    <div className={s.shell}>
-      <header className={s.top}>
-        <div className={s.identity}>
-          <span className={s.family}>{state.familyName}</span>
-          <span className={s.meta}>担当：新人（2年目）</span>
-          {!connected && <span className={s.reconnect}>再接続中…</span>}
+    <div className={c.app}>
+      <nav className={c.rail} aria-label="画面の切り替え">
+        <div className={c.brand}>
+          <span className={c.brandFamily}>{state.familyName}</span>
+          <span className={c.brandMeta}>担当：新人（2年目）</span>
+          {!connected && <span className={c.reconnect}>再接続中…</span>}
         </div>
-        <div className={s.demo} role="group" aria-label="デモの操作">
-          <span className={s.demoLabel}>デモ</span>
-          <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => setPlaying((p) => !p)} disabled={finished}>
-            {recording && <span className={s.recDot} aria-hidden="true" />}
-            {playing ? "一時停止" : "▶ 打合せを再生"}
-          </button>
-          <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => void advance()} disabled={playing || finished}>
-            1行すすめる
-          </button>
-          <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => void reset()}>
-            最初から
-          </button>
+        <div className={c.navList} role="tablist" aria-orientation="vertical" aria-label="画面">
+          {VIEWS.map((v) => (
+            <button
+              key={v.id}
+              type="button"
+              role="tab"
+              id={`tab-${v.id}`}
+              aria-selected={view === v.id}
+              aria-controls="main-view"
+              className={c.navItem}
+              onClick={() => setView(v.id)}
+            >
+              <Icon d={v.icon} />
+              <span>{v.label}</span>
+              {badge[v.id] > 0 && <span className={`${c.navBadge} ${v.id === "now" ? c.navBadgeWarn : ""}`}>{badge[v.id]}</span>}
+            </button>
+          ))}
         </div>
-        <button type="button" className={`${s.btn} ${s.inboxBtn}`} onClick={() => setInboxOpen((o) => !o)} aria-expanded={inboxOpen}>
-          ご家族の窓口
-          {openRequests > 0 && <span className={s.badge} aria-label={`未対応 ${openRequests} 件`}>{openRequests}</span>}
-        </button>
-      </header>
-      <PhaseBar reading={phase} />
-      <div className={s.body}>
-        <Transcript state={state} extracting={extracting} onAdd={addLine} onEdit={editLine} />
-        <DecisionBoard
-          state={state}
-          impacted={impacted}
-          onConfirm={(id, v) => void confirm(id, v)}
-          oversights={oversights}
-          onFeedback={(t, v) => void feedback(t, v)}
-        />
-        <section className={s.col} aria-label="推奨と手配">
-          <div className={s.tabs} role="tablist" aria-label="推奨と手配">
-            {TABS.map((t) => (
-              <button key={t.id} type="button" role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={`panel-${t.id}`} onClick={() => setTab(t.id)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className={s.tabPanel} role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-            {tab === "farewell" && (
-              <FarewellPanel
-                state={state}
-                result={farewell}
-                resultBasedOn={farewellBasedOn}
-                quick={quick}
-                listening={listening}
-                loading={farewellLoading}
-                error={error}
-                onRun={() => void runFarewell()}
-                onFeedback={(t, v) => void feedback(t, v)}
-              />
+        <div className={c.railFoot}>
+          <button type="button" className={`${c.navItem} ${s.inboxBtn}`} onClick={() => setInboxOpen((o) => !o)} aria-expanded={inboxOpen}>
+            <Icon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            <span>ご家族の窓口</span>
+            {openRequests > 0 && (
+              <span className={`${c.navBadge} ${c.navBadgeWarn}`} aria-label={`未対応 ${openRequests} 件`}>
+                {openRequests}
+              </span>
             )}
-            {tab === "plans" && <PlansPanel state={state} phase={phase.phase} onFeedback={(t, v) => void feedback(t, v)} />}
-            {tab === "orders" && <OrdersPanel state={state} />}
+          </button>
+        </div>
+      </nav>
+
+      <div className={c.main}>
+        <header className={c.topbar}>
+          <PhaseBar reading={phase} />
+          <div className={c.demo} role="group" aria-label="デモの操作">
+            <span className={c.demoLabel}>デモ</span>
+            <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => setPlaying((p) => !p)} disabled={finished}>
+              {recording && <span className={s.recDot} aria-hidden="true" />}
+              {playing ? "一時停止" : "▶ 打合せを再生"}
+            </button>
+            <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => void advance()} disabled={playing || finished}>
+              1行すすめる
+            </button>
+            <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => void reset()}>
+              最初から
+            </button>
           </div>
-        </section>
+        </header>
+        <main className={c.stage} id="main-view" role="tabpanel" aria-labelledby={`tab-${view}`}>
+          {view === "now" && (
+            <NowView
+              state={state}
+              phase={phase}
+              impacted={impacted}
+              oversights={oversights}
+              farewell={farewell}
+              onConfirm={(id, v) => void confirm(id, v)}
+              onFeedback={(t, v) => void feedback(t, v)}
+            >
+              {farewellPanel}
+            </NowView>
+          )}
+          {view === "decisions" && (
+            <div className={`${c.view} ${c.wide}`}>
+              <DecisionBoard state={state} impacted={impacted} onConfirm={(id, v) => void confirm(id, v)} />
+            </div>
+          )}
+          {view === "plans" && (
+            <div className={c.view}>
+              <h1 className={c.viewTitle}>プランの案</h1>
+              <PlansPanel state={state} phase={phase.phase} onFeedback={(t, v) => void feedback(t, v)} />
+            </div>
+          )}
+          {view === "orders" && (
+            <div className={c.view}>
+              <h1 className={c.viewTitle}>手配と書き出し</h1>
+              <OrdersPanel state={state} />
+            </div>
+          )}
+        </main>
       </div>
+
+      <aside className={c.live} aria-label="会話">
+        <Transcript state={state} extracting={extracting} onAdd={addLine} onEdit={editLine} />
+      </aside>
       {inboxOpen && <FamilyInbox state={state} onClose={() => setInboxOpen(false)} onAcknowledge={acknowledge} onLink={familyLink} />}
     </div>
   );
