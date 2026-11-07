@@ -31,12 +31,15 @@ export const TOPIC_CUES: Readonly<Record<string, readonly RegExp[]>> = {
   relatives_arrival: [/着く/, /到着/, /帰って(?:くる|来る)/, /遠方/, /間に合/],
   cremation_date: [/火葬/, /日程/, /明後日/, /日後/],
   altar_plan: [/祭壇/, /プラン/],
-  budget_scope: [/費用/, /予算/, /お金/, /抑え/],
+  budget_scope: [/費用/, /予算/, /お金/, /抑え/, /葬祭費/, /埋葬料/],
   meals: [/料理/, /会食/, /食事/],
   obituary: [/お悔やみ欄/, /新聞/],
   photo: [/遺影/, /写真/],
   pacemaker: [/ペースメーカー/],
-  death_certificate: [/死亡届/],
+  death_certificate: [/死亡届/, /死亡診断書/, /火葬許可/],
+  coffin_items: [/棺に入れ/, /お棺に/, /一緒に入れ/],
+  deceased_character: [/エンディングノート/, /遺言/, /生前/],
+  estimate: [/お布施/, /見積/],
 };
 
 const PHASE_ORDER: readonly Phase[] = ["trust", "hearing", "farewell", "schedule", "plan", "logistics", "after"];

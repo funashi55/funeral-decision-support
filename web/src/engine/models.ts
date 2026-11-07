@@ -1,5 +1,6 @@
 /**
- * Claude の呼び出し。推奨の生成と判定役は Opus、抽出は Haiku。
+ * Claude の呼び出し。打合せの最中に出すもの（いまの見立て・寄り添いと提案・プランの見立て・窓口の案内役・ロールプレイのご遺族役）は
+ * 会話に追いつくことを優先して Haiku。守る線の判定役と、打合せのあとの書類・判断の取り出しは Opus。
  * すべて構造化出力で受け取り、応答を控えた場合と形が崩れた場合は例外にする。
  */
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
@@ -35,10 +36,10 @@ function unwrap<T>(response: ParsedResponse<T>): T {
 
 export async function generateFarewellDraft(system: string, prompt: string): Promise<FarewellDraft> {
   const response = await getClient().messages.parse({
-    model: MODEL_REASONING,
+    model: MODEL_FAST,
     max_tokens: 8000,
     system,
-    output_config: { effort: "medium", format: zodOutputFormat(FarewellDraftSchema) },
+    output_config: { effort: "low", format: zodOutputFormat(FarewellDraftSchema) },
     messages: [{ role: "user", content: prompt }],
   });
   return unwrap(response as ParsedResponse<FarewellDraft>);
@@ -81,7 +82,7 @@ export async function judgeRecommendation(recommendation: FarewellRecommendation
 /** 遺族の窓口の案内役。返事の速さを優先して effort は low */
 export const familyChatModel: ChatModel = async ({ system, messages, tools }) => {
   const response = await getClient().messages.create({
-    model: MODEL_REASONING,
+    model: MODEL_FAST,
     max_tokens: 2000,
     system,
     tools,
@@ -94,7 +95,7 @@ export const familyChatModel: ChatModel = async ({ system, messages, tools }) =>
 /** いまの見立て（即答の層）。見立てだけを返させ、考える量を少なめにして約2秒で返す */
 export async function generateQuickFit(system: string, prompt: string): Promise<QuickFitDraft> {
   const response = await getClient().messages.parse({
-    model: MODEL_REASONING,
+    model: MODEL_FAST,
     max_tokens: 1000,
     system,
     output_config: { effort: "low", format: zodOutputFormat(QuickFitSchema) },
@@ -118,7 +119,7 @@ export async function generatePaperwork(system: string, prompt: string): Promise
 /** 遺族との打合せのロールプレイ：ご遺族役。会話のテンポを優先して考える量は少なめ */
 export const hearingFamilyModel: FamilyModel = async (system, messages) => {
   const response = await getClient().messages.parse({
-    model: MODEL_REASONING,
+    model: MODEL_FAST,
     max_tokens: 1500,
     system,
     output_config: { effort: "low", format: zodOutputFormat(FamilyReplySchema) },
@@ -142,10 +143,10 @@ export const hearingExtractModel: ExtractModel = async (system, prompt) => {
 /** プランの提案（幅ごとの合う・合わない、切り出し方）。推奨と同じく考える量はふつう */
 export async function generatePlanFit(system: string, prompt: string): Promise<PlanFitDraft> {
   const response = await getClient().messages.parse({
-    model: MODEL_REASONING,
+    model: MODEL_FAST,
     max_tokens: 4000,
     system,
-    output_config: { effort: "medium", format: zodOutputFormat(PlanFitDraftSchema) },
+    output_config: { effort: "low", format: zodOutputFormat(PlanFitDraftSchema) },
     messages: [{ role: "user", content: prompt }],
   });
   return unwrap(response as ParsedResponse<PlanFitDraft>);

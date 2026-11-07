@@ -19,4 +19,4 @@ Built with Claude: Japan 2026 の提出作品。葬儀の打合せで、遺族�
 - `npm test`（Vitest）／ `npm run typecheck`
 
 ## 技術
-Next.js 16（App Router。書く前に `web/node_modules/next/dist/docs/` を確認する）、TypeScript、Anthropic SDK（推奨・判定は `claude-opus-5-5`、抽出は `claude-haiku-5-5`）、zod。
+Next.js 16（App Router。書く前に `web/node_modules/next/dist/docs/` を確認する）、TypeScript、Anthropic SDK（打合せ中にリアルタイムで出すもの＝いまの見立て・寄り添いと提案・プランの見立て・窓口の案内役・ロールプレイのご遺族役・抽出・話者の聞き分けは `claude-haiku-5-5`。守る線の判定役と、打合せのあとの書類・判断の取り出しは `claude-opus-5-5`）、zod。

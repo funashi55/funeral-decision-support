@@ -61,3 +61,29 @@ describe("見落としの先回り", () => {
     expect(new Set(all).size).toBe(all.length);
   });
 });
+
+describe("足した見落としの先回り", () => {
+  const base = (texts: readonly string[], decisions: CaseState["decisions"] = {}): CaseState => ({
+    ...DEMO_CASE,
+    decisions,
+    utterances: texts.map((text, i) => ({ id: `U${i + 1}`, speaker: "chief_mourner", speakerLabel: "喪主", text, at: i })),
+  });
+    const candidate = (value: string) => ({ value, status: "candidate" as const, utteranceIds: [] });
+
+  test("火葬の話が出たら、火葬許可（死亡届）の段取りを知らせる", () => {
+    expect(ids(base(["火葬はいつになりますか"]))).toContain("permit_before_cremation");
+  });
+
+  test("火葬の日の候補が出たら、友引を知らせる。確定したら知らせない", () => {
+    expect(ids(base([], { cremation_date: candidate("明後日") }))).toContain("tomobiki");
+    expect(ids(base([], { cremation_date: { value: "明後日", status: "confirmed", utteranceIds: [] } }))).not.toContain("tomobiki");
+  });
+
+  test("棺に入れたいものの話が出たら、入れられないものを知らせる", () => {
+    expect(ids(base(["母の眼鏡を棺に入れてあげたい"]))).toContain("coffin_items_limits");
+  });
+
+  test("ご家族が費用の話をしたら、葬祭費などを受け取れることを知らせる", () => {
+    expect(ids(base(["費用はできるだけ抑えたいです"]))).toContain("funeral_benefit");
+  });
+});

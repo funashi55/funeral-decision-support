@@ -92,6 +92,55 @@ export const OVERSIGHT_RULES: readonly OversightRule[] = [
     message: "香典返しは余った分を返品できます。参列の人数が決まっていなくても、後から調整できるとお伝えできます",
     cues: [/香典返し/],
   },
+  // 取り返しのつかない段取り
+  {
+    id: "permit_before_cremation",
+    decisionId: "death_certificate",
+    message: "火葬には火葬許可証が要ります。死亡診断書の受け取りと死亡届の提出を、誰がいつ行うかを確かめてください",
+    cues: [/死亡届/, /死亡診断書/, /火葬許可/],
+    when: (s) => (isMentioned(s, "cremation_date") || s.utterances.some((u) => /火葬/.test(u.text))) && !isConfirmed(s, "death_certificate"),
+  },
+  {
+    id: "tomobiki",
+    decisionId: "cremation_date",
+    message: "友引の日は休みの火葬場があります。候補の日が友引にあたらないか、ご家族の気にされ方と一緒に確かめてください",
+    cues: [/友引/, /六曜/],
+    when: (s) => isMentioned(s, "cremation_date") && !isConfirmed(s, "cremation_date"),
+  },
+  {
+    id: "coffin_items_limits",
+    decisionId: "coffin_items",
+    message: "金属・ガラス・電池の入ったもの・厚い本などは棺に入れられません。入れてあげたいものを伺うときに、そっとお伝えください",
+    cues: [/棺に入れ/, /お棺に/, /一緒に入れ/, /持たせ/],
+  },
+  {
+    id: "photo_early",
+    decisionId: "photo",
+    message: "遺影の写真は、通夜の前に仕上げる必要があります。お気に入りの写真を選んでいただけるよう、早めにお願いしてください",
+    cues: [/遺影/, /写真/],
+    when: (s) => (isMentioned(s, "funeral_date") || isMentioned(s, "wake_date")) && !isConfirmed(s, "photo"),
+  },
+  // ご家族の思いと負担
+  {
+    id: "wishes_left",
+    decisionId: "deceased_character",
+    message: "故人が残した希望（エンディングノート・遺言・生前のお話）がないか、ご家族に伺ってください",
+    cues: [/エンディングノート/, /遺言/, /生前/, /言い残/],
+  },
+  {
+    id: "funeral_benefit",
+    decisionId: "budget_scope",
+    message: "国民健康保険などの葬祭費や、勤め先の健康保険の埋葬料を受け取れることがあります（申請が必要です）。費用の話のときにお伝えできます",
+    cues: [/保険/, /葬祭費/, /埋葬料/],
+    when: (s) => s.utterances.some((u) => u.speaker !== "staff" && /費用|予算|お金|抑え/.test(u.text)),
+  },
+  {
+    id: "offering_not_included",
+    decisionId: "estimate",
+    message: "お布施は葬儀社の見積もりに含まれません。菩提寺がある場合は、お寺に直接お尋ねいただくことをお伝えください",
+    cues: [/お布施/, /戒名/],
+    when: (s) => isMentioned(s, "temple") && (isMentioned(s, "altar_plan") || s.utterances.some((u) => /費用|見積/.test(u.text))),
+  },
 ];
 
 /** 今の打合せで知らせるべき見落としを返す。確定済みの項目については知らせない */
