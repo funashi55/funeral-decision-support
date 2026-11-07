@@ -112,3 +112,8 @@
 .footer { padding-bottom: 96px; }
 /* 左下の「尋ねる」ボタンに、ページの最後の項目が隠れないように */
 .page { padding-bottom: 120px; }
+
+/* 見出しの背景：朝の庭（架空の絵）。左の余白に文字を重ねる */
+.hero { position: relative; isolation: isolate; padding-right: 0; }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--bg, #fbf8f3) 38%, rgba(251, 248, 243, 0.55) 62%, rgba(251, 248, 243, 0) 100%), url("/images/web/family-hero.webp") right center / auto 100% no-repeat; opacity: 0.95; }
+@media (max-width: 520px) { .hero::before { background: linear-gradient(180deg, rgba(251, 248, 243, 0.2) 0%, var(--bg, #fbf8f3) 72%), url("/images/web/family-hero.webp") 80% top / cover no-repeat; } }

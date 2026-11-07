@@ -60,16 +60,26 @@ function sourceOf(state: CaseState, decisionId: string): AdditionSource | null {
 
 const QUESTION = /(?:か|かね|でしょうか|ですか)[。？?]?\s*$|[？?]\s*$/;
 
+/** 選択肢の名前のあとに続く「断る」言い回し（「湯灌はせず」「湯灌はしなくて大丈夫」「エンバーミングは不要」） */
+const DECLINE_AFTER = /^(?:は|を|も)?(?:[、\s]*)(?:せず|しない|しなくて|しません|なし|無し|不要|いらない|要らない|結構|行わない|やめ)/;
+
+/** その言葉が「望む」意味で出ているか（断っている言い回しなら false） */
+export function wantsWord(text: string, word: RegExp): boolean {
+  const m = word.exec(text);
+  if (!m) return false;
+  return !DECLINE_AFTER.test(text.slice(m.index + m[0].length)) && !/(?:行わない|しない|不要|なし)$/.test(text.trim());
+}
+
 /**
  * 有料のオプションを見積もりに入れてよいか。高いものへ誘導しないため、会話からの推測では入れない：
  * 確定しているか、ご家族がその言葉をはっきり口にした（問いかけではない）ときだけ
  */
 function asked(state: CaseState, decisionId: string, value: RegExp, words: RegExp): boolean {
   const d = state.decisions[decisionId];
-  if (!d || !value.test(d.value)) return false;
+  if (!d || !value.test(d.value) || !wantsWord(d.value, value)) return false;
   if (d.status === "confirmed") return true;
   const quote = sourceOf(state, decisionId)?.quote ?? "";
-  return words.test(quote) && !QUESTION.test(quote);
+  return wantsWord(quote, words) && !QUESTION.test(quote);
 }
 
 /** 火葬場への送迎車の台数：1台にお乗りいただける人数 */
@@ -101,12 +111,16 @@ function additionsFor(state: CaseState, plan: AltarPlan): { additions: Addition[
 
   // 人数で決まるもの
   const guests = readCount(decisionValue(state, "meals")) ?? readCount(decisionValue(state, "attendees_scope"));
-  const gifts = readCount(decisionValue(state, "return_gifts")) ?? readCount(decisionValue(state, "attendees_scope"));
+  const giftCount = (() => {
+    const m = decisionValue(state, "return_gifts")?.match(/(\d+)\s*(?:個|名|人|つ|セット)?/);
+    return m ? Number(m[1]) : null;
+  })();
+  const gifts = giftCount ?? readCount(decisionValue(state, "attendees_scope"));
   if (!chose(state, "meals", /なし|しない|行わない/)) {
     if (guests !== null) add("meal", guests, "料理", `${guests}名分（${readCount(decisionValue(state, "meals")) !== null ? "会食の人数" : "参列の人数の目安"}から）`, readCount(decisionValue(state, "meals")) !== null ? "meals" : "attendees_scope");
     else pending.push("料理（人数が決まってから）");
   }
-  if (gifts !== null) add("return_gift", gifts, "香典返し", `${gifts}個（${readCount(decisionValue(state, "return_gifts")) !== null ? "香典返しの数" : "参列の人数の目安"}から）。余った分は返品できます`, readCount(decisionValue(state, "return_gifts")) !== null ? "return_gifts" : "attendees_scope");
+  if (gifts !== null) add("return_gift", gifts, "香典返し", `${gifts}個（${giftCount !== null ? "香典返しの数" : "参列の人数の目安"}から）。余った分は返品できることが多い品です`, giftCount !== null ? "return_gifts" : "attendees_scope");
   else pending.push("香典返し（人数が決まってから）");
   const party = readCount(decisionValue(state, "crematorium_party"));
   if (party !== null) add("crematory_car", Math.ceil(party / CAR_SEATS), "火葬場への送迎車", `火葬場へ行く${party}名を、1台${CAR_SEATS}名で`, "crematorium_party");

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { DECISIONS } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
@@ -185,7 +186,17 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               <FirstSentence text={rec.familyWish} />
             </div>
           )}
-          {care.length === 0 && !rec && state.utterances.length === 0 && <p className={c.quiet}>会話が進むと、かける言葉の例が出ます</p>}
+          {care.length === 0 && !rec && state.utterances.length === 0 && (
+            <div className={c.careEmpty}>
+              {/* 架空の絵：まず座って、お話を聴く */}
+              <Image src="/images/web/care-tea.webp" width={96} height={96} alt="" aria-hidden="true" />
+              <p>
+                まず座って、お話を伺いましょう。
+                <br />
+                会話が進むと、かける言葉の例が出ます。
+              </p>
+            </div>
+          )}
           {!rec && !thinking && state.utterances.length > 0 && (
             <p className={c.quiet}>
               {farewell && !farewell.ok ? "言い回しが守る線にかかったため、今回は出していません（選択肢の事実は「提案」の比較から見られます）。" : "まだ作っていません。"}

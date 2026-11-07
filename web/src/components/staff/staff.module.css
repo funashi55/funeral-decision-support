@@ -267,3 +267,15 @@
 .uttSpeaker:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 1px; }
 .uttSpeaker small { font-size: 0.6rem; font-weight: 800; padding: 0 5px; border-radius: 999px; background: var(--surface-3); color: var(--ink-3); }
 @media (max-width: 760px) { .autoSpeaker { display: none; } }
+
+/* 祭壇の大きさのイメージ。3案とも同じ大きさで出す */
+.altarImage { display: block; width: 100%; max-width: 360px; height: auto; aspect-ratio: 710 / 400; margin-bottom: var(--space-3); border-radius: var(--r-sm); background: #f7f3ec; }
+/* 色合いのサンプル写真は控えめな大きさにする（大きな祭壇を目立たせない） */
+.altar { max-width: 420px; }
+/* 案のカード：左に祭壇の大きさの絵、右に内容（3案とも同じ大きさ） */
+.option:has(> .altarImage) { display: grid; grid-template-columns: 200px minmax(0, 1fr); column-gap: var(--space-4); align-items: start; }
+.option:has(> .altarImage) > .altarImage { grid-row: 1 / span 8; max-width: 200px; margin-bottom: 0; }
+@media (max-width: 640px) {
+  .option:has(> .altarImage) { grid-template-columns: 1fr; }
+  .option:has(> .altarImage) > .altarImage { grid-row: auto; max-width: 260px; margin-bottom: var(--space-3); }
+}

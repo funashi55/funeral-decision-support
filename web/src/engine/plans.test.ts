@@ -117,3 +117,23 @@ describe("3つの幅での案", () => {
     expect(readCount(undefined)).toBeNull();
   });
 });
+
+describe("断った有料の選択肢を、見積もりに入れない", () => {
+  const ok = (value: string) => ({ value, status: "confirmed" as const, utteranceIds: [] });
+  const items = (decisions: CaseState["decisions"]) => buildPlanProposals({ ...DEMO_CASE, decisions })[0]?.additions.map((a) => a.label) ?? [];
+
+  test("「湯灌はせず」「湯灌はしなくて大丈夫」は、湯灌を足さない", () => {
+    expect(items({ laying_in_style: ok("湯灌はせず、普通の納棺") })).not.toContain("湯灌");
+    expect(items({ laying_in_style: ok("湯灌はしなくて大丈夫") })).not.toContain("湯灌");
+    expect(items({ laying_in_style: ok("湯灌を行う") })).toContain("湯灌");
+  });
+
+  test("「エンバーミングは不要」は、エンバーミングを足さない", () => {
+    expect(items({ embalming: ok("エンバーミングは不要") })).not.toContain("エンバーミング");
+  });
+
+  test("香典返しは、確定した数（30個）をそのまま使う", () => {
+    const gifts = buildPlanProposals({ ...DEMO_CASE, decisions: { return_gifts: ok("30個"), attendees_scope: ok("約15名") } })[0]?.additions.find((a) => a.label === "香典返し");
+    expect(gifts?.quantity).toBe(30);
+  });
+});

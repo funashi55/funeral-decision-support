@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import { PHASE_LABEL, type Phase } from "../../domain/decisions";
 import { CATALOG_SOURCE, yen, type Range } from "../../domain/pricing";
@@ -42,6 +43,8 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
       <p className={s.empty}>価格の上下ではなく、ご家族の気持ちの幅として並べています。費用を抑える案から順に示します。</p>
       {proposals.map((p) => (
         <article key={p.range} className={s.option} data-testid={`plan-${p.range}`}>
+          {/* 3つの幅は同じ大きさの絵で並べる（大きい祭壇を目立たせない）。絵は架空のイメージ */}
+          <Image src={ALTAR_IMAGE[p.range]} width={710} height={400} alt={`${p.rangeLabel}のイメージ（花の段の数の違い）`} className={s.altarImage} />
           <div className={s.optionHead}>
             <h3>
               <span className={`${s.fit} ${s.fitConsider}`}>{p.rangeLabel}</span>
@@ -134,3 +137,10 @@ function PlanFitNote({ planFit, range }: { readonly planFit: PlanFitProposal | n
     </p>
   );
 }
+
+/** 祭壇の大きさのイメージ（架空の絵。花の段の数だけが違う） */
+const ALTAR_IMAGE: Readonly<Record<Range, string>> = {
+  simple: "/images/web/altar-small.webp",
+  standard: "/images/web/altar-medium.webp",
+  gratitude: "/images/web/altar-large.webp",
+};

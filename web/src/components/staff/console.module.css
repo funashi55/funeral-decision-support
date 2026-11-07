@@ -404,3 +404,6 @@ a.navItem { text-decoration: none; }
 .moreText > summary::-webkit-details-marker { display: none; }
 .moreText:not([open]) > summary::after { content: " 続き"; font-size: 0.75em; opacity: 0.7; text-decoration: underline; }
 .moreText > summary:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 4px; }
+
+.careEmpty { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); border-radius: var(--r-md); background: #f7f3ec; color: var(--ink-2); font-size: var(--text-sm); line-height: 1.8; }
+.careEmpty img { border-radius: 50%; flex: none; }
