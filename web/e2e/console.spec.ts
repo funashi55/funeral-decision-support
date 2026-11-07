@@ -15,7 +15,7 @@ test("メモ入力で発言を足すと、確認・注意に見落としの注�
   // 伝えたものは「済んだこと」に畳まれ、戻せる
   await oversights.getByRole("button", { name: "伝えた" }).first().click();
   const handled = page.getByTestId("handled");
-  await expect(handled).toContainText("新聞のお悔やみ欄");
+  await expect(handled).toContainText("お悔やみ欄");
   await expect(oversights.getByText(/掲載すると取り消せません/)).toHaveCount(0);
   await handled.locator("summary").click();
   await handled.getByRole("button", { name: "戻す" }).click();
@@ -53,7 +53,7 @@ test("確定したものだけが手配に回り、CSV に書き出される", a
   await expect(orders.getByText("寺院への連絡").locator("..")).toContainText("確定待ち");
 
   const download = page.waitForEvent("download");
-  await page.getByRole("link", { name: /基幹システム向け/ }).click();
+  await page.getByRole("link", { name: /基幹システム/ }).click();
   const file = await download;
   const path = await file.path();
   const { readFileSync } = await import("node:fs");

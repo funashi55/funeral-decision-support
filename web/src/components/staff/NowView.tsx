@@ -31,6 +31,8 @@ interface NowViewProps {
   readonly thinking: boolean;
   /** 会話から家族の事情を拾い上げている途中か */
   readonly extracting: boolean;
+  /** いまの会話から、寄り添いと提案を作る */
+  readonly onRecommend: () => void;
   readonly onConfirm: (decisionId: string, value: string) => void;
   /** 担当者が自分で足すやること（足す・済みにする・消す） */
   readonly onTodo: TodoHandler;
@@ -66,7 +68,7 @@ interface DoneItem {
  * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）。
  * 伝えた提案・確定した項目に関わる提案・会話で触れた提案は、下の「済んだこと」に畳む
  */
-export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
+export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onRecommend, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
   const [tab, setTab] = useState<NowTab>("proposal");
   const rec = farewell?.ok ? farewell.recommendation : null;
   // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く。
@@ -104,7 +106,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
     const first = state.utterances.findIndex((u) => u.speaker !== "staff" && ids.includes(u.id));
     return first >= 0 ? first + 1 : 1;
   };
-  const alerts = oversights.filter((a) => active({ target: `oversight:${a.id}`, decisionId: a.decisionId, cues: TOPIC_CUES[a.decisionId], basedOn: after(a.utteranceIds) }, "注意", a.decisionLabel));
+  const alerts = oversights.filter((a) => active({ target: `oversight:${a.id}`, decisionId: a.decisionId, cues: TOPIC_CUES[a.decisionId], basedOn: after(a.utteranceIds) }, "注意", a.title));
   // 推奨（AI）が一覧から選んだ注意。決まりごとが言い回しの違いで拾えなかったものを補う。同じ注意は重ねて出さない
   const aiCautions = (rec?.cautions ?? [])
     .filter((x) => !oversights.some((o) => o.id === x.id) && state.decisions[x.decisionId]?.status !== "confirmed")
@@ -112,8 +114,11 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
   const questions = (rec?.questionsToAsk ?? []).filter((q) => active(byWords(`question:${textKey(q)}`, q), "確認", q));
   const nowAlerts = alerts.filter((a) => !later(a.decisionId));
   const nowCautions = aiCautions.filter((x) => !later(x.decisionId));
-  const laterChecks = [...alerts.filter((a) => later(a.decisionId)).map((a) => ({ key: `oversight:${a.id}`, label: a.decisionLabel, message: a.message })), ...aiCautions.filter((x) => later(x.decisionId)).map((x) => ({ key: `oversight:${x.id}`, label: x.label, message: x.message }))];
-  const checkCount = nowAlerts.length + nowCautions.length + questions.length;
+  const laterChecks = [...alerts.filter((a) => later(a.decisionId)).map((a) => ({ key: `oversight:${a.id}`, label: a.title, message: a.message })), ...aiCautions.filter((x) => later(x.decisionId)).map((x) => ({ key: `oversight:${x.id}`, label: x.label, message: x.message }))];
+  // 取り消せないもの（must）だけを上に出し、ほかは「ほかに確かめること」に畳む（打合せ中に画面を見続けなくて済むように）
+  const mustItems = [...nowAlerts.filter((a) => a.level === "must").map((a) => ({ key: `oversight:${a.id}`, title: a.title, message: a.message, quote: a.utteranceIds.at(-1) })), ...nowCautions.filter((x) => x.level === "must").map((x) => ({ key: `oversight:${x.id}`, title: x.label, message: x.message, quote: undefined }))];
+  const checkItems = [...nowAlerts.filter((a) => a.level !== "must").map((a) => ({ key: `oversight:${a.id}`, title: a.title, message: a.message, quote: a.utteranceIds.at(-1) })), ...nowCautions.filter((x) => x.level !== "must").map((x) => ({ key: `oversight:${x.id}`, title: x.label, message: x.message, quote: undefined }))];
+  const checkCount = mustItems.length + checkItems.length + questions.length;
   const told = (target: string): React.ReactNode => <FeedbackButtons state={state} target={target} onFeedback={onFeedback} />;
   // 会話で触れた提案・注意・尋ねることは「伝えた」として記録に残す（推奨が書き直されても戻らないように）
   const spoken = done.filter((d) => d.by === "spoken").map((d) => d.target);
@@ -179,7 +184,15 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               {rec.familyWish}
             </p>
           )}
-          {care.length === 0 && !rec && <p className={c.quiet}>会話が進むと、かける言葉の例が出ます</p>}
+          {care.length === 0 && !rec && state.utterances.length === 0 && <p className={c.quiet}>会話が進むと、かける言葉の例が出ます</p>}
+          {!rec && !thinking && state.utterances.length > 0 && (
+            <p className={c.quiet}>
+              まだ作っていません。
+              <button type="button" className={c.inlineAction} onClick={onRecommend}>
+                いまの会話から作る
+              </button>
+            </p>
+          )}
           <GriefCareLane state={state} items={care} actions={(id) => <div className={c.itemActions}>{told(`care:${id}`)}</div>} />
         </section>
 
@@ -246,31 +259,35 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
             確認・注意<span className={c.laneCount}>{checkCount}</span>
           </h2>
           {checkCount === 0 && <p className={c.quiet}>いまはありません</p>}
-          {nowAlerts.map((a) => (
-            <article key={a.id} className={c.alert}>
+          {mustItems.map((x) => (
+            <article key={x.key} className={c.alert}>
               <h4>
                 <span className={c.tagWarn}>注意</span>
-                {a.decisionLabel}
+                {x.title}
               </h4>
-              <p>{a.message}</p>
+              <p>{x.message}</p>
               <div className={s.meta2}>
-                {a.utteranceIds.length > 0 && (
-                  <span className={s.tag}>きっかけ：「{state.utterances.find((u) => u.id === a.utteranceIds.at(-1))?.text.slice(0, 18)}…」</span>
-                )}
-                {told(`oversight:${a.id}`)}
+                {x.quote && <span className={s.tag}>きっかけ：「{state.utterances.find((u) => u.id === x.quote)?.text.slice(0, 18)}…」</span>}
+                {told(x.key)}
               </div>
             </article>
           ))}
-          {nowCautions.map((x) => (
-            <article key={x.decisionId + x.message} className={c.alert}>
-              <h4>
-                <span className={c.tagWarn}>注意</span>
-                {x.label}
-              </h4>
-              <p>{x.message}</p>
-              <div className={c.itemActions}>{told(`oversight:${x.id}`)}</div>
-            </article>
-          ))}
+          {checkItems.length > 0 && (
+            <details className={c.checkFold}>
+              <summary>
+                ほかに確かめること<span className={c.laneCount}>{checkItems.length}</span>
+              </summary>
+              <ul>
+                {checkItems.map((x) => (
+                  <li key={x.key}>
+                    <b>{x.title}</b>
+                    <span>{x.message}</span>
+                    <div className={c.itemActions}>{told(x.key)}</div>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           {questions.length > 0 && (
             <ul className={c.questions}>
               {questions.map((q) => (

@@ -177,7 +177,8 @@
 
 /* 伝えた／使わない */
 .feedback { display: inline-flex; margin-left: auto; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; }
-.feedback button { font-size: 0.66rem; padding: 0.1rem 0.6rem; background: var(--surface); border: 0; color: var(--ink-3); }
+.feedback button { min-height: 36px; font-size: 0.8rem; font-weight: 700; padding: 0 0.9rem; background: var(--surface); border: 0; color: var(--ink-2); }
+.feedback button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: -2px; }
 .feedback button + button { border-left: 1px solid var(--line-2); }
 .feedback button.fbOn { background: var(--ink); color: #fff; }
 

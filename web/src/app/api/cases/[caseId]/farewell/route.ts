@@ -4,6 +4,7 @@ import { generateFarewellDraft, judgeRecommendation } from "../../../../../engin
 import { store } from "../../../../../server/store";
 import { spendAiCall } from "../../../../../server/budget";
 import { fail, handleError, ok } from "../../../../../server/http";
+import { recommendationStore } from "../../../../../server/recommendationStore";
 
 export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/farewell">): Promise<Response> {
   try {
@@ -16,7 +17,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     const result = await recommendFarewell(state, generateFarewellDraft, judgeRecommendation);
     const latest = await store.get(caseId) ?? state;
     await store.save(appendAudits(latest, auditOfFarewell(result, Date.now())));
-    return ok({ ...result, basedOn: state.utterances.length });
+    const saved = { ...result, basedOn: state.utterances.length };
+    await recommendationStore.put(caseId, { farewell: saved });
+    return ok(saved);
   } catch (error) {
     return handleError(error);
   }

@@ -30,10 +30,10 @@ export function OrdersPanel({ state }: { readonly state: CaseState }) {
           年回表（中陰月日表）
         </a>
         <a className={s.btn} href={`/api/cases/${encodeURIComponent(state.caseId)}/export`} download>
-          基幹システム向け CSV
+          基幹システムに取り込むファイル
         </a>
       </div>
-      <p className={s.empty}>CSV に書き出すのは確定した項目だけです。AI が拾っただけの候補は含めません。</p>
+      <p className={s.empty}>書き出すのは確定した項目だけです。会話から拾っただけの候補は含めません。</p>
 
       <OrderList state={state} />
 

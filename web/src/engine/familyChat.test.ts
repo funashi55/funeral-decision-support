@@ -120,3 +120,14 @@ describe("案内役の返事の検査", () => {
     expect(checkChatReply(t)).toEqual([]);
   });
 });
+
+describe("命に関わるかもしれない言葉", () => {
+  test("AI を呼ばずに決まった文で応え、つらいお気持ちとして担当者に回す", async () => {
+    const model = vi.fn();
+    const next = await runFamilyChat(DEMO_CASE, "母の後を追いたいです", model, 10);
+    expect(model).not.toHaveBeenCalled();
+    expect(next.familyChat.at(-1)?.text).toContain("0120-279-338");
+    expect(next.familyChat.at(-1)?.handedOff).toBe(true);
+    expect(next.requests.length).toBe(DEMO_CASE.requests.length + 1);
+  });
+});

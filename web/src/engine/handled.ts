@@ -17,7 +17,7 @@ export type HandledBy = FeedbackVerdict | "confirmed" | "spoken";
 export const FAREWELL_CUES: Readonly<Record<FarewellOptionId, readonly RegExp[]>> = {
   standard_laying: [/通常の納棺/, /身支度を整え/],
   yukan: [/湯灌/, /お体を(?:洗|清)/, /洗い清め/],
-  embalming: [/エンバーミング/, /お顔を保つ/],
+  embalming: [/エンバーミング/, /防腐/],
   extend_resting: [/日を延ば/, /延ばして/, /お待ちする/, /ゆっくりお別れ/],
 };
 

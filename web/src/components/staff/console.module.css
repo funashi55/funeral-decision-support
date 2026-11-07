@@ -371,3 +371,12 @@ a.navItem { text-decoration: none; }
 .errorBar span { flex: 1; }
 .errorBar button { font-size: 1.1rem; color: inherit; padding: 0 var(--space-2); }
 .main:not(:has(.errorBar)) { grid-template-rows: auto minmax(0, 1fr); }
+/* タブは本文の上に重なっても読めるよう、地の色で塗る */
+.nowTabs { background: var(--surface-3); box-shadow: 0 0 0 8px var(--bg); }
+/* 確かめておくとよいこと（取り消せない注意の下に畳む） */
+.checkFold { margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); }
+.checkFold > summary { cursor: pointer; font-weight: 800; font-size: var(--text-sm); color: var(--ink-2); display: flex; align-items: center; gap: var(--space-2); }
+.checkFold ul { list-style: none; display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+.checkFold li { display: grid; gap: 2px; font-size: var(--text-sm); line-height: 1.7; }
+.checkFold b { font-weight: 800; }
+.inlineAction { margin-left: var(--space-2); min-height: 36px; padding: 0 0.9rem; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; font-size: var(--text-sm); } .inlineAction:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }

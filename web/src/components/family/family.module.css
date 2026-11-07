@@ -110,3 +110,5 @@
 .notesList li { padding: 0.8rem 1rem; border-radius: var(--r-md); background: var(--surface); box-shadow: var(--shadow-sm); line-height: 1.8; }
 /* 左下のチャットのボタンに、ページの最後が隠れないように */
 .footer { padding-bottom: 96px; }
+/* 左下の「尋ねる」ボタンに、ページの最後の項目が隠れないように */
+.page { padding-bottom: 120px; }

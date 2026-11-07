@@ -10,7 +10,7 @@ const withDecisions = (d: Record<string, [string, DecisionState["status"]]>): Ca
 });
 
 describe("確認表", () => {
-  test("41項目すべてを、確定・候補・未定に分けて返す", () => {
+  test("決定項目すべてを、確定・候補・未定に分けて返す", () => {
     const rows = buildChecklist(withDecisions({ religion: ["浄土真宗", "confirmed"], funeral_style: ["家族葬", "candidate"] }));
     expect(rows).toHaveLength(DECISIONS.length);
     expect(rows.find((r) => r.decisionId === "religion")?.status).toBe("confirmed");

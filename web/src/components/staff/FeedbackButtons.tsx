@@ -16,9 +16,11 @@ export function FeedbackButtons({ state, target, onFeedback }: FeedbackButtonsPr
   return (
     <span className={s.feedback} role="group" aria-label="この提案を使ったか">
       <button type="button" className={current === "told" ? s.fbOn : undefined} aria-pressed={current === "told"} onClick={() => onFeedback(target, "told")}>
+        {current === "told" && "✓ "}
         伝えた
       </button>
       <button type="button" className={current === "unused" ? s.fbOn : undefined} aria-pressed={current === "unused"} onClick={() => onFeedback(target, "unused")}>
+        {current === "unused" && "✓ "}
         使わない
       </button>
     </span>

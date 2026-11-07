@@ -7,13 +7,13 @@ test("決まったことがまだない状態を、責めない言葉で示す",
   await page.goto(FAMILY_PATH);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("山田家さま");
   await expect(page.getByText("まだ確定したことはありません")).toBeVisible();
-  await expect(page.getByRole("status").filter({ hasText: "つながっています" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "いつも最新の内容です" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "これから決めること" })).toBeVisible();
 });
 
 test("担当者が確定すると、再読み込みなしで遺族の画面に出る", async ({ page, request }) => {
   await page.goto(FAMILY_PATH);
-  await expect(page.getByText("つながっています")).toBeVisible();
+  await expect(page.getByText("いつも最新の内容です")).toBeVisible();
   await confirmDecision(request, "funeral_style", "家族葬");
   const card = page.getByTestId("decided-funeral_style");
   await expect(card).toBeVisible();
@@ -24,7 +24,7 @@ test("会話の書き起こしや AI の候補は遺族の画面に出ない", a
   const secret = "正直、費用はできるだけ抑えたいんですけど";
   await addUtterance(request, secret);
   await page.goto(FAMILY_PATH);
-  await expect(page.getByText("つながっています")).toBeVisible();
+  await expect(page.getByText("いつも最新の内容です")).toBeVisible();
   await expect(page.locator("body")).not.toContainText(secret);
   const api = await request.get(`/api/family/yamada-k7m2q9`);
   expect(await api.text()).not.toContain(secret);

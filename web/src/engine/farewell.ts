@@ -11,7 +11,6 @@ import { z } from "zod";
 import { FAREWELL_OPTIONS, getFarewellOption, type FarewellOptionId } from "../domain/farewell";
 import { getCatalogItem } from "../domain/pricing";
 import { yukanReferences, type Reference } from "../domain/similarFamilies";
-import { getDecision } from "../domain/decisions";
 import { GRIEF_PRINCIPLES, GRIEF_PRINCIPLE_IDS, type GriefPrincipleId } from "../domain/griefCare";
 import { loadKnowledge, rulesFor, withRecordRules, type Knowledge, type Rule } from "../knowledge/rules";
 import type { CaseState } from "./case";
@@ -46,11 +45,11 @@ export const FarewellDraftSchema = z.object({
       z.object({
         principleId: z.enum(GRIEF_PRINCIPLE_IDS),
         observation: z.string().describe("会話のどこから、この配慮が要ると見たか。断定せず『〜のようです』の形で"),
-        words: z.string().describe("この場面で担当者がかけるとよい言葉の例。話し言葉で1〜2文。ご家族の言葉や故人の呼び方に合わせる。選択肢（湯灌・エンバーミングなど）や費用に触れない"),
+        words: z.string().describe("この場面で担当者がかけるとよい言葉の例。話し言葉で1〜2文。ご家族の言葉や故人の呼び方に合わせる。過去と今のことを受け止めるだけにし、これからのお見送り・送り方・お別れの形には触れない（あとの提案の前振りにしない）。選択肢（湯灌・エンバーミングなど）や費用に触れない"),
         utteranceIds: z.array(z.string()),
       }),
     )
-    .describe("ご遺族への配慮（グリーフケア）。この会話で特に大事なものを最大3つ。当てはまるものがなければ空"),
+    .describe("ご遺族への配慮（グリーフケア）。この会話で特に大事なものを最大3つ。当てはまるものがなければ空。ご家族が口にしていない気持ちを決めつけない（例：anticipatory（看病のあとの安堵）は、ご家族が安堵や疲れを口にした発言があるときだけ選ぶ）"),
   // 一覧にない ID が返っても読み取りを止めないよう文字列で受け、使うときに一覧にあるものだけを残す
   cautionIds: z
     .array(z.string())
@@ -166,7 +165,7 @@ export interface FarewellRecommendation {
   readonly questionsToAsk: readonly string[];
   /** 理論の説明・出典・避けたい言葉は domain/griefCare.ts から画面で引く（判定役に避けたい言葉を誤検出させない） */
   readonly griefCare: readonly { readonly principleId: GriefPrincipleId; readonly observation: string; readonly words: string; readonly utteranceIds: readonly string[] }[];
-  readonly cautions: readonly { readonly id: string; readonly decisionId: string; readonly label: string; readonly message: string }[];
+  readonly cautions: readonly { readonly id: string; readonly decisionId: string; readonly label: string; readonly level: "must" | "check"; readonly message: string }[];
 }
 
 /** 配慮の言葉に出てきてはいけない語（有料の選択肢と費用） */
@@ -223,7 +222,7 @@ export function enrichDraft(draft: FarewellDraft, ctx: FarewellContext, referenc
     // 注意は決まった一覧から選ばせ、文面は一覧の固定の文を使う（モデルに注意の文章を書かせない）
     cautions: [...new Set(draft.cautionIds)].flatMap((id) => {
       const rule = OVERSIGHT_RULES.find((r) => r.id === id);
-      return rule ? [{ id, decisionId: rule.decisionId, label: getDecision(rule.decisionId).label, message: rule.message }] : [];
+      return rule ? [{ id, decisionId: rule.decisionId, label: rule.title, level: rule.level, message: rule.message }] : [];
     }),
   };
 }

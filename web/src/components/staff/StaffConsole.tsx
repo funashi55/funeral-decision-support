@@ -7,7 +7,6 @@ import { impactedBy } from "../../domain/decisions";
 import type { FeedbackVerdict } from "../../engine/case";
 import type { FarewellResult } from "../../engine/farewell";
 import { DEMO_SCRIPT } from "../../engine/fixtures/demoScript";
-import { DECISIONS } from "../../domain/decisions";
 import { buildOrders } from "../../engine/orders";
 import { detectOversights } from "../../engine/oversight";
 import { allowsPrices, detectPhase } from "../../engine/phase";
@@ -171,6 +170,28 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       farewellRunning.current = false;
       setFarewellLoading(false);
     }
+  }, [caseId]);
+
+  // 画面を開いたら、最後に出した推奨を読み込む（再読み込みで消えないように）
+  useEffect(() => {
+    let alive = true;
+    void api
+      .recommendations(caseId)
+      .then((saved) => {
+        if (!alive) return;
+        if (saved.farewell) {
+          setFarewell(saved.farewell);
+          if (saved.farewell.ok) setFarewellBasedOn(saved.farewell.basedOn);
+        }
+        if (saved.planFit) {
+          setPlanFit(saved.planFit);
+          planFitAt.current = Math.max(planFitAt.current, 1);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
   }, [caseId]);
 
   /**
@@ -352,9 +373,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const phase = detectPhase(state.utterances);
   const oversights = detectOversights(state);
 
-  const todayOpen = DECISIONS.filter((d) => d.urgency === "today" && state.decisions[d.id]?.status !== "confirmed").length;
   const readyOrders = buildOrders(state).filter((o) => o.status === "ready").length;
-  const badge: Record<View, number> = { now: oversights.length, decisions: todayOpen, plans: 0, orders: readyOrders };
+  // 左の帯の数字は「手配できる数」だけにする（いま・決めることの残りは、それぞれの画面の中で数える。数字がずれて見えないように）
+  const badge: Record<View, number> = { now: 0, decisions: 0, plans: 0, orders: readyOrders };
 
   const farewellPanel = (
     <FarewellPanel
@@ -461,6 +482,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               impacted={impacted}
               thinking={farewellLoading || listening}
               extracting={extracting}
+              onRecommend={() => void runFarewell()}
               oversights={oversights}
               farewell={farewell}
               planFit={planFit?.ok ? planFit.proposal : null}

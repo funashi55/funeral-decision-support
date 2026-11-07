@@ -95,7 +95,7 @@ export function ChatWidget({ token, view }: ChatWidgetProps) {
             </span>
             <div className={s.headText}>
               <h2 id="chat-title">窓口の案内役</h2>
-              <p>決まったことの確認と、担当者への取り次ぎをします（AI）</p>
+              <p>機械（AI）がお答えします。担当者には人がお返事します</p>
             </div>
             <button type="button" className={s.close} onClick={close} aria-label="チャットを閉じる">
               ×
@@ -105,7 +105,7 @@ export function ChatWidget({ token, view }: ChatWidgetProps) {
           <div className={s.body} aria-live="polite">
             <div className={`${s.msg} ${s.guide}`}>
               <p>
-                {view.familyName}さま、窓口の案内役です。決まったことを確かめたり、考えたいことをメモに残したりできます。変えたいことや、担当者にしか分からないことは、担当者にお伝えします。
+                {view.familyName}さま、窓口の案内役です。決まったことを確かめたり、考えたいことをメモに残したりできます。変えたいことや、担当者にしか分からないことは、担当者にお伝えします。夜のあいだに送られたものは、翌朝以降にお返事することがあります。
               </p>
             </div>
             {view.chat.map((t) => (

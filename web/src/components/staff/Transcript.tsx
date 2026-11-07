@@ -29,6 +29,7 @@ function Line({ u, onEdit, onSwapSpeaker }: { readonly u: Utterance; readonly on
           aria-label={`${u.id}の話した人を${isStaff ? "ご遺族" : "担当者"}に入れ替える`}
         >
           {u.speakerLabel}
+          <span aria-hidden="true">⇄</span>
           {u.speakerBy && u.speakerBy !== "manual" && <small>自動</small>}
         </button>
         <span>{mmss(u.at)}</span>

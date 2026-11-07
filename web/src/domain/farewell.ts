@@ -43,8 +43,8 @@ export const FAREWELL_OPTIONS: readonly FarewellOption[] = [
   {
     id: "embalming",
     label: "エンバーミング",
-    summary: "専門の処置で、火葬までの日数があいても穏やかなお顔を保ちやすくします。",
-    canDo: ["火葬まで日数があいても、お顔を見てもらいやすい", "お顔やお体に触れてお別れしやすい"],
+    summary: "専門の技術者が、お顔やお体を整える処置です。",
+    canDo: ["お顔やお体を整えたうえで、お別れの時間をとれる", "お顔やお体に触れてお別れしやすい"],
     cannotDo: ["処置のあいだ、ご遺体をしばらくお預かりする", "処置のあとから元に戻すことはできない"],
     reversible: false,
     deadline: "火葬の日時が決まった時点で",

@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest";
 import { DECISIONS, blockersOf, decisionOrder, getDecision, impactedBy } from "./decisions";
 
 describe("決定項目の定義", () => {
-  test("打合せの決定項目は41項目ある", () => {
-    expect(DECISIONS).toHaveLength(41);
+  test("打合せの決定項目は47項目ある（基幹システムの41項目に、現場のベテランが当日に必ず聞く6項目を足した）", () => {
+    expect(DECISIONS).toHaveLength(47);
   });
 
   test("id が重複していない", () => {

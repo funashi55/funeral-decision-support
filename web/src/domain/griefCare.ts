@@ -95,7 +95,7 @@ export const GRIEF_PRINCIPLES: readonly GriefPrinciple[] = [
     name: "罪悪感は、正さずに受け止める",
     principle: "「何もしてあげられなかった」という言葉は、すぐに否定も同意もせず、まず受け止める。後悔を選択肢の理由にしない。",
     signals: "「もっと早く気づいていれば」「何もしてあげられなかった」と口にする",
-    sayExamples: ["そう感じていらっしゃるのですね", "ずっとそばで見てこられたのですね"],
+    sayExamples: ["（ご家族の言葉をそのまま返す）「何もしてあげられなかった、と」", "ずっとそばで見てこられたのですね"],
     avoid: [
       { words: "仕方なかったですよ", why: "気持ちを早く片づけようとしてしまう" },
       { words: "せめて最後くらいは〇〇を", why: "罪悪感を有料の選択肢につなげる" },
@@ -108,7 +108,7 @@ export const GRIEF_PRINCIPLES: readonly GriefPrinciple[] = [
     name: "悲しみ方に正しい順番はない",
     principle: "怒る・泣かない・笑う・事務的になる、どれも自然な反応。段階に当てはめて評価しない。",
     signals: "泣かない家族、冗談を言う家族、怒りを口にする家族、家族の間で反応が違う",
-    sayExamples: ["お気持ちは、人それぞれで当然です", "（評価せず、そのまま話を聞く）"],
+    sayExamples: ["（評価せず、そのまま話を聞く）", "（言葉を急がず、沈黙を待つ）"],
     avoid: [
       { words: "まだ受け入れられていないんですね", why: "段階に当てはめて評価する" },
       { words: "そのうち落ち着きますよ", why: "悲しみに期限や筋道を当てる" },
@@ -127,13 +127,13 @@ export const GRIEF_PRINCIPLES: readonly GriefPrinciple[] = [
       { words: "お気持ちはよくわかります", why: "相手の体験を自分のものとして扱ってしまう" },
     ],
     theory: "寄り添いのモデル（遺族を治療の対象ではなく、ともに歩む相手として見る）",
-    source: "Wolfelt (2006) Companioning the Bereaved: A Soulful Guide for Caregivers. Companion Press",
+    source: "実践の指針：Wolfelt (2006) Companioning the Bereaved: A Soulful Guide for Caregivers. Companion Press（査読研究ではなく実践書）／国内：坂口幸弘 (2010)『悲嘆学入門―死別の悲しみを学ぶ』昭和堂",
   },
   {
     id: "anticipatory",
     name: "長い看病のあとの安堵も、自然な気持ち",
     principle: "看病や介護が長かった家族には、悲しみと安堵が混ざる。安堵した自分を責めることもあるので、ねぎらう。",
-    signals: "長い入院・介護・看病の話。「やっと楽になれた」「ほっとした」と口にする",
+    signals: "ご家族が「やっと楽になれた」「ほっとした」「疲れた」など、安堵や疲れを口にしたとき（長い看病の話だけでは選ばない。気持ちを決めつけないため）",
     sayExamples: ["長い間、本当にお疲れさまでした", "ずっと支えてこられたのですね"],
     avoid: [
       { words: "楽になってよかったですね", why: "家族の受け止めを決めつける" },
@@ -153,7 +153,7 @@ export const GRIEF_PRINCIPLES: readonly GriefPrinciple[] = [
       { words: "全部今日決めましょう", why: "判断の負担を一度に負わせる" },
     ],
     theory: "突然の死による悲嘆（予期しない死では衝撃が大きく、情報を受け止める力が落ちる）",
-    source: "Stroebe, Schut & Stroebe (2007) Health outcomes of bereavement. The Lancet, 370(9603)",
+    source: "Kristensen, Weisæth & Heir (2012) Bereavement and mental health after sudden and violent losses: A review. Psychiatry, 75(1)",
   },
   {
     id: "unrecognized",

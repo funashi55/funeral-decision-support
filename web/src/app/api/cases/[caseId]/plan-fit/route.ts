@@ -3,6 +3,7 @@ import { generatePlanFit, judgePlanFit } from "../../../../../engine/models";
 import { store } from "../../../../../server/store";
 import { spendAiCall } from "../../../../../server/budget";
 import { fail, handleError, ok } from "../../../../../server/http";
+import { recommendationStore } from "../../../../../server/recommendationStore";
 
 /** プランの提案：幅ごとの合う・合わないと、ご家族の言葉に結びつけた切り出し方 */
 export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/plan-fit">): Promise<Response> {
@@ -14,7 +15,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     const overBudget = await spendAiCall(req);
     if (overBudget) return overBudget;
     const result = await recommendPlanFit(state, generatePlanFit, judgePlanFit);
-    return ok({ ...result, basedOn: state.utterances.length });
+    const saved = { ...result, basedOn: state.utterances.length };
+    await recommendationStore.put(caseId, { planFit: saved });
+    return ok(saved);
   } catch (error) {
     return handleError(error);
   }

@@ -29,7 +29,7 @@ function Upcoming({ view }: { readonly view: FamilyView }) {
         {view.upcoming.map((u) => (
           <li key={u.id}>
             <span>{u.label}</span>
-            {u.today ? <span className={s.todayTag}>今日のうちに</span> : <span className={s.laterTag}>あとで</span>}
+            {/* ご家族の画面では「今日のうちに」で急かさない。順番だけを示す */}
           </li>
         ))}
       </ol>
@@ -64,7 +64,7 @@ export function FamilyWindow({ token }: { readonly token: string }) {
         <h1 className={s.title}>{view.familyName}さま</h1>
         <p className={s.lead}>決めたことは、ここにいつでも残っています。急がなくて大丈夫です。</p>
         <p className={`${s.live} ${status === "open" ? s.liveOn : ""}`} role="status">
-          {status === "open" ? "担当者の画面とつながっています" : "つなぎ直しています…"}
+          {status === "open" ? "いつも最新の内容です" : "つなぎ直しています…"}
         </p>
       </header>
 

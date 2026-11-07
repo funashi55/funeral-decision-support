@@ -55,10 +55,10 @@ export function PaperworkSection({ state }: { readonly state: CaseState }) {
 
   return (
     <section className={s.group} aria-labelledby="paperwork-title" data-testid="paperwork">
-      <h3 id="paperwork-title">打合せのまとめと発注書（Claude）</h3>
+      <h3 id="paperwork-title">打合せのまとめと発注書の下書き</h3>
       <div className={s.toolbar} style={{ padding: 0 }}>
         <span className={s.count}>
-          {paperwork ? `${paperwork.basedOn}発言目までで作成${stale ? "（その後の発言は入っていません）" : ""}` : "会話と決めることボードから、TODO と発注書の下書きを作ります（30秒ほど）"}
+          {paperwork ? `${paperwork.basedOn}発言目までで作成${stale ? "（その後の発言は入っていません）" : ""}` : "会話と決めたことから、やることと発注書の下書きを作ります（30秒ほど）"}
         </span>
         <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={() => void make()} disabled={busy || state.utterances.length === 0}>
           {busy ? "まとめています…" : paperwork ? "作り直す" : "まとめて発注書を作る"}
@@ -74,7 +74,7 @@ export function PaperworkSection({ state }: { readonly state: CaseState }) {
           <p className={s.reason}>{paperwork.summary}</p>
 
           <h3>
-            担当者の TODO<span>{paperwork.todos.length - done.size}</span>
+            担当者のやること<span>{paperwork.todos.length - done.size}</span>
           </h3>
           {TODO_STAGES.map((stage) => {
             const items = paperwork.todos.map((t, i) => ({ t, i })).filter(({ t }) => t.stage === stage);

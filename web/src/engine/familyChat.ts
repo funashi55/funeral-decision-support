@@ -42,7 +42,7 @@ export const FAMILY_CHAT_SYSTEM = `あなたは葬儀社の「ご家族の窓口
 話し方：
 - 短く、やわらかい言葉で。一度に伝えることは一つか二つ
 - 記録にないことは推測せず、「担当者に確かめます」と伝えて回す
-- 「何もしてあげられなかった」などのつらいお気持ちには、まず気持ちを受け止める。励ましや評価をせず、担当者に回してよいかを尋ねる。今すぐ誰かと話したい様子なら、担当者に回したうえで、各地の「よりそいホットライン」などの相談窓口もあることを伝える
+- 「何もしてあげられなかった」などのつらいお気持ちには、まず気持ちを受け止める。励ましや評価をせず、担当者に回してよいかを尋ねる。今すぐ誰かと話したい様子なら、担当者に回したうえで、24時間・無料の「よりそいホットライン」（0120-279-338）などの相談窓口もあることを伝える
 - 時刻は記録にある書き方のまま伝える`;
 
 const ReadSchema = z.object({ section: z.enum(["decided", "upcoming", "requests", "all"]) });
@@ -100,6 +100,11 @@ export function checkChatReply(text: string): string[] {
 }
 
 /** 案内役の返事が守る線を外したときに代わりに出す文 */
+/** 命に関わるかもしれない言葉。AI には任せず、決まった文で応え、すぐ担当者に回す */
+const DANGER = /死にたい|後を追|あとを追|消えたい|生きていけない|一緒に逝|自分も死/;
+export const DANGER_REPLY =
+  "お気持ちを聞かせてくださって、ありがとうございます。いまのお気持ちは、担当者にすぐお伝えします。おひとりで抱えずに、24時間・無料の「よりそいホットライン」（0120-279-338）にも、いつでもお電話できます。";
+
 export const SAFE_REPLY = "ありがとうございます。この件は、担当者からきちんとお伝えしたいので、担当者にお伝えしておきますね。";
 /** 案内役が使えないときの文 */
 export const UNAVAILABLE_REPLY = "ただいま案内役がお返事できません。お手数ですが、下の「担当者に送る」からお送りください。";
@@ -160,6 +165,11 @@ export async function runFamilyChat(state: CaseState, message: string, model: Ch
   if (state.familyChat.length >= CHAT_LIMIT) throw new ChatInputError("これ以上お送りできません。担当者に直接お声がけください");
 
   const familyTurn: ChatTurn = { id: `T${state.familyChat.length + 1}`, role: "family", text, at: now, handedOff: false };
+  if (DANGER.test(text)) {
+    const out = runTool(state, "hand_to_staff", { kind: "question", decisionId: null, summary: `窓口で、つらいお気持ちを伝えられました：${text}`, reason: "feelings" }, now);
+    const turn: ChatTurn = { id: `T${state.familyChat.length + 2}`, role: "assistant", text: DANGER_REPLY, at: now, handedOff: true };
+    return { ...out.state, familyChat: [...state.familyChat, familyTurn, turn] };
+  }
   let current: CaseState = state;
   let handedOff = false;
   const messages: Anthropic.MessageParam[] = [...historyMessages(state.familyChat), { role: "user", content: text }];

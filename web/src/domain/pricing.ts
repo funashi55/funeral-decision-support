@@ -10,11 +10,14 @@ import catalogData from "../data/product-catalog.json";
 
 export type Range = "simple" | "standard" | "gratitude";
 
-/** プランは価格の上下ではなく、家族の気持ちに合わせた3つの幅で示す */
+/**
+ * 3つの幅は、気持ちではなく中身（祭壇の大きさ）で呼ぶ。
+ * 「感謝の気持ち」のような名前を価格の段に付けると、小さい幅を選ぶことが感謝が少ないことのように感じられるため
+ */
 export const RANGE_LABEL: Record<Range, string> = {
-  simple: "費用を抑えたい",
-  standard: "しっかり飾りたい",
-  gratitude: "感謝の気持ちを表したい",
+  simple: "祭壇は小さめ・費用を抑える",
+  standard: "祭壇は中くらい",
+  gratitude: "祭壇は大きめ・花を多く",
 };
 
 /** 会員（互助会の積立あり）か一般か */

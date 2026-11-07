@@ -67,6 +67,7 @@ export const DECISIONS: readonly DecisionItem[] = [
   { id: "face_viewing", label: "お顔を見ていただく方の範囲", phase: "farewell", urgency: "later", reversible: true, hard: false, dependsOn: ["attendees_scope"] },
 
   // 日程
+  { id: "cremation_order", label: "前火葬（骨葬）か後火葬か", phase: "schedule", urgency: "today", reversible: false, hard: true, dependsOn: [] },
   { id: "relatives_arrival", label: "遠方の親族の到着の見込み", phase: "schedule", urgency: "today", reversible: true, hard: false, dependsOn: [] },
   { id: "cremation_date", label: "火葬の日時と斎場", phase: "schedule", urgency: "today", reversible: false, hard: true, dependsOn: ["temple", "relatives_arrival"], coreField: "火葬日時・利用斎場", caution: "火葬は死亡後24時間以降。斎場の空きを確認してから確定します" },
   { id: "wake_date", label: "通夜の日時", phase: "schedule", urgency: "today", reversible: false, hard: false, dependsOn: ["wake_held", "cremation_date", "temple"], coreField: "通夜日" },
@@ -93,6 +94,11 @@ export const DECISIONS: readonly DecisionItem[] = [
   { id: "pacemaker", label: "ペースメーカーの有無", phase: "logistics", urgency: "today", reversible: false, hard: false, dependsOn: [], caution: "火葬の前に必ず確認が必要です" },
   { id: "death_certificate", label: "死亡届の記入", phase: "logistics", urgency: "today", reversible: false, hard: false, dependsOn: ["chief_mourner"] },
   { id: "crematorium_party", label: "火葬場へ行く人数", phase: "logistics", urgency: "later", reversible: true, hard: false, dependsOn: ["attendees_scope"] },
+  { id: "koden_decline", label: "香典をいただくか、辞退するか", phase: "logistics", urgency: "today", reversible: false, hard: false, dependsOn: ["funeral_style"] },
+  { id: "neighborhood_notice", label: "隣組・町内会への連絡", phase: "logistics", urgency: "today", reversible: false, hard: false, dependsOn: [] },
+  { id: "flower_names", label: "供花の札名（名義）", phase: "logistics", urgency: "later", reversible: true, hard: false, dependsOn: [] },
+  { id: "mourner_speech", label: "喪主のあいさつ", phase: "logistics", urgency: "later", reversible: true, hard: false, dependsOn: ["chief_mourner"] },
+  { id: "transport", label: "火葬場への移動（霊柩車・マイクロバス）", phase: "logistics", urgency: "later", reversible: true, hard: false, dependsOn: ["crematorium_party"] },
   { id: "departure_stop", label: "出棺のときに寄っていく場所", phase: "logistics", urgency: "later", reversible: true, hard: false, dependsOn: ["cremation_date"] },
 
   // 葬儀後
