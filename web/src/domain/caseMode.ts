@@ -24,5 +24,5 @@ export function caseHref(caseId: string, sub = ""): string {
   return `${base}/${encodeURIComponent(caseId)}${sub ? `/${sub}` : ""}`;
 }
 
-/** 案件の一覧（デモはデモの入口、本番はご家族の一覧） */
+/** 案件の一覧（デモはデモの入口、本番は施行一覧） */
 export const listHref = (caseId: string): string => (isDemoCase(caseId) ? "/demo" : "/staff");

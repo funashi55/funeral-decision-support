@@ -19,7 +19,7 @@ export function SystemBar({
     readonly label: string;
     readonly href: string;
   }[] = [
-    { id: "families", label: "ご家族の一覧", href: "/staff" },
+    { id: "families", label: "施行一覧", href: "/staff" },
     { id: "meeting", label: "打合せ", href: meetingHref(caseId) },
     { id: "roleplay", label: "ロールプレイ", href: roleplayHref(caseId) },
     // デモ（架空のご家族）は本番の一覧と分けて置く

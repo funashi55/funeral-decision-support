@@ -84,7 +84,7 @@ export function SceneFlow({ scene, progress, mode, respondent, experience, onCha
   return (
     <section aria-labelledby="scene-title">
       <button type="button" className={s.buttonGhost} onClick={onBack}>
-        ← ご家族の一覧へ
+        ← 施行一覧へ
       </button>
       <h2 id="scene-title" className={h.stageTitle} style={{ marginTop: "1rem" }}>
         {scene.title}

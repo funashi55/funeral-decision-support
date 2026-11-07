@@ -41,7 +41,7 @@ export function WrapUp({ progress, busy, error, onChange, onExtract, onSubmit, o
           この打合せの記録を受け取りました。ありがとうございます。
         </p>
         <button type="button" className={s.button} onClick={onBack}>
-          ご家族の一覧へ
+          施行一覧へ
         </button>
       </div>
     );

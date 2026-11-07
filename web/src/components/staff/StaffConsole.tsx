@@ -484,7 +484,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     <div className={c.app} data-pane={talkOpen ? "talk" : "main"}>
       <nav className={c.rail} aria-label="画面の切り替え">
         <div className={c.brand}>
-          <Link href={listHref(caseId)} className={c.home} aria-label={demo ? "sou-buddy のトップ（デモの入口）へ戻る" : "sou-buddy のトップ（ご家族の一覧）へ戻る"} data-testid="to-top">
+          <Link href={listHref(caseId)} className={c.home} aria-label={demo ? "sou-buddy のトップ（デモの入口）へ戻る" : "sou-buddy のトップ（施行一覧）へ戻る"} data-testid="to-top">
             <span aria-hidden="true">←</span> sou-buddy
           </Link>
           <span className={c.brandFamily}>{state.familyName}</span>
@@ -523,9 +523,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           </button>
         </div>
         <div className={c.railFoot}>
-          <Link href={listHref(caseId)} className={c.navItem} title={demo ? "デモの入口" : "ご家族の一覧・新しいご家族の登録"}>
+          <Link href={listHref(caseId)} className={c.navItem} title={demo ? "デモの入口" : "施行一覧・新しいご家族の登録"}>
             <Icon d="M3 6h18M3 12h18M3 18h18" />
-            <span>{demo ? "デモの入口" : "ご家族の一覧"}</span>
+            <span>{demo ? "デモの入口" : "施行一覧"}</span>
           </Link>
           <Link href={roleplayHref(caseId)} className={c.navItem} title="架空のご家族と打合せの練習をする">
             <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
@@ -665,7 +665,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               </button>
               <Link href={listHref(caseId)} className={c.sheetItem}>
                 <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-                {demo ? "デモの入口" : "ご家族の一覧"}
+                {demo ? "デモの入口" : "施行一覧"}
               </Link>
               <Link href={roleplayHref(caseId)} className={c.sheetItem}>
                 <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />

@@ -3,7 +3,7 @@ import { DECISIONS } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
 import s from "./cases.module.css";
 
-/** ご家族の一覧・デモの入口に並べる1件 */
+/** 施行一覧・デモの入口に並べる1件 */
 export function CaseCard({ state, name: fallbackName, href, meta, demo }: { readonly state: CaseState | undefined; readonly name?: string; readonly href: string; readonly meta: string; readonly demo?: boolean }) {
   const name = state?.familyName ?? fallbackName ?? "";
   const decided = state ? DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed").length : 0;

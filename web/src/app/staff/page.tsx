@@ -7,7 +7,7 @@ import s from "../../components/cases/cases.module.css";
 import { SystemBar } from "../../components/system/SystemBar";
 import { store } from "../../server/store";
 
-export const metadata: Metadata = { title: "ご家族｜sou-buddy", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "施行一覧｜sou-buddy", robots: { index: false, follow: false } };
 
 /** 一覧に並べる数（多いときは新しい順にここまで） */
 const LIST_MAX = 30;
@@ -21,14 +21,14 @@ async function CaseList() {
   if (cases.length === 0) {
     return (
       <p className={s.empty}>
-        まだ登録したご家族はいません。お迎えの連絡が入ったら「登録」から始めます。
+        まだ施行はありません。お迎えの連絡が入ったら「登録」から始めます。
         <br />
         架空のご家族で試すときは <Link href="/demo">デモ</Link> を開いてください。
       </p>
     );
   }
   return (
-    <ul className={s.list} aria-label="ご家族">
+    <ul className={s.list} aria-label="施行一覧">
       {cases.map((c, i) => (
         <li key={c.caseId}>
           <CaseCard state={states[i]} name={c.familyName} href={`/staff/${encodeURIComponent(c.caseId)}`} meta={`${dateTime(c.registeredAt)} 登録`} />
@@ -45,7 +45,7 @@ export default function CasesPage() {
       <main className={s.page}>
         <div className={s.column}>
           <div className={s.head}>
-            <h1 className={s.title}>ご家族</h1>
+            <h1 className={s.title}>施行一覧</h1>
             <Link className={s.primary} href="/staff/new" data-guide="register">
               <span aria-hidden="true">＋</span> 登録
             </Link>
