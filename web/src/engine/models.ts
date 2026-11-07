@@ -20,6 +20,7 @@ import {
 import { PaperworkDraftSchema, type PaperworkDraft } from "./paperwork";
 import { PlanFitDraftSchema, type PlanFitDraft, type PlanFitProposal } from "./planFit";
 import { QuickFitSchema, type QuickFitDraft } from "./quickFit";
+import { CleanedSchema, ReportDraftSchema, type Cleaned, type ReportDraft } from "./report";
 import { SpeakerAnswerSchema, type ClassifySpeaker } from "./speaker";
 
 interface ParsedResponse<T> {
@@ -124,6 +125,30 @@ export async function generatePaperwork(system: string, prompt: string): Promise
     messages: [{ role: "user", content: prompt }],
   });
   return unwrap(response as ParsedResponse<PaperworkDraft>);
+}
+
+/** 打合せの記録の要約（打合せのあとの書類なので Opus） */
+export async function generateReport(system: string, prompt: string): Promise<ReportDraft> {
+  const response = await getClient().messages.parse({
+    model: MODEL_REASONING,
+    max_tokens: 8000,
+    system,
+    output_config: { effort: "medium", format: zodOutputFormat(ReportDraftSchema) },
+    messages: [{ role: "user", content: prompt }],
+  });
+  return unwrap(response as ParsedResponse<ReportDraft>);
+}
+
+/** 文字起こしの清書。整えるだけなので考える量は少なめ */
+export async function cleanTranscript(system: string, prompt: string): Promise<Cleaned> {
+  const response = await getClient().messages.parse({
+    model: MODEL_REASONING,
+    max_tokens: 16000,
+    system,
+    output_config: { effort: "low", format: zodOutputFormat(CleanedSchema) },
+    messages: [{ role: "user", content: prompt }],
+  });
+  return unwrap(response as ParsedResponse<Cleaned>);
 }
 
 /** 遺族との打合せのロールプレイ：ご遺族役。会話のテンポを優先して考える量は少なめ */

@@ -26,6 +26,8 @@ import { OrdersPanel } from "./OrdersPanel";
 import { PlansPanel } from "./PlansPanel";
 import { Transcript } from "./Transcript";
 import { BuddyView } from "./BuddyView";
+import { RecordsView } from "./RecordsView";
+import type { MeetingReport } from "../../engine/report";
 import type { Amount, BuddyProfile, Tone } from "../../domain/buddy";
 import c from "./console.module.css";
 import s from "./staff.module.css";
@@ -49,12 +51,13 @@ const CONSOLE_GUIDE: readonly GuideStep[] = [
 /** デモの画面だけ、最初に「デモを再生」を照らす */
 const DEMO_GUIDE: readonly GuideStep[] = [{ target: "demo", title: "デモを再生", body: "架空の打合せの会話が流れます。実際の打合せでは、会話の欄に打つか、マイクで聞き取ります。" }, ...CONSOLE_GUIDE];
 
-type View = "now" | "decisions" | "plans" | "orders" | "buddy";
+type View = "now" | "decisions" | "plans" | "orders" | "records" | "buddy";
 const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon: string }[] = [
   { id: "now", label: "いま", icon: "M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" },
   { id: "decisions", label: "決めること", icon: "M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" },
   { id: "plans", label: "プランの案", icon: "M4 6h16M4 12h16M4 18h10" },
   { id: "orders", label: "書類作成", icon: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6ZM14 3v6h6M8 13h8M8 17h5" },
+  { id: "records", label: "打合せの記録", icon: "M4 4h16v16H4zM8 8h8M8 12h8M8 16h5" },
   { id: "buddy", label: "バディ", icon: "M12 21s-7-4.4-9.3-9A5.3 5.3 0 0 1 12 6.6 5.3 5.3 0 0 1 21.3 12C19 16.6 12 21 12 21Z" },
 ];
 
@@ -109,6 +112,33 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       alive = false;
     };
   }, [caseId, buddyTick, state?.registration?.staffName]);
+  // 打合せの記録（回ごと）
+  const [reports, setReports] = useState<readonly MeetingReport[] | null>(null);
+  const [ending, setEnding] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    api
+      .reports(caseId)
+      .then((r) => alive && setReports(r))
+      .catch(() => alive && setReports([]));
+    return () => {
+      alive = false;
+    };
+  }, [caseId]);
+  const lastRecorded = reports?.at(-1)?.transcript.at(-1)?.id;
+  const canEnd = (state?.utterances.length ?? 0) > 0 && state?.utterances.at(-1)?.id !== lastRecorded;
+  const endMeeting = async (): Promise<void> => {
+    setView("records");
+    setTalkOpen(false);
+    setEnding(true);
+    try {
+      setReports(await api.endMeeting(caseId));
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setEnding(false);
+    }
+  };
   const buddySettings = (body: { tone?: Tone; amount?: Amount }): void => {
     api.buddySettings(caseId, body).then(setBuddy).catch((e: unknown) => setError(message(e)));
   };
@@ -432,7 +462,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
 
   const readyOrders = buildOrders(state).filter((o) => o.status === "ready").length;
   // 左の帯の数字は「手配できる数」だけにする（いま・決めることの残りは、それぞれの画面の中で数える。数字がずれて見えないように）
-  const badge: Record<View, number> = { now: 0, decisions: 0, plans: 0, orders: readyOrders, buddy: 0 };
+  const badge: Record<View, number> = { now: 0, decisions: 0, plans: 0, orders: readyOrders, records: 0, buddy: 0 };
 
   const farewellPanel = (
     <FarewellPanel
@@ -525,6 +555,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
             </button>
           </div>
           )}
+          <button type="button" className={[s.btn, s.btnGhost, c.endBtn].join(" ")} onClick={() => void endMeeting()} disabled={ending || !canEnd} data-testid="end-meeting">
+            {ending ? "記録を作っています…" : "打合せを終える"}
+          </button>
           <Guide steps={demo ? DEMO_GUIDE : CONSOLE_GUIDE} storageKey="console" label="打合せの画面" inline />
         </header>
         {error && (
@@ -567,6 +600,11 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
             <div className={c.view}>
               <h1 className={c.viewTitle}>プランの案</h1>
               <PlansPanel state={state} phase={phase.phase} planFit={planFit?.ok ? planFit.proposal : null} onFeedback={(t, v) => void feedback(t, v)} />
+            </div>
+          )}
+          {view === "records" && (
+            <div className={c.view}>
+              <RecordsView caseId={caseId} reports={reports} ending={ending} canEnd={canEnd} onEnd={() => void endMeeting()} />
             </div>
           )}
           {view === "buddy" && (

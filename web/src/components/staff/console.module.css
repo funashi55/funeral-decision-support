@@ -410,3 +410,5 @@ a.navItem { text-decoration: none; }
 
 /* デモの案件だけに出す札（本番の案件と見分ける） */
 .demoBadge { align-self: flex-start; width: fit-content; margin-top: 2px; padding: 1px 8px; border-radius: 999px; background: #f2c14e; color: #3a2b00; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.06em; }
+.endBtn { border: 1px solid var(--line-2); font-weight: 800; }
+.endBtn:disabled { opacity: 0.45; cursor: default; }

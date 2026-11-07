@@ -50,6 +50,7 @@ export interface FamilyRequest {
 
 export type AuditKind =
   | "confirm" // 担当者が確定した
+  | "report" // 打合せを終えて記録を作った
   | "recommend" // 推奨を出した（判定役を通った）
   | "withheld" // 守る線に2回落ちて推奨を出さなかった
   | "rejected_draft" // 1回目の案を止めた

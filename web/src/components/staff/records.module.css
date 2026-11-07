@@ -1,0 +1,22 @@
+/* 打合せの記録の一覧 */
+.wrap { display: grid; gap: var(--space-4); }
+.head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.head h1 { margin-bottom: 0; }
+.end { min-height: 44px; padding: 0 1.3rem; border: 0; border-radius: 999px; background: var(--ink); color: #fff; font: inherit; font-weight: 800; cursor: pointer; transition: transform var(--duration-fast, 150ms); }
+.end:hover:not(:disabled) { transform: translateY(-1px); }
+.end:disabled { opacity: 0.45; cursor: default; }
+.end:focus-visible, .open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.item { display: grid; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; }
+.itemHead { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.itemHead b { font-size: var(--text-lg); }
+.when, .count { color: var(--ink-3); font-size: var(--text-sm); }
+.open { margin-left: auto; color: var(--accent); font-weight: 800; font-size: var(--text-sm); }
+.overview { line-height: 1.8; color: var(--ink-2); }
+.next { margin: 0; padding-left: 1.2em; color: var(--ink-2); font-size: var(--text-sm); line-height: 1.7; }
+.skeleton { display: grid; gap: 8px; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; }
+.skeleton i { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, #f0ede8 25%, #e6e2db 50%, #f0ede8 75%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+.skeleton i:nth-child(2) { width: 85%; }
+.skeleton i:nth-child(3) { width: 60%; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton i { animation: none; } }

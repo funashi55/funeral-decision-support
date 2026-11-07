@@ -1,0 +1,21 @@
+/* 打合せの記録：読み返すための紙。要約を先に、清書した会話をそのあとに */
+.doc { display: grid; gap: 7mm; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; padding-bottom: 4mm; border-bottom: 1.5px solid #111; }
+.title { font-size: 1.45rem; font-weight: 700; letter-spacing: 0.08em; }
+.meta { font-size: 0.85rem; line-height: 1.7; text-align: right; color: #333; }
+.section { display: grid; gap: 2.5mm; break-inside: avoid; }
+.section h2 { font-size: 1rem; font-weight: 700; padding-left: 2.5mm; border-left: 3px solid #111; }
+.overview { font-size: 0.95rem; line-height: 1.9; }
+.list { margin: 0; padding-left: 1.2em; display: grid; gap: 1.2mm; font-size: 0.92rem; line-height: 1.7; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.table th, .table td { border: 1px solid #999; padding: 1.6mm 2.4mm; text-align: left; vertical-align: top; }
+.table th { width: 34%; background: #f4f2ee; font-weight: 600; }
+.cand { color: #555; }
+.lines { display: grid; gap: 2.6mm; }
+.line { display: grid; grid-template-columns: 22mm minmax(0, 1fr); gap: 3mm; font-size: 0.92rem; line-height: 1.75; break-inside: avoid; }
+.who { color: #555; font-size: 0.8rem; padding-top: 0.15em; }
+.staff .who { color: #888; }
+.edited { display: block; margin-top: 0.6mm; color: #888; font-size: 0.74rem; }
+.empty { color: #777; font-size: 0.9rem; }
+.note { font-family: system-ui, sans-serif; font-size: 0.75rem; color: #777; }
+@media print { .edited { display: none; } }

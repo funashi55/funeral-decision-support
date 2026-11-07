@@ -10,6 +10,7 @@ import type { FactKey } from "../engine/facts";
 import type { Place } from "../domain/directory";
 import type { TravelView } from "../domain/travel";
 import type { Amount, BuddyProfile, Tone } from "../domain/buddy";
+import type { MeetingReport } from "../engine/report";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -50,6 +51,9 @@ export const api = {
   confirmFact: (caseId: string, key: FactKey, value: string) => post<CaseState>(`/api/cases/${caseId}/facts`, { key, value }),
   todo: (caseId: string, body: { action: "add"; text: string } | { action: "done"; id: string; done: boolean } | { action: "remove"; id: string }) =>
     post<CaseState>(`/api/cases/${caseId}/todos`, body),
+  /** 打合せの記録（古い順）・打合せを終えて記録を作る */
+  reports: (caseId: string) => call<MeetingReport[]>(`/api/cases/${caseId}/reports`),
+  endMeeting: (caseId: string) => post<MeetingReport[]>(`/api/cases/${caseId}/reports`),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
   acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),
   swapSpeaker: (caseId: string, utteranceId: string, speaker: "staff" | "family") =>
