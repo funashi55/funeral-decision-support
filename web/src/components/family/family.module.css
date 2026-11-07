@@ -106,3 +106,7 @@
 .notes ul { padding-left: 1.1rem; font-size: 0.88rem; line-height: 1.8; }
 .altar { margin-top: 0.6rem; }
 .altar img { width: 100%; height: auto; border-radius: var(--r-sm); display: block; }
+.notesList { list-style: none; display: grid; gap: 0.5rem; }
+.notesList li { padding: 0.8rem 1rem; border-radius: var(--r-md); background: var(--surface); box-shadow: var(--shadow-sm); line-height: 1.8; }
+/* 左下のチャットのボタンに、ページの最後が隠れないように */
+.footer { padding-bottom: 96px; }

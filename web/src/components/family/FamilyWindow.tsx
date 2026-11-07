@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import { useFamilyStream } from "../../client/useFamilyStream";
 import type { FamilyView } from "../../engine/familyView";
-import { AskBox } from "./AskBox";
+import { ChatWidget } from "./ChatWidget";
 import { DecidedList } from "./DecidedList";
 import { RequestComposer, type ComposerDraft } from "./RequestComposer";
 import { SentList } from "./SentList";
@@ -61,9 +61,22 @@ export function FamilyWindow({ token }: { readonly token: string }) {
 
       <DecidedList decided={view.decided} onAskChange={askChange} />
       <Upcoming view={view} />
-      <AskBox token={token} view={view} />
+      {view.notes.length > 0 && (
+        <section className={s.section} aria-labelledby="notes-title">
+          <div className={s.sectionHead}>
+            <h2 id="notes-title">検討メモ</h2>
+          </div>
+          <ul className={s.notesList}>
+            {view.notes.map((n) => (
+              <li key={n.id}>{n.text}</li>
+            ))}
+          </ul>
+        </section>
+      )}
       <RequestComposer ref={composerRef} token={token} decided={view.decided} draft={draft} onDraftChange={setDraft} onSent={() => setDraft(EMPTY_DRAFT)} />
       <SentList requests={view.requests} />
+
+      <ChatWidget token={token} view={view} />
 
       <footer className={s.footer}>
         この画面は担当者からお渡ししたリンクでだけ開けます。リンクはご家族の中でだけ共有してください。
