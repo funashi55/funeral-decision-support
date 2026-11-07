@@ -6,7 +6,8 @@ import { TODO_TEXT_MAX, todosOf } from "../../engine/todos";
 import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
 import { getGriefPrinciple } from "../../domain/griefCare";
-import { FAREWELL_CUES, FAREWELL_DECISION, HANDLED_LABEL, PLAN_CUES, handledBy, textKey, type HandledBy, type HandledCheck } from "../../engine/handled";
+import { FAREWELL_CUES, FAREWELL_DECISION, HANDLED_LABEL, PLAN_CUES, handledBy, keywordCues, keywordHits, textKey, type HandledBy, type HandledCheck } from "../../engine/handled";
+import { TOPIC_CUES } from "../../engine/nextSteps";
 import { ConfirmControl, ManualEntry } from "./DecisionBoard";
 import { GriefCareLane } from "./GriefCareLane";
 import { PlanFitCard } from "./PlanFitCard";
@@ -71,16 +72,28 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
     .sort((a, b) => (a.fit === b.fit ? 0 : a.fit === "suits" ? -1 : 1))
     .filter((o) => active({ target: `farewell:${o.id}`, decisionId: FAREWELL_DECISION[o.id], cues: FAREWELL_CUES[o.id], basedOn: farewellBasedOn }, "提案", o.label));
   const showPlan = planFit !== null && active({ target: "plan:fit", decisionId: "altar_plan", cues: PLAN_CUES, basedOn: planFitBasedOn }, "提案", "プラン");
-  const care = (rec?.griefCare ?? []).filter((g) => active({ target: `care:${g.principleId}` }, "声かけ", getGriefPrinciple(g.principleId).name));
-  const alerts = oversights.filter((a) => active({ target: `oversight:${a.id}`, decisionId: a.decisionId }, "注意", a.decisionLabel));
+  // 声かけ・尋ねることは、勧めた文の言葉が担当者の発言にいくつ重なるかで見る
+  const byWords = (target: string, text: string): HandledCheck => {
+    const cues = keywordCues(text);
+    return { target, cues, minHits: keywordHits(cues), basedOn: farewellBasedOn };
+  };
+  const care = (rec?.griefCare ?? []).filter((g) => active({ ...byWords(`care:${g.principleId}`, g.words) }, "声かけ", getGriefPrinciple(g.principleId).name));
+  // 注意は、きっかけの発言のあとに担当者がその話題に触れたら済んだとみなす
+  // （担当者が自分で話題にした発言はきっかけに数えない。きっかけがご家族の発言にないときは、最初から見る）
+  const after = (ids: readonly string[]): number => {
+    const first = state.utterances.findIndex((u) => u.speaker !== "staff" && ids.includes(u.id));
+    return first >= 0 ? first + 1 : 1;
+  };
+  const alerts = oversights.filter((a) => active({ target: `oversight:${a.id}`, decisionId: a.decisionId, cues: TOPIC_CUES[a.decisionId], basedOn: after(a.utteranceIds) }, "注意", a.decisionLabel));
   // 推奨が挙げた注意。決まりごとの検出と同じ項目は重ねて出さない
   const aiCautions = (rec?.cautions ?? [])
     .filter((x) => !oversights.some((o) => o.decisionLabel === x.label))
-    .filter((x) => active({ target: `caution:${x.decisionId}`, decisionId: x.decisionId }, "注意", x.label));
-  const questions = (rec?.questionsToAsk ?? []).filter((q) => active({ target: `question:${textKey(q)}` }, "確認", q));
+    // AI の注意は文が長く話題も広いので、その注意の文の語が担当者の発言に2つ重なったときだけ済んだとみなす
+    .filter((x) => active(byWords(`caution:${x.decisionId}`, x.message), "注意", x.label));
+  const questions = (rec?.questionsToAsk ?? []).filter((q) => active(byWords(`question:${textKey(q)}`, q), "確認", q));
   const checkCount = alerts.length + aiCautions.length + questions.length;
   const told = (target: string): React.ReactNode => <FeedbackButtons state={state} target={target} onFeedback={onFeedback} />;
-  // 会話で触れた提案は「伝えた」として記録に残す（推奨が書き直されても戻らないように）
+  // 会話で触れた提案・注意・尋ねることは「伝えた」として記録に残す（推奨が書き直されても戻らないように）
   const spoken = done.filter((d) => d.by === "spoken").map((d) => d.target);
   const spokenKey = spoken.join("|");
   useEffect(() => {

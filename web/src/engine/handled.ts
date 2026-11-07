@@ -5,6 +5,8 @@
  * - 担当者が「伝えた／使わない」を押した
  * - 関係する項目を確定した
  * - 提案が出たあとに、担当者がその内容に触れた（例：「湯灌」「お体を洗い清める」と話した）
+ *   提案・注意は決まった言葉で、尋ねること・声かけは文の中の言葉（漢字・カタカナの語）がいくつ重なるかで見る
+ * 「伝えた／使わない」のボタンは、自動で拾えなかったときの補助
  */
 import type { FarewellOptionId } from "../domain/farewell";
 import type { CaseState, FeedbackVerdict } from "./case";
@@ -37,9 +39,24 @@ export function textKey(text: string): string {
   return h.toString(36);
 }
 
-/** 提案が出たあと（basedOn 番目の発言より後）に、担当者がその内容に触れたか */
-export function spokenAfter(state: CaseState, basedOn: number, cues: readonly RegExp[]): boolean {
-  return state.utterances.slice(basedOn).some((u) => u.speaker === "staff" && cues.some((c) => c.test(u.text)));
+/** 提案が出たあと（basedOn 番目の発言より後）に、担当者がその内容に触れたか。1つの発言に minHits 個以上の手がかりがあれば触れたとみなす */
+export function spokenAfter(state: CaseState, basedOn: number, cues: readonly RegExp[], minHits = 1): boolean {
+  if (cues.length === 0) return false;
+  return state.utterances.slice(basedOn).some((u) => u.speaker === "staff" && cues.filter((c) => c.test(u.text)).length >= minHits);
+}
+
+/** 文の中の語を手がかりにするときに、どの文にも出やすいので除く語 */
+const COMMON_WORDS = new Set(["家族", "担当", "担当者", "確認", "大丈夫", "気持", "葬儀", "今日", "一緒", "場合", "必要", "相談"]);
+
+/** 文から手がかりの語（漢字・カタカナが2文字以上続くところ）を取り出す */
+export function keywordCues(text: string): RegExp[] {
+  const words = [...new Set(text.match(/[\u4E00-\u9FFF\u30A0-\u30FF]{2,}/g) ?? [])].filter((w) => !COMMON_WORDS.has(w));
+  return words.map((w) => new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+}
+
+/** 文の中の語で見るときに、何語重なれば触れたとみなすか */
+export function keywordHits(cues: readonly RegExp[]): number {
+  return Math.min(2, cues.length);
 }
 
 export interface HandledCheck {
@@ -48,6 +65,8 @@ export interface HandledCheck {
   readonly cues?: readonly RegExp[];
   /** 提案が何番目の発言までを見て出たか */
   readonly basedOn?: number;
+  /** 1つの発言にいくつ手がかりがあれば触れたとみなすか（既定は1） */
+  readonly minHits?: number;
 }
 
 /** 済んでいれば、その理由を返す。済んでいなければ null */
@@ -55,7 +74,7 @@ export function handledBy(state: CaseState, check: HandledCheck): HandledBy | nu
   const fb = state.feedback.find((f) => f.target === check.target);
   if (fb) return fb.verdict;
   if (check.decisionId && state.decisions[check.decisionId]?.status === "confirmed") return "confirmed";
-  if (check.cues && check.basedOn !== undefined && check.basedOn > 0 && spokenAfter(state, check.basedOn, check.cues)) return "spoken";
+  if (check.cues && check.basedOn !== undefined && check.basedOn > 0 && spokenAfter(state, check.basedOn, check.cues, check.minHits)) return "spoken";
   return null;
 }
 
