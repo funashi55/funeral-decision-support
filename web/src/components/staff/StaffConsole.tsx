@@ -66,6 +66,8 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const [playing, setPlaying] = useState(false);
   // スマホでは「会話」と中央の画面を切り替えて見せる（広い画面では両方とも出ている）
   const [talkOpen, setTalkOpen] = useState(false);
+  // スマホの「メニュー」（下のバーに入れないもの）
+  const [menuOpen, setMenuOpen] = useState(false);
   // ログインしている担当者の名前（ログインの設定がなければ null のまま）
   const [staffName, setStaffName] = useState<string | null>(null);
   useEffect(() => {
@@ -385,7 +387,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               id={`tab-${v.id}`}
               aria-selected={view === v.id && !talkOpen}
               aria-controls="main-view"
-              className={c.navItem}
+              className={`${c.navItem} ${v.id === "plans" || v.id === "orders" ? c.desktopOnly : ""}`}
               onClick={() => {
                 setView(v.id);
                 setTalkOpen(false);
@@ -399,7 +401,11 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           <button type="button" className={`${c.navItem} ${c.mobileOnly}`} aria-pressed={talkOpen} onClick={() => setTalkOpen(true)}>
             <Icon d="M8 10h8M8 14h5M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12Z" />
             <span>会話</span>
-            <span className={c.navBadge}>{state.utterances.length}</span>
+          </button>
+          <button type="button" className={`${c.navItem} ${c.mobileOnly}`} aria-expanded={menuOpen} aria-haspopup="dialog" onClick={() => setMenuOpen(true)}>
+            <Icon d="M4 6h16M4 12h16M4 18h16" />
+            <span>メニュー</span>
+            {openRequests + badge.orders > 0 && <span className={`${c.navBadge} ${openRequests > 0 ? c.navBadgeWarn : ""}`}>{openRequests + badge.orders}</span>}
           </button>
         </div>
         <div className={c.railFoot}>
@@ -482,6 +488,52 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       <aside className={c.live} aria-label="会話">
         <Transcript state={state} onAdd={addLine} onEdit={editLine} onSwapSpeaker={swapSpeaker} />
       </aside>
+      {menuOpen && (
+        <div className={c.sheetLayer} role="dialog" aria-modal="true" aria-label="メニュー" onKeyDown={(e) => e.key === "Escape" && setMenuOpen(false)}>
+          <button type="button" className={c.sheetBackdrop} aria-label="メニューを閉じる" onClick={() => setMenuOpen(false)} />
+          <div className={c.sheet}>
+            <p className={c.sheetFamily}>{state.familyName}</p>
+            <div className={c.sheetGrid}>
+              {VIEWS.filter((v) => v.id === "plans" || v.id === "orders").map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  className={c.sheetItem}
+                  onClick={() => {
+                    setView(v.id);
+                    setTalkOpen(false);
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Icon d={v.icon} />
+                  {v.label}
+                  {badge[v.id] > 0 && <span className={c.navBadge}>{badge[v.id]}</span>}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={c.sheetItem}
+                onClick={() => {
+                  setInboxOpen(true);
+                  setMenuOpen(false);
+                }}
+              >
+                <Icon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                ご家族の窓口
+                {openRequests > 0 && <span className={`${c.navBadge} ${c.navBadgeWarn}`}>{openRequests}</span>}
+              </button>
+              <Link href="/staff" className={c.sheetItem}>
+                <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                ご家族の一覧
+              </Link>
+              <Link href={roleplayHref(caseId)} className={c.sheetItem}>
+                <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                ロールプレイ
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
       {inboxOpen && <FamilyInbox state={state} onClose={() => setInboxOpen(false)} onAcknowledge={acknowledge} onLink={familyLink} />}
     </div>
   );
