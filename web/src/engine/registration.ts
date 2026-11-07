@@ -55,6 +55,8 @@ export const RegistrationSchema = z.object({
       ),
     })
     .prefault({}),
+  /** 喪家（ご自宅）の住所。会館・火葬場までの時間を出すのに使う */
+  homeAddress: optional(120),
   membership: z.enum(MEMBERSHIP_OPTIONS).default("わからない"),
   funeralStyle: z.enum(FUNERAL_STYLE_OPTIONS).default("未定"),
   religion: optional(30),

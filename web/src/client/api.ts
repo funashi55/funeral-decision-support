@@ -8,6 +8,7 @@ import type { PlanFitResult } from "../engine/planFit";
 import type { QuickFit } from "../engine/quickFit";
 import type { FactKey } from "../engine/facts";
 import type { Place } from "../domain/directory";
+import type { TravelView } from "../domain/travel";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -34,6 +35,7 @@ export const api = {
   quickFit: (caseId: string) => post<QuickFit>(`/api/cases/${caseId}/quick-fit`),
   /** 関係先の名簿（デモは架空、本番は自社の名簿） */
   directory: (caseId: string) => call<Place[]>(`/api/cases/${caseId}/directory`),
+  travel: (caseId: string) => call<TravelView>(`/api/cases/${caseId}/travel`),
   paperwork: (caseId: string) => call<Paperwork | null>(`/api/cases/${caseId}/paperwork`),
   makePaperwork: (caseId: string) => post<Paperwork>(`/api/cases/${caseId}/paperwork`),
   orderSheets: (caseId: string) => call<OrderSheetMap>(`/api/cases/${caseId}/order-sheets`),

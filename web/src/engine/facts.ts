@@ -1,5 +1,5 @@
 /**
- * 受付の事実（故人のお名前・年齢・性別・亡くなった日時と場所・喪主のお名前と電話・担当者）。
+ * 受付の事実（故人のお名前・年齢・性別・亡くなった日時と場所・喪主のお名前と電話・喪家の住所・担当者）。
  * 登録では家名だけが必須で、ほかは空のまま始めてよい。会話から拾えたものは「候補」として入り、担当者が確定すると登録の内容になる。
  * あとで変わったら、担当者がいつでも書き直せる。
  */
@@ -15,6 +15,7 @@ export const FACT_KEYS = [
   "diedPlace",
   "mournerName",
   "mournerPhone",
+  "homeAddress",
   "staffName",
 ] as const;
 export type FactKey = (typeof FACT_KEYS)[number];
@@ -26,6 +27,7 @@ export const EXTRACTABLE_FACTS = [
   "deceasedSex",
   "diedPlace",
   "mournerName",
+  "homeAddress",
 ] as const satisfies readonly FactKey[];
 
 export const FACT_LABEL: Readonly<Record<FactKey, string>> = {
@@ -36,6 +38,7 @@ export const FACT_LABEL: Readonly<Record<FactKey, string>> = {
   diedPlace: "亡くなった場所",
   mournerName: "喪主のお名前",
   mournerPhone: "喪主の電話",
+  homeAddress: "喪家（ご自宅）の住所",
   staffName: "担当者",
 };
 
@@ -63,6 +66,7 @@ const FACT_SCHEMA: Readonly<Record<FactKey, z.ZodType<string>>> = {
     .string()
     .trim()
     .regex(/^[0-9０-９+\-－() ]{6,20}$/, "電話番号の形で入れてください"),
+  homeAddress: z.string().trim().min(4).max(120),
   staffName: z.string().trim().min(1).max(20),
 };
 
@@ -85,6 +89,7 @@ export function factValue(
     diedPlace: r.deceased.diedPlace,
     mournerName: r.chiefMourner.name,
     mournerPhone: r.chiefMourner.phone,
+    homeAddress: r.homeAddress,
     staffName: r.staffName,
   }[key];
   return v === "" ? undefined : v;
@@ -124,7 +129,9 @@ export function confirmFact(
                 ? { ...r, chiefMourner: { ...m, name: value } }
                 : key === "mournerPhone"
                   ? { ...r, chiefMourner: { ...m, phone: value } }
-                  : { ...r, staffName: value };
+                  : key === "homeAddress"
+                    ? { ...r, homeAddress: value }
+                    : { ...r, staffName: value };
   const rest = Object.fromEntries(Object.entries(state.factCandidates ?? {}).filter(([k]) => k !== key));
   const profile =
     key === "deceasedAge"

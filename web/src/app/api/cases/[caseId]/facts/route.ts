@@ -4,7 +4,7 @@ import { FACT_KEYS, FACT_LABEL, confirmFact } from "../../../../../engine/facts"
 import { fail, handleError, ok } from "../../../../../server/http";
 import { store } from "../../../../../server/store";
 
-const BodySchema = z.object({ key: z.enum(FACT_KEYS), value: z.string().trim().min(1).max(60) });
+const BodySchema = z.object({ key: z.enum(FACT_KEYS), value: z.string().trim().min(1).max(120) });
 
 /** 受付の事実（故人のお名前など）を担当者が確定・書き直す。AI からは呼ばない */
 export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/facts">): Promise<Response> {

@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { api } from "../../client/api";
+import { factValue } from "../../engine/facts";
 import { PLACE_KIND_LABEL, mapEmbedUrl, placesMentioned, routeEmbedUrl, routeLinkUrl, telHref, type Place } from "../../domain/directory";
 import type { CaseState } from "../../engine/case";
 import c from "./console.module.css";
+import { HallMap } from "./HallMap";
 import p from "./places.module.css";
 
 /** Maps Embed API の鍵（なければ鍵の要らない埋め込みを使う） */
@@ -43,6 +45,7 @@ export function PlacesPanel({ state }: { readonly state: CaseState }) {
   const presets = directory.filter((x) => x.address && (x.kind === "crematorium" || x.kind === "hall"));
   const others = directory.filter((x) => x.address && !presets.includes(x));
   const firstAddress = mentioned.find((x) => x.address)?.address ?? "";
+  const home = factValue(state.registration, "homeAddress");
 
   const submit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
@@ -91,7 +94,7 @@ export function PlacesPanel({ state }: { readonly state: CaseState }) {
       <form className={p.route} onSubmit={submit} aria-label="地図と経路">
         <label>
           出発
-          <input name="from" list="places-presets" placeholder="例：会館・火葬場・ご自宅の住所" autoComplete="off" />
+          <input name="from" list="places-presets" defaultValue={home ?? ""} key={home ?? "no-home"} placeholder="例：会館・火葬場・ご自宅の住所" autoComplete="off" />
         </label>
         <label>
           行き先
@@ -131,6 +134,8 @@ export function PlacesPanel({ state }: { readonly state: CaseState }) {
           </figcaption>
         </figure>
       )}
+
+      <HallMap caseId={state.caseId} homeAddress={home} />
     </section>
   );
 }

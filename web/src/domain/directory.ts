@@ -45,7 +45,7 @@ export function mapEmbedUrl(address: string, key?: string): string {
   const q = encodeURIComponent(address);
   return key
     ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(key)}&q=${q}&language=ja`
-    : `https://maps.google.com/maps?q=${q}&hl=ja&z=15&output=embed`;
+    : `https://maps.google.com/maps?q=${q}&hl=ja&z=16&output=embed`;
 }
 
 /** 経路の埋め込み（車） */

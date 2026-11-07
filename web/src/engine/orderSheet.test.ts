@@ -40,6 +40,7 @@ describe("発注書に、案件で確定した値を入れる", () => {
       staffName: undefined,
       deceased: { name: "山田 ハナ", age: 84, sex: "女性", diedAt: "2026-11-07T05:30", diedPlace: "市内の病院" },
       chiefMourner: { relation: "長女", name: undefined, phone: undefined },
+    homeAddress: undefined,
       membership: "わからない",
       funeralStyle: "家族葬",
       restingPlace: "会館",

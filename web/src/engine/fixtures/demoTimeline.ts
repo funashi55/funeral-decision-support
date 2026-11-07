@@ -42,6 +42,8 @@ export function demoRegistration(diedAt: string): Registration {
     staffName: "佐藤（2年目）",
     deceased: { name: "山田 ハナ", age: 84, sex: "女性", diedAt, diedPlace: "市内の病院" },
     chiefMourner: { relation: "長女", name: undefined, phone: undefined },
+    /** 町名までの架空の住所（番地は持たない） */
+    homeAddress: "東京都杉並区阿佐谷南1丁目",
     membership: "わからない",
     funeralStyle: "家族葬",
     religion: undefined,
