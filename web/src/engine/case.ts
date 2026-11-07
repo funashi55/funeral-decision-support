@@ -1,3 +1,4 @@
+import type { FactCandidate, FactKey } from "./facts";
 import type { Registration } from "./registration";
 import type { FamilyProfile } from "../domain/similarFamilies";
 
@@ -123,6 +124,8 @@ export interface CaseState {
   readonly audit: readonly AuditEntry[];
   /** 担当者が自分で足したやること（前から保存されている案件にはないことがある） */
   readonly customTodos?: readonly CustomTodo[];
-  /** 喪家の登録で受付が入れた内容（デモ・試用の案件にはない） */
+  /** 喪家の登録で受付が入れた内容（デモ・試用の案件にはない）。家名のほかは空でもよく、確定した事実があとから入る */
   readonly registration?: Registration;
+  /** 会話から拾った受付の事実の候補（故人のお名前など）。担当者が確定すると registration に移る */
+  readonly factCandidates?: Readonly<Partial<Record<FactKey, FactCandidate>>>;
 }

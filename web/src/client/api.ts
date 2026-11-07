@@ -6,6 +6,7 @@ import type { OrderSheetMap } from "../server/orderSheetStore";
 import type { SavedRecommendations } from "../server/recommendationStore";
 import type { PlanFitResult } from "../engine/planFit";
 import type { QuickFit } from "../engine/quickFit";
+import type { FactKey } from "../engine/facts";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -35,6 +36,8 @@ export const api = {
   orderSheets: (caseId: string) => call<OrderSheetMap>(`/api/cases/${caseId}/order-sheets`),
   makeOrderSheet: (caseId: string, orderId: string) => post<OrderSheetMap>(`/api/cases/${caseId}/order-sheets`, { orderId }),
   confirm: (caseId: string, decisionId: string, value: string) => post<CaseState>(`/api/cases/${caseId}/decisions`, { decisionId, value }),
+  /** 受付の事実（故人のお名前など）を確定・書き直す */
+  confirmFact: (caseId: string, key: FactKey, value: string) => post<CaseState>(`/api/cases/${caseId}/facts`, { key, value }),
   todo: (caseId: string, body: { action: "add"; text: string } | { action: "done"; id: string; done: boolean } | { action: "remove"; id: string }) =>
     post<CaseState>(`/api/cases/${caseId}/todos`, body),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),

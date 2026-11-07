@@ -28,3 +28,19 @@ test("登録した喪家の画面には、デモの操作も札も出ず、/demo
   await page.goto(`/demo/${data.caseId}`);
   await expect(page).toHaveURL(new RegExp(`/staff/${data.caseId}$`));
 });
+
+test("家名だけで登録でき、受付の事実はあとから確定・書き直せる", async ({ page, request }) => {
+  await page.goto("/staff/new");
+  await page.getByLabel(/家名/).fill("苗字だけ");
+  await page.getByRole("button", { name: /登録して打合せへ/ }).click();
+  await expect(page).toHaveURL(/\/staff\/case-/);
+  await page.getByRole("tab", { name: /基本情報/ }).click();
+  await expect(page.getByTestId("fact-deceasedName")).toContainText("未登録");
+  await expect(page.getByText(/未定（決めることの「喪主を誰にするか」で決めます）/)).toBeVisible();
+  await page.getByRole("button", { name: "故人のお名前を入れる" }).click();
+  await page.getByRole("textbox", { name: "故人のお名前" }).fill("架空 花子");
+  await page.getByTestId("fact-deceasedName").getByRole("button", { name: "確定" }).click();
+  await expect(page.getByTestId("fact-deceasedName")).toContainText("架空 花子");
+  const caseId = page.url().split("/").pop();
+  expect((await request.post(`/api/cases/${caseId}/facts`, { data: { key: "mournerPhone", value: "でんわ" } })).status()).toBe(400);
+});

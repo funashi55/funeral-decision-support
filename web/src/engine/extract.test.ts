@@ -13,6 +13,11 @@ const extraction: Extraction = {
     { decisionId: "relatives_arrival", value: "孫が3日後に東京から", utteranceIds: ["U3"] },
     { decisionId: "budget_scope", value: "できるだけ抑えたい", utteranceIds: ["U5"] },
   ],
+  facts: [
+    { key: "deceasedSex", value: "女性", utteranceIds: ["U4"] },
+    { key: "deceasedName", value: "ハナ", utteranceIds: ["U99"] },
+    { key: "deceasedAge", value: "八十四", utteranceIds: ["U4"] },
+  ],
   profile: { daysUntilFuneral: 6, deceasedAge: null, funeralStyle: "家族葬" },
 };
 

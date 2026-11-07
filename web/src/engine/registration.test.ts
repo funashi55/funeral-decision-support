@@ -38,9 +38,10 @@ describe("喪家の登録", () => {
     expect(state.decisions.membership?.value).toMatch(/一般/);
   });
 
-  it("家名と喪主の続柄がなければ登録できず、電話番号の形も確かめる", () => {
+  it("家名がなければ登録できない。喪主の続柄は空でもよく、電話番号の形は確かめる", () => {
     expect(RegistrationSchema.safeParse({ ...base, familyName: " " }).success).toBe(false);
-    expect(RegistrationSchema.safeParse({ ...base, chiefMourner: { relation: "" } }).success).toBe(false);
+    expect(RegistrationSchema.safeParse({ ...base, chiefMourner: { relation: "" } }).success).toBe(true);
+    expect(RegistrationSchema.safeParse({ familyName: "佐藤" }).success).toBe(true);
     expect(RegistrationSchema.safeParse({ ...base, chiefMourner: { relation: "長男", phone: "abc" } }).success).toBe(false);
   });
 

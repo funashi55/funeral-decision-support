@@ -10,6 +10,7 @@ import type { OversightAlert } from "../../engine/oversight";
 import { getGriefPrinciple } from "../../domain/griefCare";
 import { FAREWELL_CUES, FAREWELL_DECISION, HANDLED_LABEL, PLAN_CUES, handledBy, keywordCues, keywordHits, textKey, type HandledBy, type HandledCheck } from "../../engine/handled";
 import { TOPIC_CUES } from "../../engine/nextSteps";
+import { BasicInfo, type FactHandler } from "./BasicInfo";
 import { CheckIcon, TaskRow } from "./TaskBoard";
 import t from "./tasks.module.css";
 import { GriefCareLane } from "./GriefCareLane";
@@ -36,6 +37,8 @@ interface NowViewProps {
   /** いまの会話から、寄り添いと提案を作る */
   readonly onRecommend: () => void;
   readonly onConfirm: (decisionId: string, value: string) => void;
+  /** 受付の事実（故人のお名前など）の確定・書き直し。うまくいけば true */
+  readonly onFact: FactHandler;
   /** 担当者が自分で足すやること（足す・済みにする・消す） */
   readonly onTodo: TodoHandler;
   readonly onFeedback: FeedbackHandler;
@@ -70,7 +73,7 @@ interface DoneItem {
  * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）。
  * 伝えた提案・確定した項目に関わる提案・会話で触れた提案は、下の「済んだこと」に畳む
  */
-export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onRecommend, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
+export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onRecommend, onConfirm, onFact, onTodo, onFeedback, children }: NowViewProps) {
   const [tab, setTab] = useState<NowTab>("proposal");
   const rec = farewell?.ok ? farewell.recommendation : null;
   // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く。
@@ -134,7 +137,8 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
   const tabs: readonly { readonly id: NowTab; readonly label: string; readonly count: number }[] = [
     { id: "proposal", label: "寄り添い・提案", count: checkCount },
     { id: "todo", label: "やること", count: remaining },
-    { id: "info", label: "基本情報", count: state.circumstances.length },
+    // 会話から拾った受付の事実の候補（確かめて確定するもの）の数
+    { id: "info", label: "基本情報", count: Object.keys(state.factCandidates ?? {}).length },
   ];
 
   return (
@@ -167,7 +171,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
       {tab === "info" && (
         <div role="tabpanel" id="now-panel-info" aria-labelledby="now-tab-info" className={`${c.nowPanel} ${c.nowMain}`}>
           <Facts state={state} extracting={extracting} />
-          <BasicInfo state={state} />
+          <BasicInfo state={state} onFact={onFact} />
         </div>
       )}
       <div role="tabpanel" id="now-panel-proposal" aria-labelledby="now-tab-proposal" className={`${c.nowPanel} ${c.nowMain}`} hidden={tab !== "proposal"}>
@@ -353,61 +357,6 @@ function todoRemaining(state: CaseState): number {
   const today = DECISIONS.filter((d) => d.urgency === "today");
   const customs = todosOf(state);
   return today.filter((d) => state.decisions[d.id]?.status !== "confirmed").length + customs.filter((t) => !t.done).length;
-}
-
-/** 基本情報：登録で伺ったことと、ここまでに決まったこと */
-function BasicInfo({ state }: { readonly state: CaseState }) {
-  const r = state.registration;
-  const decided = DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed");
-  const rows: readonly (readonly [string, string | undefined])[] = r
-    ? [
-        ["喪主", [r.chiefMourner.relation, r.chiefMourner.name].filter(Boolean).join("・")],
-        ["喪主の電話", r.chiefMourner.phone],
-        ["故人", [r.deceased.name, r.deceased.age !== undefined ? `${r.deceased.age}歳` : undefined, r.deceased.sex !== "答えない" ? r.deceased.sex : undefined].filter(Boolean).join("・")],
-        ["亡くなった日時・場所", [r.deceased.diedAt?.replace("T", " "), r.deceased.diedPlace].filter(Boolean).join("・")],
-        ["互助会", r.membership],
-        ["受付のメモ", r.memo],
-      ]
-    : [["故人", state.profile.deceasedAge ? `${state.profile.deceasedAge}歳` : undefined], ["葬儀の形の希望", state.profile.funeralStyle]];
-  const shown = rows.filter(([, v]) => v);
-  return (
-    <>
-      <section aria-labelledby="registration-title" className={c.block}>
-        <h2 id="registration-title" className={c.blockTitle}>
-          受付で伺ったこと
-        </h2>
-        {shown.length === 0 ? (
-          <p className={c.quiet}>まだありません</p>
-        ) : (
-          <dl className={c.infoList}>
-            {shown.map(([k, v]) => (
-              <div key={k}>
-                <dt>{k}</dt>
-                <dd>{v}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-      </section>
-      <section aria-labelledby="decided-title" className={c.block}>
-        <h2 id="decided-title" className={c.blockTitle}>
-          決まったこと{decided.length > 0 && <span className={c.factsCount}>{decided.length}</span>}
-        </h2>
-        {decided.length === 0 ? (
-          <p className={c.quiet}>まだありません</p>
-        ) : (
-          <dl className={c.infoList}>
-            {decided.map((d) => (
-              <div key={d.id}>
-                <dt>{d.label}</dt>
-                <dd>{state.decisions[d.id]?.value}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
-      </section>
-    </>
-  );
 }
 
 /**

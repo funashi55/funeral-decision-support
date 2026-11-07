@@ -1,20 +1,46 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FUNERAL_STYLE_OPTIONS, MEMBERSHIP_OPTIONS, RESTING_OPTIONS, SEX_OPTIONS } from "../../engine/registration";
+import {
+  FUNERAL_STYLE_OPTIONS,
+  MEMBERSHIP_OPTIONS,
+  RESTING_OPTIONS,
+  SEX_OPTIONS,
+} from "../../engine/registration";
 import { Guide, type GuideStep } from "../guide/Guide";
 import s from "./cases.module.css";
 
 const GUIDE: readonly GuideStep[] = [
-  { target: "required", title: "必須は2つだけ", body: "家名と喪主の続柄があれば登録できます。わからないところは空のままで構いません。" },
-  { target: "membership", title: "互助会", body: "見積もりの価格（会員・一般）がこれで決まります。わからなければ会員価格で仮に出します。" },
-  { target: "intake", title: "受付で伺ったこと", body: "ここで選んだことは、打合せの「決めること」に確定済みで入ります。未定は打合せで決めます。" },
-  { target: "submit", title: "打合せを始める", body: "登録すると、このご家族の打合せの画面が開きます。" },
+  {
+    target: "required",
+    title: "必須は家名だけ",
+    body: "苗字だけで登録できます。喪主もあとで変わることがあるので、わからなければ空のままで構いません。",
+  },
+  {
+    target: "more",
+    title: "わかっていることがあれば",
+    body: "開いて入れると、打合せの「決めること」に確定済みで入ります。空のものは、会話から拾えたら候補として入ります。",
+  },
+  {
+    target: "submit",
+    title: "打合せを始める",
+    body: "登録すると、このご家族の打合せの画面が開きます。",
+  },
 ];
 
 function SectionIcon({ d }: { readonly d: string }) {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d={d} />
     </svg>
   );
@@ -26,15 +52,29 @@ interface Envelope {
   readonly error?: string;
 }
 
-const value = (f: FormData, name: string): string => String(f.get(name) ?? "").trim();
+const value = (f: FormData, name: string): string =>
+  String(f.get(name) ?? "").trim();
 
 /** 選択肢を丸いボタンで並べる（受付で、目で見て選べるように） */
-function Choices({ name, options, initial }: { readonly name: string; readonly options: readonly string[]; readonly initial: string }) {
+function Choices({
+  name,
+  options,
+  initial,
+}: {
+  readonly name: string;
+  readonly options: readonly string[];
+  readonly initial: string;
+}) {
   return (
     <div className={s.choices}>
       {options.map((o) => (
         <label key={o} className={s.choice}>
-          <input type="radio" name={name} value={o} defaultChecked={o === initial} />
+          <input
+            type="radio"
+            name={name}
+            value={o}
+            defaultChecked={o === initial}
+          />
           <span>{o}</span>
         </label>
       ))}
@@ -58,8 +98,18 @@ export function RegisterForm() {
     const body = {
       familyName: value(f, "familyName"),
       staffName: value(f, "staffName"),
-      deceased: { name: value(f, "deceasedName"), age: age === "" ? undefined : age, sex: value(f, "sex") || undefined, diedAt: value(f, "diedAt"), diedPlace: value(f, "diedPlace") },
-      chiefMourner: { name: value(f, "mournerName"), relation: value(f, "relation"), phone: value(f, "phone") },
+      deceased: {
+        name: value(f, "deceasedName"),
+        age: age === "" ? undefined : age,
+        sex: value(f, "sex") || undefined,
+        diedAt: value(f, "diedAt"),
+        diedPlace: value(f, "diedPlace"),
+      },
+      chiefMourner: {
+        name: value(f, "mournerName"),
+        relation: value(f, "relation"),
+        phone: value(f, "phone"),
+      },
       membership: value(f, "membership"),
       funeralStyle: value(f, "funeralStyle"),
       religion: value(f, "religion"),
@@ -70,9 +120,14 @@ export function RegisterForm() {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/cases", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const res = await fetch("/api/cases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
       const json = (await res.json()) as Envelope;
-      if (!json.success || !json.data) throw new Error(json.error ?? "登録できませんでした");
+      if (!json.success || !json.data)
+        throw new Error(json.error ?? "登録できませんでした");
       router.push(`/staff/${encodeURIComponent(json.data.caseId)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "登録できませんでした");
@@ -81,102 +136,174 @@ export function RegisterForm() {
   };
 
   return (
-    <form className={s.form} onSubmit={(e) => void submit(e)} aria-label="喪家の登録">
+    <form
+      className={s.form}
+      onSubmit={(e) => void submit(e)}
+      aria-label="喪家の登録"
+    >
       <Guide steps={GUIDE} storageKey="register" label="登録" />
       <section className={s.section} data-guide="required">
-        <h2>
-          <SectionIcon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-          ご家族
-        </h2>
-        <div className={s.grid}>
-          <label className={s.field}>
-            <span>
-              家名<span className={s.req}>必須</span>
-            </span>
-            <input name="familyName" required maxLength={30} placeholder="例：佐藤" autoComplete="off" />
-          </label>
-          <label className={s.field}>
-            <span>
-              喪主の続柄<span className={s.req}>必須</span>
-            </span>
-            <input name="relation" required maxLength={20} placeholder="例：長男" autoComplete="off" />
-          </label>
-          <label className={s.field}>
-            喪主のお名前
-            <input name="mournerName" maxLength={40} autoComplete="off" />
-          </label>
-          <label className={s.field}>
-            喪主の電話番号
-            <input name="phone" type="tel" maxLength={20} inputMode="tel" autoComplete="off" />
-          </label>
-        </div>
-        <div data-guide="membership">
-          <p className={s.legend}>互助会</p>
-          <Choices name="membership" options={MEMBERSHIP_OPTIONS} initial="わからない" />
-        </div>
+        <label className={s.field}>
+          <span>
+            家名<span className={s.req}>必須</span>
+          </span>
+          <input
+            name="familyName"
+            required
+            maxLength={30}
+            placeholder="例：佐藤"
+            autoComplete="off"
+            autoFocus
+          />
+        </label>
+        <p className={s.note}>
+          苗字だけで始められます。ほかのことは、わかっていれば下に入れてください。打合せの会話から拾えたものは、あとから候補として入ります。
+        </p>
       </section>
 
-      <section className={s.section}>
-        <h2>
-          <SectionIcon d="M12 21s-7-4.5-7-11a7 7 0 0 1 14 0c0 6.5-7 11-7 11ZM12 10h.01" />
-          故人
-        </h2>
-        <div className={s.grid}>
-          <label className={s.field}>
-            お名前
-            <input name="deceasedName" maxLength={40} autoComplete="off" />
-          </label>
-          <label className={s.field}>
-            年齢
-            <input name="age" type="number" min={0} max={120} inputMode="numeric" />
-          </label>
-          <label className={s.field}>
-            亡くなった日時
-            <input name="diedAt" type="datetime-local" />
-          </label>
-          <label className={s.field}>
-            亡くなった場所
-            <input name="diedPlace" maxLength={60} placeholder="例：病院・ご自宅・施設" autoComplete="off" />
-          </label>
-        </div>
-        <div>
-          <p className={s.legend}>性別</p>
-          <Choices name="sex" options={SEX_OPTIONS} initial="" />
-        </div>
-      </section>
+      <details className={s.more} data-guide="more">
+        <summary>わかっていることを入れる（任意）</summary>
+        <section className={s.section}>
+          <h2>
+            <SectionIcon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+            ご家族
+          </h2>
+          <div className={s.grid}>
+            <label className={s.field}>
+              喪主の続柄
+              <input
+                name="relation"
+                maxLength={20}
+                placeholder="例：長男（あとで変わってもかまいません）"
+                autoComplete="off"
+              />
+            </label>
+            <label className={s.field}>
+              喪主のお名前
+              <input name="mournerName" maxLength={40} autoComplete="off" />
+            </label>
+            <label className={s.field}>
+              喪主の電話番号
+              <input
+                name="phone"
+                type="tel"
+                maxLength={20}
+                inputMode="tel"
+                autoComplete="off"
+              />
+            </label>
+          </div>
+          <div>
+            <p className={s.legend}>互助会</p>
+            <Choices
+              name="membership"
+              options={MEMBERSHIP_OPTIONS}
+              initial="わからない"
+            />
+          </div>
+        </section>
 
-      <section className={s.section} data-guide="intake">
-        <h2>
-          <SectionIcon d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" />
-          受付で伺ったこと
-        </h2>
-        <div>
-          <p className={s.legend}>ご安置の場所</p>
-          <Choices name="restingPlace" options={RESTING_OPTIONS} initial="未定" />
-        </div>
-        <div>
-          <p className={s.legend}>葬儀の形のご希望</p>
-          <Choices name="funeralStyle" options={FUNERAL_STYLE_OPTIONS} initial="未定" />
-        </div>
-        <div className={s.grid}>
+        <section className={s.section}>
+          <h2>
+            <SectionIcon d="M12 21s-7-4.5-7-11a7 7 0 0 1 14 0c0 6.5-7 11-7 11ZM12 10h.01" />
+            故人
+          </h2>
+          <div className={s.grid}>
+            <label className={s.field}>
+              お名前
+              <input name="deceasedName" maxLength={40} autoComplete="off" />
+            </label>
+            <label className={s.field}>
+              年齢
+              <input
+                name="age"
+                type="number"
+                min={0}
+                max={120}
+                inputMode="numeric"
+              />
+            </label>
+            <label className={s.field}>
+              亡くなった日時
+              <input name="diedAt" type="datetime-local" />
+            </label>
+            <label className={s.field}>
+              亡くなった場所
+              <input
+                name="diedPlace"
+                maxLength={60}
+                placeholder="例：病院・ご自宅・施設"
+                autoComplete="off"
+              />
+            </label>
+          </div>
+          <div>
+            <p className={s.legend}>性別</p>
+            <Choices name="sex" options={SEX_OPTIONS} initial="" />
+          </div>
+        </section>
+
+        <section className={s.section}>
+          <h2>
+            <SectionIcon d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" />
+            受付で伺ったこと
+          </h2>
+          <div>
+            <p className={s.legend}>ご安置の場所</p>
+            <Choices
+              name="restingPlace"
+              options={RESTING_OPTIONS}
+              initial="未定"
+            />
+          </div>
+          <div>
+            <p className={s.legend}>葬儀の形のご希望</p>
+            <Choices
+              name="funeralStyle"
+              options={FUNERAL_STYLE_OPTIONS}
+              initial="未定"
+            />
+          </div>
+          <div className={s.grid}>
+            <label className={s.field}>
+              宗派
+              <input
+                name="religion"
+                maxLength={30}
+                placeholder="例：浄土真宗"
+                autoComplete="off"
+              />
+            </label>
+            <label className={s.field}>
+              菩提寺
+              <input
+                name="temple"
+                maxLength={60}
+                placeholder="例：市外のお寺（お付き合いあり）"
+                autoComplete="off"
+              />
+            </label>
+          </div>
           <label className={s.field}>
-            宗派
-            <input name="religion" maxLength={30} placeholder="例：浄土真宗" autoComplete="off" />
+            担当者
+            <input
+              name="staffName"
+              maxLength={20}
+              placeholder="例：佐藤（発注書・受注書の担当欄に入ります）"
+              autoComplete="off"
+            />
           </label>
           <label className={s.field}>
-            菩提寺
-            <input name="temple" maxLength={60} placeholder="例：市外のお寺（お付き合いあり）" autoComplete="off" />
+            受付のメモ
+            <textarea
+              name="memo"
+              rows={3}
+              maxLength={400}
+              placeholder="お迎えのときの様子、気をつけることなど"
+            />
           </label>
-        </div>
-        <label className={s.field}>
-          担当者
-          <input name="staffName" maxLength={20} placeholder="例：佐藤（発注書・受注書の担当欄に入ります）" autoComplete="off" />
-        </label>
-        <label className={s.field}>
-          受付のメモ
-          <textarea name="memo" rows={3} maxLength={400} placeholder="お迎えのときの様子、気をつけることなど" />
-        </label>
-      </section>
+        </section>
+      </details>
 
       {error && (
         <p className={s.error} role="alert">
@@ -184,7 +311,12 @@ export function RegisterForm() {
         </p>
       )}
       <div className={s.actions}>
-        <button type="submit" className={s.primary} disabled={busy} data-guide="submit">
+        <button
+          type="submit"
+          className={s.primary}
+          disabled={busy}
+          data-guide="submit"
+        >
           {busy ? "登録しています…" : "登録して打合せへ"}
           <span aria-hidden="true">→</span>
         </button>

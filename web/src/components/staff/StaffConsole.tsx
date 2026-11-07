@@ -6,6 +6,7 @@ import { useCaseStream } from "../../client/useCaseStream";
 import { isDemoCase, listHref } from "../../domain/caseMode";
 import { impactedBy } from "../../domain/decisions";
 import type { FeedbackVerdict } from "../../engine/case";
+import type { FactKey } from "../../engine/facts";
 import type { FarewellResult } from "../../engine/farewell";
 import { demoScript } from "../../engine/fixtures/demoScript";
 import { demoDiedAt } from "../../engine/fixtures/demoTimeline";
@@ -279,6 +280,17 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     }
   };
 
+  /** 受付の事実を確定・書き直す（形が合わなければ理由を出す） */
+  const fact = async (key: FactKey, value: string): Promise<boolean> => {
+    try {
+      await api.confirmFact(caseId, key, value);
+      return true;
+    } catch (e) {
+      setError(message(e));
+      return false;
+    }
+  };
+
   /** メモ入力やマイクの聞き取りで、発言を1つ足す（以降の処理は台本の再生と同じ） */
   const addLine = useCallback(
     async (line: NewLine): Promise<void> => {
@@ -502,6 +514,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               farewellBasedOn={farewellBasedOn}
               planFitBasedOn={planFit?.basedOn ?? 0}
               onConfirm={(id, v) => void confirm(id, v)}
+              onFact={fact}
               onTodo={(body) => void todo(body)}
               onFeedback={recordFeedback}
             >
