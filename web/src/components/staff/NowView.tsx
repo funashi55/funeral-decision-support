@@ -42,6 +42,9 @@ interface NowViewProps {
 export type TodoAction = { readonly action: "add"; readonly text: string } | { readonly action: "done"; readonly id: string; readonly done: boolean } | { readonly action: "remove"; readonly id: string };
 export type TodoHandler = (body: TodoAction) => void;
 
+/** 提案を開く前に、ご家族についてわかっていたいことの数 */
+const READY_FACTS = 3;
+
 /** 見立てがこれだけ発言に遅れたら、古いことを示す */
 const STALE_AFTER = 4;
 
@@ -66,8 +69,12 @@ interface DoneItem {
 export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
   const [tab, setTab] = useState<NowTab>("proposal");
   const rec = farewell?.ok ? farewell.recommendation : null;
-  // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く
-  const proposalsReady = allowsPrices(detectPhase(state.utterances).phase);
+  // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く。
+  // 「お別れ」という言葉だけで早く開かないよう、ご家族のことが3つ以上わかっていることも条件にする。一度開いたら閉じに戻さない
+  const readyNow = allowsPrices(detectPhase(state.utterances).phase) && state.circumstances.length >= READY_FACTS;
+  const [openedOnce, setOpenedOnce] = useState(false);
+  if (readyNow && !openedOnce) setOpenedOnce(true);
+  const proposalsReady = readyNow || openedOnce;
   // 有料の選択肢やお金に関わる注意は、提案と同じく信頼を得てから。それまでは提案と一緒に畳む
   const later = (decisionId: string): boolean => !proposalsReady && OFFER_DECISIONS.has(decisionId);
   const done: DoneItem[] = [];

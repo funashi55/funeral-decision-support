@@ -51,6 +51,8 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
             <span className={s.price}>{yen(p.estimate.total)}</span>
           </div>
           <PlanFitNote planFit={fit} range={p.range} />
+          <details className={s.evidence}>
+            <summary>含まれるもの・含まれないもの</summary>
           <div className={s.can}>
             <div>
               <b>プランに含まれるもの</b>
@@ -69,6 +71,7 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
               </ul>
             </div>
           </div>
+          </details>
           <details className={s.evidence}>
             <summary>見積もりの明細</summary>
             <table className={s.lines}>
