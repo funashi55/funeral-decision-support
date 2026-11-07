@@ -44,3 +44,9 @@ test("家名だけで登録でき、受付の事実はあとから確定・書�
   const caseId = page.url().split("/").pop();
   expect((await request.post(`/api/cases/${caseId}/facts`, { data: { key: "mournerPhone", value: "でんわ" } })).status()).toBe(400);
 });
+
+test("相談中の画面から、左上の sou-buddy でトップ（デモの入口）へ戻れる", async ({ page }) => {
+  await page.goto("/demo/demo-yamada");
+  await page.getByTestId("to-top").click();
+  await expect(page).toHaveURL(/\/demo$/);
+});

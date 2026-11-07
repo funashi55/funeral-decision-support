@@ -61,6 +61,9 @@ const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon
   { id: "buddy", label: "バディ", icon: "M12 21s-7-4.4-9.3-9A5.3 5.3 0 0 1 12 6.6 5.3 5.3 0 0 1 21.3 12C19 16.6 12 21 12 21Z" },
 ];
 
+/** スマホでは下の帯に入りきらないので、メニューから開く画面 */
+const SHEET_VIEWS: readonly View[] = ["plans", "orders", "records", "buddy"];
+
 function Icon({ d }: { readonly d: string }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -457,7 +460,6 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const finished = state.utterances.length >= script.length;
   const openRequests = state.requests.filter((r) => r.status === "open").length;
   const recording = playing;
-  const phase = detectPhase(state.utterances);
   const oversights = detectOversights(state);
 
   const readyOrders = buildOrders(state).filter((o) => o.status === "ready").length;
@@ -482,6 +484,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     <div className={c.app} data-pane={talkOpen ? "talk" : "main"}>
       <nav className={c.rail} aria-label="画面の切り替え">
         <div className={c.brand}>
+          <Link href={listHref(caseId)} className={c.home} aria-label={demo ? "sou-buddy のトップ（デモの入口）へ戻る" : "sou-buddy のトップ（ご家族の一覧）へ戻る"} data-testid="to-top">
+            <span aria-hidden="true">←</span> sou-buddy
+          </Link>
           <span className={c.brandFamily}>{state.familyName}</span>
           {demo && <span className={c.demoBadge}>デモ・架空のご家族</span>}
           <span className={c.brandMeta}>{`担当：${state.registration?.staffName ?? staffName ?? "担当者"}`}</span>
@@ -496,7 +501,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               id={`tab-${v.id}`}
               aria-selected={view === v.id && !talkOpen}
               aria-controls="main-view"
-              className={`${c.navItem} ${v.id === "plans" || v.id === "orders" ? c.desktopOnly : ""}`}
+              className={`${c.navItem} ${SHEET_VIEWS.includes(v.id) ? c.desktopOnly : ""}`}
               onClick={() => {
                 setView(v.id);
                 setTalkOpen(false);
@@ -599,7 +604,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           {view === "plans" && (
             <div className={c.view}>
               <h1 className={c.viewTitle}>プランの案</h1>
-              <PlansPanel state={state} phase={phase.phase} planFit={planFit?.ok ? planFit.proposal : null} onFeedback={(t, v) => void feedback(t, v)} />
+              <PlansPanel state={state} planFit={planFit?.ok ? planFit.proposal : null} onFeedback={(t, v) => void feedback(t, v)} />
             </div>
           )}
           {view === "records" && (
@@ -630,7 +635,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           <div className={c.sheet}>
             <p className={c.sheetFamily}>{state.familyName}</p>
             <div className={c.sheetGrid}>
-              {VIEWS.filter((v) => v.id === "plans" || v.id === "orders").map((v) => (
+              {VIEWS.filter((v) => SHEET_VIEWS.includes(v.id)).map((v) => (
                 <button
                   key={v.id}
                   type="button"

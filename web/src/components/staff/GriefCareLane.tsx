@@ -112,7 +112,6 @@ export function GriefCareLane({ state, items, actions, phrases, onSavePhrase }: 
           </article>
         );
       })}
-      <p className={c.careNote}>言葉は例です。使うかどうかは担当者が決めます。</p>
     </div>
   );
 }

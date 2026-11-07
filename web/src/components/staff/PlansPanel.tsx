@@ -1,10 +1,7 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
-import type { Phase } from "../../domain/decisions";
 import { CATALOG_SOURCE, yen, type Range } from "../../domain/pricing";
 import type { CaseState } from "../../engine/case";
-import { allowsPrices } from "../../engine/phase";
 import { familyAskedForMore, familyWantsToSave, type PlanFitProposal } from "../../engine/planFit";
 import { buildPlanProposals } from "../../engine/plans";
 import { AltarPreview } from "../AltarPreview";
@@ -13,27 +10,13 @@ import s from "./staff.module.css";
 
 interface PlansPanelProps {
   readonly state: CaseState;
-  readonly phase: Phase;
   /** この家族に合うところ・確かめたいこと（プランの見立て） */
   readonly planFit: PlanFitProposal | null;
   readonly onFeedback: FeedbackHandler;
 }
 
 /** 3つの幅の案。金額はすべて価格表から計算し、含まれないものを先に見せる */
-export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProps) {
-  const [showAnyway, setShowAnyway] = useState(false);
-  if (!allowsPrices(phase) && !showAnyway) {
-    return (
-      <div className={s.scroll}>
-        <p className={s.empty}>
-          まだ案はありません。
-        </p>
-        <button type="button" className={s.btn} onClick={() => setShowAnyway(true)}>
-          案を見る（準備用）
-        </button>
-      </div>
-    );
-  }
+export function PlansPanel({ state, planFit, onFeedback }: PlansPanelProps) {
   const proposals = buildPlanProposals(state);
   // 費用を抑えたいと話したご家族に、上の幅を勧める古い見立ては使わない
   const fit = planFit && !(planFit.bestRange !== "simple" && familyWantsToSave(state) && !familyAskedForMore(state)) ? planFit : null;

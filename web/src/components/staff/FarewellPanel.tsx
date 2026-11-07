@@ -182,14 +182,13 @@ export function FarewellPanel({ state, result, resultBasedOn, quick, listening, 
         {!result && !loading && (
           <div className={s.emptyState}>
             <p className={s.emptyTitle}>会話が進むと、ここに推奨が出ます</p>
-            <p>お別れの仕方の選択肢を、ご遺族の言葉・ベテランの知見・似た家族の選び方と並べて示します。推奨はこの画面にだけ出ます。伝えるかどうかは担当者が決めます。</p>
           </div>
         )}
         {!result && loading && <Skeleton />}
         {result && !result.ok && (
           <>
             <p className={s.error} role="alert">
-              守る線の検査を通る推奨を作れなかったため、推奨は出していません。代わりに、選択肢の事実だけを並べます（費用のかからないものから）。どれが合うかは、ご家族の言葉を聞いて判断してください。
+              選択肢の事実を、費用のかからないものから並べています。
             </p>
             <details className={s.evidence} style={{ margin: "0 0 0.8rem" }}>
               <summary>止めた理由を見る</summary>
@@ -222,7 +221,7 @@ export function FarewellPanel({ state, result, resultBasedOn, quick, listening, 
             {result.recommendation.references.length > 0 && (
               <div className={s.refs}>
                 <h3>似た家族の選び方（参考）</h3>
-                <small>{result.recommendation.referenceSource}。多数派に合わせる必要はありません</small>
+                <small>{result.recommendation.referenceSource}</small>
                 {result.recommendation.references.map((r) => (
                   <div key={r.id} className={s.ref}>
                     <span>

@@ -35,12 +35,9 @@ test("字幕を直すと、直した文が残る", async ({ page, request }) => 
   await expect(page.getByTestId("utt-U1")).toContainText("お寺は西光寺です");
 });
 
-test("信頼関係の段階ではプランの金額を出さず、段階が進むと3つの幅の案が費用を抑える順に出る", async ({ page, request }) => {
+test("プランの案は最初から隠さずに出し、3つの幅の案を費用を抑える順に並べる", async ({ page }) => {
   await page.goto(`/demo/${CASE_ID}`);
   await page.getByRole("tab", { name: /プランの案/ }).click();
-  await expect(page.getByText("まだ案はありません。")).toBeVisible();
-
-  await addUtterance(request, "費用はできるだけ抑えたいです");
   await expect(page.getByTestId("plan-simple")).toBeVisible();
   const ids = await page.locator("[data-testid^=plan-]").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
   expect(ids).toEqual(["plan-simple", "plan-standard", "plan-gratitude"]);

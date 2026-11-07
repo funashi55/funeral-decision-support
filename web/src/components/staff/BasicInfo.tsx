@@ -111,7 +111,6 @@ export function BasicInfo({ state, onFact }: { readonly state: CaseState; readon
         <h2 id="registration-title" className={c.blockTitle}>
           受付の事実{waiting > 0 && <span className={c.factsCount}>候補 {waiting}</span>}
         </h2>
-        <p className={f.hint}>登録は家名だけで始められます。会話で分かったことは「会話から」の候補として入るので、確かめて確定してください。あとで変わったら「直す」で書き直せます。</p>
         <dl className={c.infoList}>
           <div>
             <dt>喪主</dt>

@@ -99,7 +99,7 @@ export function HallMap({ caseId, homeAddress }: HallMapProps) {
       {error && <p className={p.hint}>{error}</p>}
       <div ref={box} className={p.leaflet} role="region" aria-label="会館とご自宅の地図" />
       {view?.note && <p className={p.hint}>{view.note}</p>}
-      {view && !view.home && !view.note && <p className={p.hint}>喪家（ご自宅）の住所を確定すると、各会館までの車の時間が近い順に出ます。</p>}
+      {view && !view.home && !view.note && <p className={p.hint}>喪家の住所が入ると、各会館までの時間が出ます。</p>}
       {view && view.halls.length > 0 && (
         <ol className={p.hallList}>
           {view.halls.map((h) => (
@@ -129,7 +129,6 @@ export function HallMap({ caseId, homeAddress }: HallMapProps) {
           ))}
         </ol>
       )}
-      <p className={p.note}>車の時間は道路の地図から計算した目安で、渋滞は入りません。ご自宅の住所は場所を探すために国土地理院の検索へ、その位置は時間の計算（OSRM）へ送られます。どちらにも保存はしません。</p>
     </div>
   );
 }

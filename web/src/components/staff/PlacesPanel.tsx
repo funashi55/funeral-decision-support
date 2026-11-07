@@ -130,7 +130,6 @@ export function PlacesPanel({ state }: { readonly state: CaseState }) {
             ) : (
               <span>{view.address}</span>
             )}
-            <small>住所は Google マップに送られます。</small>
           </figcaption>
         </figure>
       )}
