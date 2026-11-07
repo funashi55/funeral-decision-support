@@ -37,6 +37,8 @@ function unwrap<T>(response: ParsedResponse<T>): T {
 export async function generateFarewellDraft(system: string, prompt: string): Promise<FarewellDraft> {
   const response = await getClient().messages.parse({
     model: MODEL_FAST,
+    // 打合せの速さに合わせて、考える時間をとらない（文面の質は判定役と検査で守る）
+    thinking: { type: "disabled" },
     max_tokens: 8000,
     system,
     output_config: { effort: "low", format: zodOutputFormat(FarewellDraftSchema) },
@@ -83,6 +85,8 @@ export async function judgeRecommendation(recommendation: FarewellRecommendation
 export const familyChatModel: ChatModel = async ({ system, messages, tools }) => {
   const response = await getClient().messages.create({
     model: MODEL_FAST,
+    // 打合せの速さに合わせて、考える時間をとらない（文面の質は判定役と検査で守る）
+    thinking: { type: "disabled" },
     max_tokens: 2000,
     system,
     tools,
@@ -96,6 +100,8 @@ export const familyChatModel: ChatModel = async ({ system, messages, tools }) =>
 export async function generateQuickFit(system: string, prompt: string): Promise<QuickFitDraft> {
   const response = await getClient().messages.parse({
     model: MODEL_FAST,
+    // 打合せの速さに合わせて、考える時間をとらない（文面の質は判定役と検査で守る）
+    thinking: { type: "disabled" },
     max_tokens: 1000,
     system,
     output_config: { effort: "low", format: zodOutputFormat(QuickFitSchema) },
@@ -120,6 +126,8 @@ export async function generatePaperwork(system: string, prompt: string): Promise
 export const hearingFamilyModel: FamilyModel = async (system, messages) => {
   const response = await getClient().messages.parse({
     model: MODEL_FAST,
+    // 打合せの速さに合わせて、考える時間をとらない（文面の質は判定役と検査で守る）
+    thinking: { type: "disabled" },
     max_tokens: 1500,
     system,
     output_config: { effort: "low", format: zodOutputFormat(FamilyReplySchema) },
@@ -144,6 +152,8 @@ export const hearingExtractModel: ExtractModel = async (system, prompt) => {
 export async function generatePlanFit(system: string, prompt: string): Promise<PlanFitDraft> {
   const response = await getClient().messages.parse({
     model: MODEL_FAST,
+    // 打合せの速さに合わせて、考える時間をとらない（文面の質は判定役と検査で守る）
+    thinking: { type: "disabled" },
     max_tokens: 4000,
     system,
     output_config: { effort: "low", format: zodOutputFormat(PlanFitDraftSchema) },
@@ -168,6 +178,8 @@ export async function judgePlanFit(proposal: PlanFitProposal): Promise<GuardViol
 export const classifySpeaker: ClassifySpeaker = async (system, prompt) => {
   const response = await getClient().messages.parse({
     model: MODEL_FAST,
+    // 打合せの速さに合わせて、考える時間をとらない（文面の質は判定役と検査で守る）
+    thinking: { type: "disabled" },
     max_tokens: 200,
     system,
     output_config: { format: zodOutputFormat(SpeakerAnswerSchema) },

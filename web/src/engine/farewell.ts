@@ -5,18 +5,18 @@
  * 「どれを、なぜ使うか」だけを構造化して返させる。金額・割合・できること/できないことは
  * サーバー側で差し込む。守る線の検査に落ちたら1回だけ出し直し、それでも落ちたら出さない。
  */
+import { OVERSIGHT_IDS, OVERSIGHT_RULES } from "./oversight";
 import { z } from "zod";
 import { FAREWELL_OPTIONS, getFarewellOption, type FarewellOptionId } from "../domain/farewell";
 import { getCatalogItem } from "../domain/pricing";
 import { yukanReferences, type Reference } from "../domain/similarFamilies";
-import { DECISIONS, getDecision } from "../domain/decisions";
+import { getDecision } from "../domain/decisions";
 import { GRIEF_PRINCIPLES, GRIEF_PRINCIPLE_IDS, type GriefPrincipleId } from "../domain/griefCare";
 import { loadKnowledge, rulesFor, withRecordRules, type Knowledge, type Rule } from "../knowledge/rules";
 import type { CaseState } from "./case";
 import { checkBudgetOption, checkText, type GuardViolation } from "./guard";
 
 const FAREWELL_DECISIONS = ["laying_in_style", "embalming", "resting_place", "cremation_date", "face_viewing"] as const;
-const DECISION_IDS = DECISIONS.map((d) => d.id) as [string, ...string[]];
 const OPTION_IDS = FAREWELL_OPTIONS.map((o) => o.id) as [FarewellOptionId, ...FarewellOptionId[]];
 
 export const FarewellDraftSchema = z.object({
@@ -50,9 +50,9 @@ export const FarewellDraftSchema = z.object({
       }),
     )
     .describe("ご遺族への配慮（グリーフケア）。この会話で特に大事なものを最大3つ。当てはまるものがなければ空"),
-  cautions: z
-    .array(z.object({ decisionId: z.enum(DECISION_IDS).describe("決定項目の ID（お別れの選択肢の ID ではない）"), message: z.string() }))
-    .describe("取り返しのつかない見落としの注意。なければ空"),
+  cautionIds: z
+    .array(z.enum(OVERSIGHT_IDS))
+    .describe(`取り返しのつかない見落としの注意を、決まった一覧から選ぶ（文章は書かない）。会話から当てはまるものだけ。なければ空。\n${OVERSIGHT_RULES.map((r) => `- ${r.id}：${r.message}`).join("\n")}`),
 });
 
 export type FarewellDraft = z.infer<typeof FarewellDraftSchema>;
@@ -161,7 +161,7 @@ export interface FarewellRecommendation {
   readonly questionsToAsk: readonly string[];
   /** 理論の説明・出典・避けたい言葉は domain/griefCare.ts から画面で引く（判定役に避けたい言葉を誤検出させない） */
   readonly griefCare: readonly { readonly principleId: GriefPrincipleId; readonly observation: string; readonly words: string; readonly utteranceIds: readonly string[] }[];
-  readonly cautions: readonly { readonly decisionId: string; readonly label: string; readonly message: string }[];
+  readonly cautions: readonly { readonly id: string; readonly decisionId: string; readonly label: string; readonly message: string }[];
 }
 
 /** 配慮の言葉に出てきてはいけない語（有料の選択肢と費用） */
@@ -170,7 +170,7 @@ const PAID_OPTION_WORDS = ["湯灌", "エンバーミング", "安置", "延ば"
 /** モデルの出力が材料に沿っているか、守る線を外していないかを検査する */
 export function validateDraft(draft: FarewellDraft, ctx: FarewellContext): GuardViolation[] {
   const problems: GuardViolation[] = [];
-  const texts = [draft.familyWish, draft.timeAdvice, ...draft.questionsToAsk, ...draft.options.flatMap((o) => [o.reason, o.howToRaise]), ...draft.griefCare.flatMap((g) => [g.observation, g.words]), ...draft.cautions.map((c) => c.message)];
+  const texts = [draft.familyWish, draft.timeAdvice, ...draft.questionsToAsk, ...draft.options.flatMap((o) => [o.reason, o.howToRaise]), ...draft.griefCare.flatMap((g) => [g.observation, g.words])];
   for (const t of texts) problems.push(...checkText(t));
 
   const shown = draft.options.filter((o) => o.fit !== "not_now");
@@ -187,13 +187,6 @@ export function validateDraft(draft: FarewellDraft, ctx: FarewellContext): Guard
     if (mentioned) problems.push({ rule: "upsell", message: "ご遺族への配慮の言葉で、有料の選択肢に触れています（気持ちへの配慮を販売の理由にしない）", quote: mentioned });
   }
   for (const id of draft.referenceIds) if (!ctx.references.has(id)) problems.push(unknown("参考値", id));
-  for (const c of draft.cautions) {
-    try {
-      getDecision(c.decisionId);
-    } catch {
-      problems.push(unknown("決定項目", c.decisionId));
-    }
-  }
   return problems;
 }
 
@@ -219,7 +212,11 @@ export function enrichDraft(draft: FarewellDraft, ctx: FarewellContext, referenc
     timeAdvice: draft.timeAdvice,
     questionsToAsk: draft.questionsToAsk.slice(0, 3),
     griefCare: draft.griefCare.slice(0, 3),
-    cautions: draft.cautions.map((c) => ({ ...c, label: getDecision(c.decisionId).label })),
+    // 注意は決まった一覧から選ばせ、文面は一覧の固定の文を使う（モデルに注意の文章を書かせない）
+    cautions: [...new Set(draft.cautionIds)].flatMap((id) => {
+      const rule = OVERSIGHT_RULES.find((r) => r.id === id);
+      return rule ? [{ id, decisionId: rule.decisionId, label: getDecision(rule.decisionId).label, message: rule.message }] : [];
+    }),
   };
 }
 

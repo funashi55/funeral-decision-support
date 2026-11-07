@@ -153,3 +153,6 @@ export function detectOversights(state: CaseState, rules: readonly OversightRule
     return [{ id: rule.id, decisionId: rule.decisionId, decisionLabel: getDecision(rule.decisionId).label, message: rule.message, utteranceIds: hits }];
   });
 }
+
+/** 推奨（AI）が選べる注意の ID（文章は書かせず、この一覧から選ばせる） */
+export const OVERSIGHT_IDS = OVERSIGHT_RULES.map((r) => r.id) as [string, ...string[]];

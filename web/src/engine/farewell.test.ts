@@ -14,7 +14,7 @@ const goodDraft: FarewellDraft = {
   timeAdvice: "火葬を急がず、お孫さんが着いてから納棺と湯灌を行う流れを提案できます",
   questionsToAsk: ["湯灌のとき、ご家族も手を添えたいですか", "お孫さんの到着の時刻は分かりますか"],
   griefCare: [{ principleId: "continuing_bonds", observation: "お母さまのお風呂好きを繰り返し話されているようです", words: "お母さまは、お風呂の時間を大事にされていたのですね", utteranceIds: ["U2"] }],
-  cautions: [{ decisionId: "cremation_date", message: "お寺と斎場の都合を確認してから火葬の日時を確定してください" }],
+  cautionIds: ["temple_outside_city"],
 };
 
 describe("材料の組み立て", () => {
