@@ -18,26 +18,22 @@ export function GriefCareLane({ state, items, actions }: GriefCareLaneProps) {
   if (items.length === 0) return null;
   return (
     <div className={c.lane} data-testid="grief-care">
-      <h3 className={c.laneTitle}>
-        <span className={c.dotCare} aria-hidden="true" />
-        ご遺族への配慮<span className={c.laneCount}>{items.length}</span>
-      </h3>
       {items.map((g) => {
         const p = getGriefPrinciple(g.principleId);
         const quote = state.utterances.find((u) => u.id === g.utteranceIds.at(-1));
         return (
           <article key={g.principleId} className={c.care}>
             <h4>{p.name}</h4>
-            <p className={c.careWhy}>
-              {g.observation}
-              {quote && <span className={c.careQuote}>（「{quote.text.slice(0, 24)}{quote.text.length > 24 ? "…" : ""}」）</span>}
-            </p>
             <p className={c.careWords}>
               <small>かける言葉の例</small>「{g.words}」
             </p>
             {actions?.(g.principleId)}
             <details className={c.careMore}>
-              <summary>ほかの言い方・避けたい言葉・拠りどころ</summary>
+              <summary>なぜ・ほかの言い方・避けたい言葉</summary>
+              <p className={c.careWhy}>
+                {g.observation}
+                {quote && <span className={c.careQuote}>（「{quote.text.slice(0, 24)}{quote.text.length > 24 ? "…" : ""}」）</span>}
+              </p>
               <dl>
                 <dt>考え方</dt>
                 <dd>{p.principle}</dd>
@@ -68,7 +64,7 @@ export function GriefCareLane({ state, items, actions }: GriefCareLaneProps) {
           </article>
         );
       })}
-      <p className={c.careNote}>言葉はどれも例です。使うか、どう言い換えるかは担当者が決めてください。打合せでの配慮であって、心のケアの専門的な支援の代わりではありません。</p>
+      <p className={c.careNote}>言葉は例です。使うかどうかは担当者が決めます。</p>
     </div>
   );
 }

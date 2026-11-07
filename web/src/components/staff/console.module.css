@@ -328,3 +328,15 @@ a.navItem { text-decoration: none; }
 }
 @media (max-width: 760px) { .live :global(textarea) { font-size: 16px; } }
 .topbar { gap: var(--space-3); }
+
+/* 提案は畳める。お気持ちを伺うまでは閉じておく */
+.proposalFold > summary { display: flex; align-items: center; gap: var(--space-3); cursor: pointer; list-style: none; }
+.proposalFold > summary::-webkit-details-marker { display: none; }
+.proposalFold > summary::after { content: "▾"; margin-left: auto; color: var(--ink-3); transition: transform var(--duration-fast); }
+.proposalFold:not([open]) > summary::after { transform: rotate(-90deg); }
+.proposalFold[open] > summary { margin-bottom: var(--space-3); }
+.earlyTag { font-size: var(--text-xs); font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--surface-3); color: var(--ink-3); }
+.why { margin-top: var(--space-1); }
+.why > summary { cursor: pointer; font-size: var(--text-xs); font-weight: 700; color: var(--ink-3); width: fit-content; }
+.why > summary:hover { color: var(--accent); }
+.why[open] > summary { margin-bottom: var(--space-1); }

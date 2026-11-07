@@ -35,8 +35,9 @@ const PLAN_REWRITE_AFTER = 3;
 /** 打合せの画面のガイド（見えている場所だけを順に照らす） */
 const CONSOLE_GUIDE: readonly GuideStep[] = [
   { target: "demo", title: "デモを再生", body: "架空の打合せの会話が流れます。実際の打合せでは、会話の欄に打つか、マイクで聞き取ります。" },
-  { target: "now-tabs", title: "いま見ること", body: "提案・やること・基本情報を切り替えます。数字は、まだ残っている件数です。" },
-  { target: "proposal", title: "この流れでの提案", body: "会話に合わせた提案と、切り出し方の例が出ます。伝えたものは、会話から読み取って自動で下に畳みます。" },
+  { target: "now-tabs", title: "いま見ること", body: "寄り添い・提案、やること、基本情報を切り替えます。数字は残っている件数です。" },
+  { target: "care", title: "まず、寄り添う", body: "ご遺族に安心して、心ゆくまでお別れしていただくための言葉の例です。提案より先に、ここから始めます。" },
+  { target: "proposal", title: "提案は、信頼のあとで", body: "お気持ちを伺い、お別れの話に入ると開きます。見せるのは切り出し方だけ。理由は「なぜ」に畳んでいます。" },
   { target: "composer", title: "会話を入れる", body: "話したことを打つか、マイクで聞き取ります。担当者かご遺族かは自動で聞き分けます。違っていたら、発言の名前を押すと入れ替わります。" },
   { target: "nav", title: "画面の切り替え", body: "決めることの一覧、プランの見積もり、手配（発注書）に移れます。" },
   { target: "inbox", title: "ご家族の窓口", body: "ご家族のスマホで開くページのリンクと QR コード、ご家族からの質問がここに届きます。" },
@@ -105,13 +106,24 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const [planFit, setPlanFit] = useState<(PlanFitResult & { readonly basedOn?: number }) | null>(null);
   const planFitRunning = useRef(false);
   const planFitAt = useRef(0);
+  // 作っている途中に新しい依頼が来たら、終わってから最新の会話でもう一度作る（費用の話を取りこぼさないように）
+  const planFitQueued = useRef<number | null>(null);
   const runPlanFit = useCallback(
     async (familyLines: number): Promise<void> => {
-      if (planFitRunning.current) return;
+      if (planFitRunning.current) {
+        planFitQueued.current = familyLines;
+        return;
+      }
       planFitRunning.current = true;
-      planFitAt.current = familyLines;
+      let lines: number | null = familyLines;
       try {
-        setPlanFit(await api.planFit(caseId));
+        while (lines !== null) {
+          planFitAt.current = lines;
+          planFitQueued.current = null;
+          setPlanFit(await api.planFit(caseId));
+          const queued: number | null = planFitQueued.current;
+          lines = queued !== null && queued > planFitAt.current ? queued : null;
+        }
       } catch (e) {
         setError(message(e));
       } finally {

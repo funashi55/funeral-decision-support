@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DECISIONS } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
 import { nextSteps } from "../../engine/nextSteps";
+import { allowsPrices, detectPhase } from "../../engine/phase";
 import { TODO_TEXT_MAX, todosOf } from "../../engine/todos";
 import type { FarewellResult } from "../../engine/farewell";
 import type { OversightAlert } from "../../engine/oversight";
@@ -11,7 +12,7 @@ import { TOPIC_CUES } from "../../engine/nextSteps";
 import { ConfirmControl, ManualEntry } from "./DecisionBoard";
 import { GriefCareLane } from "./GriefCareLane";
 import { PlanFitCard } from "./PlanFitCard";
-import type { PlanFitProposal } from "../../engine/planFit";
+import { familyAskedForMore, familyWantsToSave, type PlanFitProposal } from "../../engine/planFit";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
 import c from "./console.module.css";
 import s from "./staff.module.css";
@@ -71,7 +72,9 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
     .filter((o) => o.fit !== "not_now")
     .sort((a, b) => (a.fit === b.fit ? 0 : a.fit === "suits" ? -1 : 1))
     .filter((o) => active({ target: `farewell:${o.id}`, decisionId: FAREWELL_DECISION[o.id], cues: FAREWELL_CUES[o.id], basedOn: farewellBasedOn }, "提案", o.label));
-  const showPlan = planFit !== null && active({ target: "plan:fit", decisionId: "altar_plan", cues: PLAN_CUES, basedOn: planFitBasedOn }, "提案", "プラン");
+  // 費用を抑えたいと話したご家族に、上の幅を勧める古い見立ては出さない（書き直しを待つ）
+  const planFresh = planFit !== null && !(planFit.bestRange !== "simple" && familyWantsToSave(state) && !familyAskedForMore(state));
+  const showPlan = planFresh && active({ target: "plan:fit", decisionId: "altar_plan", cues: PLAN_CUES, basedOn: planFitBasedOn }, "提案", "プラン");
   // 声かけ・尋ねることは、勧めた文の言葉が担当者の発言にいくつ重なるかで見る
   const byWords = (target: string, text: string): HandledCheck => {
     const cues = keywordCues(text);
@@ -101,8 +104,10 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
   }, [spokenKey, onFeedback]);
 
   const remaining = todoRemaining(state);
+  // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く
+  const proposalsReady = allowsPrices(detectPhase(state.utterances).phase);
   const tabs: readonly { readonly id: NowTab; readonly label: string; readonly count: number }[] = [
-    { id: "proposal", label: "提案", count: oversights.length },
+    { id: "proposal", label: "寄り添い・提案", count: oversights.length },
     { id: "todo", label: "やること", count: remaining },
     { id: "info", label: "基本情報", count: state.circumstances.length },
   ];
@@ -141,18 +146,33 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
         </div>
       )}
       <div role="tabpanel" id="now-panel-proposal" aria-labelledby="now-tab-proposal" className={`${c.nowPanel} ${c.nowMain}`} hidden={tab !== "proposal"}>
-        <section aria-labelledby="proposal-title" className={c.block} data-guide="proposal">
-          <h2 id="proposal-title" className={c.blockTitle}>
-            この流れでの提案
+        {/* まず寄り添う：ご遺族への配慮を一番上に。安心してお別れしていただけてから、提案に進む */}
+        <section aria-labelledby="care-title" className={c.block} data-guide="care">
+          <h2 id="care-title" className={c.blockTitle}>
+            まず、寄り添う
             {thinking && <span className={c.thinking}>考えています…</span>}
           </h2>
+          {rec && (
+            <p className={c.wishBand}>
+              <small>ご家族が望んでいること</small>
+              {rec.familyWish}
+            </p>
+          )}
+          {care.length === 0 && !rec && <p className={c.quiet}>会話が進むと、かける言葉の例が出ます</p>}
+          <GriefCareLane state={state} items={care} actions={(id) => <div className={c.itemActions}>{told(`care:${id}`)}</div>} />
+        </section>
+
+        <details className={`${c.block} ${c.proposalFold}`} open={proposalsReady || undefined} data-guide="proposal" key={proposalsReady ? "ready" : "early"}>
+          <summary>
+            <h2 id="proposal-title" className={c.blockTitle}>
+              提案
+              {proposals.length + (showPlan ? 1 : 0) > 0 && <span className={c.laneCount}>{proposals.length + (showPlan ? 1 : 0)}</span>}
+            </h2>
+            {!proposalsReady && <span className={c.earlyTag}>お気持ちを伺ってから</span>}
+          </summary>
           {!rec && <p className={c.quiet}>会話が進むと、ここに提案が出ます</p>}
           {rec && (
             <>
-              <p className={c.wishBand}>
-                <small>ご家族が望んでいること</small>
-                {rec.familyWish}
-              </p>
               <ul className={c.proposals}>
                 {proposals.map((o) => (
                   <li key={o.id} className={c.proposal}>
@@ -163,26 +183,28 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
                     <p className={c.raise}>
                       <small>こう切り出しましょう</small>「{o.howToRaise}」
                     </p>
-                    <p className={c.reason}>{o.reason}</p>
+                    <details className={c.why}>
+                      <summary>なぜ</summary>
+                      <p className={c.reason}>{o.reason}</p>
+                    </details>
                     <div className={c.itemActions}>{told(`farewell:${o.id}`)}</div>
                   </li>
                 ))}
               </ul>
               {showPlan && planFit && <PlanFitCard state={state} proposal={planFit} actions={<div className={c.itemActions}>{told("plan:fit")}</div>} />}
               {rec.timeAdvice && (
-                <p className={c.timeAdvice}>
-                  <small>日程について</small>
-                  {rec.timeAdvice}
-                </p>
+                <details className={c.why}>
+                  <summary>日程について</summary>
+                  <p className={c.reason}>{rec.timeAdvice}</p>
+                </details>
               )}
             </>
           )}
-          <GriefCareLane state={state} items={care} actions={(id) => <div className={c.itemActions}>{told(`care:${id}`)}</div>} />
           <details className={c.more}>
             <summary>選択肢の比較と根拠をすべて見る</summary>
             {children}
           </details>
-        </section>
+        </details>
 
         <section aria-labelledby="check-title" className={c.block} data-testid="oversights">
           <h2 id="check-title" className={c.blockTitle}>

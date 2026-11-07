@@ -4,7 +4,7 @@ import { PHASE_LABEL, type Phase } from "../../domain/decisions";
 import { CATALOG_SOURCE, yen, type Range } from "../../domain/pricing";
 import type { CaseState } from "../../engine/case";
 import { allowsPrices } from "../../engine/phase";
-import type { PlanFitProposal } from "../../engine/planFit";
+import { familyAskedForMore, familyWantsToSave, type PlanFitProposal } from "../../engine/planFit";
 import { buildPlanProposals } from "../../engine/plans";
 import { AltarPreview } from "../AltarPreview";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
@@ -34,6 +34,8 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
     );
   }
   const proposals = buildPlanProposals(state);
+  // 費用を抑えたいと話したご家族に、上の幅を勧める古い見立ては使わない
+  const fit = planFit && !(planFit.bestRange !== "simple" && familyWantsToSave(state) && !familyAskedForMore(state)) ? planFit : null;
   return (
     <div className={s.scroll}>
       <AltarPreview flowerColor={state.decisions.flower_color?.value} className={s.altar} captionClassName={s.count} />
@@ -44,11 +46,11 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
             <h3>
               <span className={`${s.fit} ${s.fitConsider}`}>{p.rangeLabel}</span>
               {p.planLabel}
-              {planFit?.bestRange === p.range && <span className={`${s.fit} ${s.fitSuits}`}>この家族に合いそう</span>}
+              {fit?.bestRange === p.range && <span className={`${s.fit} ${s.fitSuits}`}>この家族に合いそう</span>}
             </h3>
             <span className={s.price}>{yen(p.estimate.total)}</span>
           </div>
-          <PlanFitNote planFit={planFit} range={p.range} />
+          <PlanFitNote planFit={fit} range={p.range} />
           <div className={s.can}>
             <div>
               <b>プランに含まれるもの</b>

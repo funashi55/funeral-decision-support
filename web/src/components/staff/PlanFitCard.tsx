@@ -26,6 +26,8 @@ export function PlanFitCard({ state, proposal, actions }: { readonly state: Case
       <p className={c.raise}>
         <small>こう切り出しましょう</small>「{proposal.howToRaise}」
       </p>
+      <details className={c.why}>
+        <summary>費用を抑える案・最後に尋ねること・幅ごとの見立て</summary>
       <p className={c.raise}>
         <small>費用を抑えるなら</small>「{proposal.budgetAlternative}」
       </p>
@@ -52,6 +54,7 @@ export function PlanFitCard({ state, proposal, actions }: { readonly state: Case
         })}
       </ul>
       <p className={c.planFitNote}>並びは費用を抑える順です。どの幅にするかを決めるのはご家族です。</p>
+      </details>
       {actions}
     </article>
   );
