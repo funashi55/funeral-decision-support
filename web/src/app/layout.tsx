@@ -7,7 +7,7 @@ const noto = Noto_Sans_JP({ variable: "--font-noto", weight: ["400", "500", "700
 
 export const metadata: Metadata = {
   title: "sou-buddy",
-  description: "葬儀の担当者のそばで、その人の接客のスタイルに合わせて育つバディ",
+  description: "決めることと、覚えておくことは、sou-buddy に。担当者とご遺族の意思決定と認知負荷を支え、悔いのないお別れに気持ちを向けられるように",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

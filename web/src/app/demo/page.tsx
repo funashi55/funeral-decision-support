@@ -24,6 +24,7 @@ export default function DemoPage() {
       <SystemBar current="demo" />
       <main className={s.page}>
         <div className={s.column}>
+          <p className={s.tagline}>決めることと、覚えておくことは、sou-buddy に。</p>
           <div className={s.head}>
             <h1 className={s.title}>デモ</h1>
           </div>

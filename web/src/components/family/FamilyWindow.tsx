@@ -65,7 +65,7 @@ export function FamilyWindow({ token }: { readonly token: string }) {
           ご家族の窓口{view.demo && <span className={s.demoBadge}>デモ・架空のご家族</span>}
         </p>
         <h1 className={s.title}>{view.familyName}さま</h1>
-        <p className={s.lead}>決めたことは、ここにいつでも残っています。急がなくて大丈夫です。</p>
+        <p className={s.lead}>決めたことと、お願いしたいことは、ここにいつでも残っています。覚えておかなくて大丈夫です。</p>
         <p className={`${s.live} ${status === "open" ? s.liveOn : ""}`} role="status">
           {status === "open" ? "いつも最新の内容です" : "つなぎ直しています…"}
         </p>
