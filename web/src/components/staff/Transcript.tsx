@@ -93,7 +93,6 @@ export function Transcript({ state, onAdd, onEdit, onSwapSpeaker }: TranscriptPr
         {count === 0 && (
           <div className={s.emptyState}>
             <p className={s.emptyTitle}>まだ会話がありません</p>
-            <p>上の「▶ 打合せを再生」でデモが始まります。録音しないときは、下の欄にご遺族の言葉を打ってください。</p>
           </div>
         )}
         {state.utterances.map((u) => (

@@ -50,3 +50,15 @@
   .actions .primary { width: 100%; justify-content: center; }
   .head .primary { width: 100%; justify-content: center; }
 }
+
+/* 一覧のカード：頭文字・名前・進み具合・数字をアイコンで */
+.case { grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-4); }
+.avatar { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: 1.25rem; font-weight: 900; }
+.caseBody { display: grid; gap: 4px; min-width: 0; }
+.progress { display: block; height: 5px; border-radius: 999px; background: var(--surface-3); overflow: hidden; margin-top: 4px; max-width: 320px; }
+.progress i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.stats { display: flex; gap: var(--space-3); font-size: var(--text-sm); font-weight: 800; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.stats > span { display: inline-flex; align-items: center; gap: 4px; }
+.statWarn { color: var(--care); }
+@media (max-width: 560px) { .stats { flex-direction: column; gap: 2px; } }
+.section > h2 svg { color: var(--accent); align-self: center; }

@@ -13,6 +13,7 @@ import { detectOversights } from "../../engine/oversight";
 import { allowsPrices, detectPhase } from "../../engine/phase";
 import { speaksAboutBudget, type PlanFitResult } from "../../engine/planFit";
 import { fitsChanged, type QuickFit } from "../../engine/quickFit";
+import { Guide, type GuideStep } from "../guide/Guide";
 import { roleplayHref } from "../system/links";
 import { DecisionBoard } from "./DecisionBoard";
 import { NowView, type TodoAction } from "./NowView";
@@ -30,6 +31,16 @@ const LINE_INTERVAL_MS = 2800;
 const REWRITE_AFTER_LINES = 3;
 /** プランの提案を書き直すまでの、ご家族の発言の数 */
 const PLAN_REWRITE_AFTER = 3;
+
+/** 打合せの画面のガイド（見えている場所だけを順に照らす） */
+const CONSOLE_GUIDE: readonly GuideStep[] = [
+  { target: "demo", title: "デモを再生", body: "架空の打合せの会話が流れます。実際の打合せでは、会話の欄に打つか、マイクで聞き取ります。" },
+  { target: "now-tabs", title: "いま見ること", body: "提案・やること・基本情報を切り替えます。数字は、まだ残っている件数です。" },
+  { target: "proposal", title: "この流れでの提案", body: "会話に合わせた提案と、切り出し方の例が出ます。伝えたものは、会話から読み取って自動で下に畳みます。" },
+  { target: "composer", title: "会話を入れる", body: "話したことを打つか、マイクで聞き取ります。担当者かご遺族かは自動で聞き分けます。違っていたら、発言の名前を押すと入れ替わります。" },
+  { target: "nav", title: "画面の切り替え", body: "決めることの一覧、プランの見積もり、手配（発注書）に移れます。" },
+  { target: "inbox", title: "ご家族の窓口", body: "ご家族のスマホで開くページのリンクと QR コード、ご家族からの質問がここに届きます。" },
+];
 
 type View = "now" | "decisions" | "plans" | "orders";
 const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon: string }[] = [
@@ -345,7 +356,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           <span className={c.brandMeta}>{staffName ? `担当：${staffName}` : "担当：新人（2年目）"}</span>
           {!connected && <span className={c.reconnect}>再接続中…</span>}
         </div>
-        <div className={c.navList} role="tablist" aria-orientation="vertical" aria-label="画面">
+        <div className={c.navList} role="tablist" aria-orientation="vertical" aria-label="画面" data-guide="nav">
           {VIEWS.map((v) => (
             <button
               key={v.id}
@@ -380,7 +391,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
             <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
             <span>ロールプレイ</span>
           </Link>
-          <button type="button" className={`${c.navItem} ${s.inboxBtn}`} onClick={() => setInboxOpen((o) => !o)} aria-expanded={inboxOpen}>
+          <button type="button" className={`${c.navItem} ${s.inboxBtn}`} onClick={() => setInboxOpen((o) => !o)} aria-expanded={inboxOpen} data-guide="inbox">
             <Icon d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             <span>ご家族の窓口</span>
             {openRequests > 0 && (
@@ -394,7 +405,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
 
       <div className={c.main}>
         <header className={c.topbar}>
-          <div className={c.demo} role="group" aria-label="デモの操作">
+          <div className={c.demo} role="group" aria-label="デモの操作" data-guide="demo">
             <span className={c.demoLabel}>デモ</span>
             <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => void togglePlay()}>
               {recording && <span className={s.recDot} aria-hidden="true" />}
@@ -407,6 +418,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               最初から
             </button>
           </div>
+          <Guide steps={CONSOLE_GUIDE} storageKey="console" label="打合せの画面" inline />
         </header>
         <main className={c.stage} id="main-view" role="tabpanel" aria-labelledby={`tab-${view}`}>
           {view === "now" && (

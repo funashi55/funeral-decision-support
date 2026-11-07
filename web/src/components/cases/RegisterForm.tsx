@@ -2,7 +2,23 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FUNERAL_STYLE_OPTIONS, MEMBERSHIP_OPTIONS, RESTING_OPTIONS, SEX_OPTIONS } from "../../engine/registration";
+import { Guide, type GuideStep } from "../guide/Guide";
 import s from "./cases.module.css";
+
+const GUIDE: readonly GuideStep[] = [
+  { target: "required", title: "必須は2つだけ", body: "家名と喪主の続柄があれば登録できます。わからないところは空のままで構いません。" },
+  { target: "membership", title: "互助会", body: "見積もりの価格（会員・一般）がこれで決まります。わからなければ会員価格で仮に出します。" },
+  { target: "intake", title: "受付で伺ったこと", body: "ここで選んだことは、打合せの「決めること」に確定済みで入ります。未定は打合せで決めます。" },
+  { target: "submit", title: "打合せを始める", body: "登録すると、このご家族の打合せの画面が開きます。" },
+];
+
+function SectionIcon({ d }: { readonly d: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
+  );
+}
 
 interface Envelope {
   readonly success: boolean;
@@ -65,9 +81,11 @@ export function RegisterForm() {
 
   return (
     <form className={s.form} onSubmit={(e) => void submit(e)} aria-label="喪家の登録">
-      <section className={s.section}>
+      <Guide steps={GUIDE} storageKey="register" label="登録" />
+      <section className={s.section} data-guide="required">
         <h2>
-          ご家族<small>家名と喪主の続柄だけは必ず</small>
+          <SectionIcon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+          ご家族
         </h2>
         <div className={s.grid}>
           <label className={s.field}>
@@ -80,7 +98,7 @@ export function RegisterForm() {
             <span>
               喪主の続柄<span className={s.req}>必須</span>
             </span>
-            <input name="relation" required maxLength={20} placeholder="例：長男（故人から見て）" autoComplete="off" />
+            <input name="relation" required maxLength={20} placeholder="例：長男" autoComplete="off" />
           </label>
           <label className={s.field}>
             喪主のお名前
@@ -91,16 +109,16 @@ export function RegisterForm() {
             <input name="phone" type="tel" maxLength={20} inputMode="tel" autoComplete="off" />
           </label>
         </div>
-        <div>
-          <p className={s.legend}>互助会の会員か</p>
+        <div data-guide="membership">
+          <p className={s.legend}>互助会</p>
           <Choices name="membership" options={MEMBERSHIP_OPTIONS} initial="わからない" />
-          <p className={s.note}>見積もりの価格（会員価格・一般価格）がこれで決まります。わからなければ会員価格で仮に出します。</p>
         </div>
       </section>
 
       <section className={s.section}>
         <h2>
-          故人<small>わかる範囲で</small>
+          <SectionIcon d="M12 21s-7-4.5-7-11a7 7 0 0 1 14 0c0 6.5-7 11-7 11ZM12 10h.01" />
+          故人
         </h2>
         <div className={s.grid}>
           <label className={s.field}>
@@ -126,9 +144,10 @@ export function RegisterForm() {
         </div>
       </section>
 
-      <section className={s.section}>
+      <section className={s.section} data-guide="intake">
         <h2>
-          受付で伺ったこと<small>未定のままで大丈夫です</small>
+          <SectionIcon d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" />
+          受付で伺ったこと
         </h2>
         <div>
           <p className={s.legend}>ご安置の場所</p>
@@ -160,9 +179,8 @@ export function RegisterForm() {
         </p>
       )}
       <div className={s.actions}>
-        <span className={s.note}>登録すると、このご家族の打合せの画面が開きます。</span>
-        <button type="submit" className={s.primary} disabled={busy}>
-          {busy ? "登録しています…" : "登録して打合せを始める"}
+        <button type="submit" className={s.primary} disabled={busy} data-guide="submit">
+          {busy ? "登録しています…" : "登録して打合せへ"}
           <span aria-hidden="true">→</span>
         </button>
       </div>

@@ -1,0 +1,34 @@
+/* ガイド：関係する場所を照らし、そばに短い説明を出す */
+.helpBtn {
+  position: fixed; right: max(16px, env(safe-area-inset-right)); top: 12px; z-index: 30;
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); color: var(--accent); font-weight: 900; font-size: 1rem;
+  border: 1px solid var(--line-2); box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-fast) var(--ease), background var(--duration-fast);
+}
+.helpBtn:hover { background: var(--accent-soft); transform: translateY(-1px); }
+.helpBtn:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+
+.layer { position: fixed; inset: 0; z-index: 100; }
+.backdrop { position: absolute; inset: 0; background: transparent; cursor: default; }
+.spot {
+  position: fixed; border-radius: 12px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(18, 33, 41, 0.58), 0 0 0 3px var(--accent-2);
+  transition: top 280ms var(--ease), left 280ms var(--ease), width 280ms var(--ease), height 280ms var(--ease);
+}
+.box {
+  position: fixed; padding: 1rem 1.1rem 0.9rem; border-radius: 14px; background: var(--surface);
+  box-shadow: 0 24px 48px -16px rgba(18, 33, 41, 0.5); animation: pop 220ms var(--ease);
+}
+@keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .spot { transition: none; } .box { animation: none; } }
+.count { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; color: var(--accent); }
+.title { margin-top: 2px; font-size: 1rem; font-weight: 900; color: var(--ink); }
+.body { margin-top: 0.35rem; font-size: 0.86rem; line-height: 1.75; color: var(--ink-2); }
+.actions { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.8rem; }
+.skip { margin-right: auto; font-size: 0.8rem; font-weight: 700; color: var(--ink-3); }
+.prev, .next { min-height: 36px; padding: 0 1rem; border-radius: 999px; font-size: 0.85rem; font-weight: 800; }
+.prev { color: var(--ink-2); background: var(--surface-3); }
+.next { color: #fff; background: var(--accent); }
+.skip:focus-visible, .prev:focus-visible, .next:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.helpInline { position: static; flex: none; }

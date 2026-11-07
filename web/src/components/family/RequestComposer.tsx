@@ -48,7 +48,7 @@ export function RequestComposer({ ref, token, decided, draft, onDraftChange, onS
   };
 
   return (
-    <section ref={ref} className={`${s.section} ${s.composer}`} aria-labelledby="composer-title">
+    <section ref={ref} className={`${s.section} ${s.composer}`} aria-labelledby="composer-title" data-guide="composer">
       <div className={s.sectionHead}>
         <h2 id="composer-title">担当者に伝える</h2>
       </div>
@@ -89,7 +89,6 @@ export function RequestComposer({ ref, token, decided, draft, onDraftChange, onS
             {text.length} / {REQUEST_TEXT_MAX}
           </span>
         </label>
-        <p className={s.note}>送った内容で、決まったことが勝手に変わることはありません。担当者が確かめて、お返事します。</p>
         {error && <p className={s.error} role="alert">{error}</p>}
         {sentNotice && <p className={s.sent} role="status">担当者に届きました。</p>}
         <button type="submit" className={s.submit} disabled={disabled}>

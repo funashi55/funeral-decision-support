@@ -71,7 +71,7 @@ export function InputDock({ onAdd }: InputDockProps) {
   };
 
   return (
-    <div className={s.dock}>
+    <div className={s.dock} data-guide="composer">
       {micOpen && !consented && (
         <div className={s.consent} role="group" aria-label="録音の同意">
           <p>
@@ -130,7 +130,6 @@ export function InputDock({ onAdd }: InputDockProps) {
           void submit();
         }}
       >
-        <p className={s.autoSpeaker}>話した人（担当者・ご遺族）は自動で聞き分けます。違っていたら、発言の名前を押すと入れ替わります</p>
         <div className={s.composerRow}>
           <textarea
             ref={area}

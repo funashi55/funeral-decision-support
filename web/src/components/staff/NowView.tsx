@@ -109,7 +109,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
 
   return (
     <div className={`${c.view} ${c.wide}`}>
-      <div className={c.nowTabs} role="tablist" aria-label="いまの画面">
+      <div className={c.nowTabs} role="tablist" aria-label="いまの画面" data-guide="now-tabs">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -141,12 +141,12 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
         </div>
       )}
       <div role="tabpanel" id="now-panel-proposal" aria-labelledby="now-tab-proposal" className={`${c.nowPanel} ${c.nowMain}`} hidden={tab !== "proposal"}>
-        <section aria-labelledby="proposal-title" className={c.block}>
+        <section aria-labelledby="proposal-title" className={c.block} data-guide="proposal">
           <h2 id="proposal-title" className={c.blockTitle}>
             この流れでの提案
             {thinking && <span className={c.thinking}>考えています…</span>}
           </h2>
-          {!rec && <p className={c.quiet}>ご家族のお話が進むと、この会話に合わせた提案と、切り出し方の例がここに出ます。</p>}
+          {!rec && <p className={c.quiet}>会話が進むと、ここに提案が出ます</p>}
           {rec && (
             <>
               <p className={c.wishBand}>
@@ -188,7 +188,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
           <h2 id="check-title" className={c.blockTitle}>
             確認・注意<span className={c.laneCount}>{checkCount}</span>
           </h2>
-          {checkCount === 0 && <p className={c.quiet}>確かめておくことや、取り消せない手配の注意がここに出ます。</p>}
+          {checkCount === 0 && <p className={c.quiet}>いまはありません</p>}
           {alerts.map((a) => (
             <article key={a.id} className={c.alert}>
               <h4>
@@ -284,7 +284,7 @@ function BasicInfo({ state }: { readonly state: CaseState }) {
           受付で伺ったこと
         </h2>
         {shown.length === 0 ? (
-          <p className={c.quiet}>受付で伺ったことはまだありません。</p>
+          <p className={c.quiet}>まだありません</p>
         ) : (
           <dl className={c.infoList}>
             {shown.map(([k, v]) => (
@@ -301,7 +301,7 @@ function BasicInfo({ state }: { readonly state: CaseState }) {
           決まったこと{decided.length > 0 && <span className={c.factsCount}>{decided.length}</span>}
         </h2>
         {decided.length === 0 ? (
-          <p className={c.quiet}>確定した項目がここに並びます。</p>
+          <p className={c.quiet}>まだありません</p>
         ) : (
           <dl className={c.infoList}>
             {decided.map((d) => (
@@ -481,7 +481,7 @@ function Facts({ state, extracting }: { readonly state: CaseState; readonly extr
         {extracting && <span className={c.thinking}>整理中…</span>}
       </h2>
       {facts.length === 0 ? (
-        <p className={c.quiet}>ご遺族の言葉から、家族の事情をここに拾い上げます。</p>
+        <p className={c.quiet}>会話から拾った事情がここに並びます</p>
       ) : (
         <>
           <ul className={c.facts}>

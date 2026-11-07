@@ -9,7 +9,7 @@ interface DecidedListProps {
 
 export function DecidedList({ decided, onAskChange }: DecidedListProps) {
   return (
-    <section className={s.section} aria-labelledby="decided-title">
+    <section className={s.section} aria-labelledby="decided-title" data-guide="decided">
       <div className={s.sectionHead}>
         <h2 id="decided-title">決まったこと</h2>
         <span className={s.count}>{decided.length} 件</span>

@@ -173,6 +173,7 @@ export function ChatWidget({ token, view }: ChatWidgetProps) {
       <button
         ref={launcher}
         type="button"
+        data-guide="chat"
         className={`${s.launcher} ${open ? s.launcherOpen : ""}`}
         onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}

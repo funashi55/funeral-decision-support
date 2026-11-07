@@ -13,13 +13,9 @@ export default function NewCasePage() {
       <main className={s.page}>
         <div className={s.column}>
           <div className={s.head}>
-            <div>
-              <p className={s.eyebrow}>受付</p>
-              <h1 className={s.title}>新しいご家族を登録</h1>
-              <p className={s.lead}>お迎えの連絡で伺ったことを入れます。わからないことは空のままで、打合せで決めます。</p>
-            </div>
+            <h1 className={s.title}>ご家族を登録</h1>
             <Link className={s.ghost} href="/staff">
-              ← ご家族の一覧へ
+              ← 一覧へ
             </Link>
           </div>
           <RegisterForm />

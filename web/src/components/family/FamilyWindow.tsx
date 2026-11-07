@@ -2,17 +2,26 @@
 import { useRef, useState } from "react";
 import { useFamilyStream } from "../../client/useFamilyStream";
 import type { FamilyView } from "../../engine/familyView";
+import { Guide, type GuideStep } from "../guide/Guide";
 import { ChatWidget } from "./ChatWidget";
 import { DecidedList } from "./DecidedList";
 import { RequestComposer, type ComposerDraft } from "./RequestComposer";
 import { SentList } from "./SentList";
 import s from "./family.module.css";
 
+/** ご家族向けのガイド（自動では始めず、右上の「？」から） */
+const FAMILY_GUIDE: readonly GuideStep[] = [
+  { target: "decided", title: "決まったこと", body: "担当者と決めたことが残ります。変えたいときは、ここから担当者にお願いできます。" },
+  { target: "upcoming", title: "これから決めること", body: "これから担当者と一緒に決める順番です。" },
+  { target: "composer", title: "担当者に送る", body: "聞きたいこと・変えたいことを送れます。送っても、決まったことが勝手に変わることはありません。" },
+  { target: "chat", title: "案内役に尋ねる", body: "決まったことの確認は、いつでも案内役（AI）に尋ねられます。" },
+];
+
 const EMPTY_DRAFT: ComposerDraft = { kind: "question", decisionId: null };
 
 function Upcoming({ view }: { readonly view: FamilyView }) {
   return (
-    <section className={s.section} aria-labelledby="upcoming-title">
+    <section className={s.section} aria-labelledby="upcoming-title" data-guide="upcoming">
       <div className={s.sectionHead}>
         <h2 id="upcoming-title">これから決めること</h2>
       </div>
@@ -53,7 +62,7 @@ export function FamilyWindow({ token }: { readonly token: string }) {
       <header className={s.hero}>
         <p className={s.eyebrow}>ご家族の窓口</p>
         <h1 className={s.title}>{view.familyName}さま</h1>
-        <p className={s.lead}>担当者と決めたことは、ここにいつでも残っています。急いで決めなくて大丈夫です。気になることは、いつでも担当者にお送りください。</p>
+        <p className={s.lead}>決めたことは、ここにいつでも残っています。急がなくて大丈夫です。</p>
         <p className={`${s.live} ${status === "open" ? s.liveOn : ""}`} role="status">
           {status === "open" ? "担当者の画面とつながっています" : "つなぎ直しています…"}
         </p>
@@ -77,6 +86,7 @@ export function FamilyWindow({ token }: { readonly token: string }) {
       <SentList requests={view.requests} />
 
       <ChatWidget token={token} view={view} />
+      <Guide steps={FAMILY_GUIDE} storageKey="family" label="窓口" autoStart={false} />
 
       <footer className={s.footer}>
         この画面は担当者からお渡ししたリンクでだけ開けます。リンクはご家族の中でだけ共有してください。
