@@ -48,7 +48,7 @@ const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon
   { id: "now", label: "いま", icon: "M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" },
   { id: "decisions", label: "決めること", icon: "M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" },
   { id: "plans", label: "プランの案", icon: "M4 6h16M4 12h16M4 18h10" },
-  { id: "orders", label: "手配と書き出し", icon: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6ZM14 3v6h6M8 13h8M8 17h5" },
+  { id: "orders", label: "書類作成", icon: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6ZM14 3v6h6M8 13h8M8 17h5" },
 ];
 
 function Icon({ d }: { readonly d: string }) {
@@ -513,7 +513,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           )}
           {view === "orders" && (
             <div className={c.view}>
-              <h1 className={c.viewTitle}>手配と書き出し</h1>
+              <h1 className={c.viewTitle}>書類作成</h1>
               <OrdersPanel state={state} />
             </div>
           )}

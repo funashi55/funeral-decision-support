@@ -51,7 +51,7 @@ test("信頼関係の段階ではプランの金額を出さず、段階が進�
 test("確定したものだけが手配に回り、CSV に書き出される", async ({ page, request }) => {
   await confirmDecision(request, "cremation_date", "11月10日 午前10時 中央斎場");
   await page.goto(`/staff/${CASE_ID}`);
-  await page.getByRole("tab", { name: /手配と書き出し/ }).click();
+  await page.getByRole("tab", { name: /書類作成/ }).click();
   const orders = page.getByTestId("orders");
   await expect(orders.getByText("火葬場の空き確認と予約").locator("..")).toContainText("手配できる");
   await expect(orders.getByText("寺院への連絡").locator("..")).toContainText("確定待ち");

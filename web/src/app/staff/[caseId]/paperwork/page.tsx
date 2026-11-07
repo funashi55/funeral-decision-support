@@ -143,7 +143,7 @@ export default async function PaperworkPage({ params, searchParams }: PageProps<
   if (!context || sheets.length === 0) {
     return (
       <main className={s.page} data-print-page>
-        <p className={s.bar}>まだ発注書がありません。担当者の画面の「手配」で、発注リストの「発注書を作る」を押してください。</p>
+        <p className={s.bar}>まだ発注書がありません。担当者の画面の「書類作成」で、発注リストの「発注書を作る」を押してください。</p>
       </main>
     );
   }

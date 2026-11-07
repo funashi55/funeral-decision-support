@@ -58,7 +58,7 @@ test("担当者の画面", async ({ page, request }) => {
   }
   await page.getByRole("button", { name: /すべて/ }).click();
   await page.waitForTimeout(2500);
-  await page.getByRole("tab", { name: /手配と書き出し/ }).click();
+  await page.getByRole("tab", { name: /書類作成/ }).click();
   await page.waitForTimeout(1500);
   const popup = page.waitForEvent("popup");
   await page.getByTestId("orders").locator("li", { hasText: "香典返し" }).getByRole("button", { name: /発注書を作る/ }).click();
