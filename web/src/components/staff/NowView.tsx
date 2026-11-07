@@ -11,6 +11,9 @@ import { getGriefPrinciple } from "../../domain/griefCare";
 import { FAREWELL_CUES, FAREWELL_DECISION, HANDLED_LABEL, PLAN_CUES, handledBy, keywordCues, keywordHits, textKey, type HandledBy, type HandledCheck } from "../../engine/handled";
 import { TOPIC_CUES } from "../../engine/nextSteps";
 import { BasicInfo, type FactHandler } from "./BasicInfo";
+import { OpeningCard } from "./OpeningCard";
+import { PlacesPanel } from "./PlacesPanel";
+import { stillOpening } from "../../domain/opening";
 import { CheckIcon, TaskRow } from "./TaskBoard";
 import t from "./tasks.module.css";
 import { GriefCareLane } from "./GriefCareLane";
@@ -172,6 +175,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
         <div role="tabpanel" id="now-panel-info" aria-labelledby="now-tab-info" className={`${c.nowPanel} ${c.nowMain}`}>
           <Facts state={state} extracting={extracting} />
           <BasicInfo state={state} onFact={onFact} />
+          <PlacesPanel state={state} />
         </div>
       )}
       <div role="tabpanel" id="now-panel-proposal" aria-labelledby="now-tab-proposal" className={`${c.nowPanel} ${c.nowMain}`} hidden={tab !== "proposal"}>
@@ -201,6 +205,8 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               </p>
             </div>
           )}
+          {/* 入り方：決めることより先に、お話を引き出す（お悔やみ → 亡くなるまで → 最期 → 故人のこと） */}
+          {stillOpening(state.utterances) && <OpeningCard state={state} />}
           {!rec && !thinking && state.utterances.length > 0 && (
             <p className={c.quiet}>
               {farewell && !farewell.ok ? "言い回しが守る線にかかったため、今回は出していません（選択肢の事実は「提案」の比較から見られます）。" : "まだ作っていません。"}
@@ -398,6 +404,7 @@ function TodoList({ state, impacted, oversights, onConfirm, onTodo }: Pick<NowVi
         </p>
       </header>
 
+      {next.length === 0 && stillOpening(state.utterances) && <p className={c.quiet}>いまは、お話を伺うところです。決めることは、亡くなるまでのことや故人のことを伺ってから進めます（「寄り添い・提案」の「まず、お話を伺う」）。</p>}
       {next.length > 0 && (
         <div data-testid="next-steps">
           {section(

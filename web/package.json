@@ -17,7 +17,9 @@
     "altar:check": "tsx --env-file=.env.local scripts/altar-check.ts",
     "demo:record": "playwright test -c playwright.record.config.ts",
     "trial:pull": "tsx --env-file=.env.trial scripts/trial-pull.ts",
-    "test:e2e:trial": "playwright test -c playwright.trial.config.ts"
+    "test:e2e:trial": "playwright test -c playwright.trial.config.ts",
+    "directory:import": "tsx scripts/directory-import.ts",
+    "directory:push": "tsx --env-file=.env.trial scripts/directory-push.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",

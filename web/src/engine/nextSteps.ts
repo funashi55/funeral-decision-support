@@ -11,6 +11,7 @@
  * 前提がまだの項目は下げ、「先に〇〇を」と添える
  */
 import { DECISIONS, type DecisionItem, type Phase } from "../domain/decisions";
+import { stillOpening } from "../domain/opening";
 import type { CaseState } from "./case";
 import type { OversightAlert } from "./oversight";
 import { detectPhase } from "./phase";
@@ -63,6 +64,8 @@ export function nextSteps(state: CaseState, oversights: readonly OversightAlert[
   const phaseNow = PHASE_ORDER.indexOf(detectPhase(state.utterances).phase);
   const recent = state.utterances.slice(-RECENT);
   const steps: NextStep[] = [];
+  // 入り方の途中（お話を伺っている最中）は、決めることを押し上げない。見落とし注意・話に出たこと・候補だけを出す
+  const opening = stillOpening(state.utterances);
 
   for (const item of DECISIONS) {
     const d = state.decisions[item.id];
@@ -77,6 +80,7 @@ export function nextSteps(state: CaseState, oversights: readonly OversightAlert[
     if (said) reasons.push({ score: 4, text: `「${short(said.text, 16)}」の話が出ています` });
 
     if (d?.status === "candidate") reasons.push({ score: 2, text: `会話から候補が出ています（${short(d.value, 14)}）` });
+    if (opening && !alert && !said && d?.status !== "candidate") continue;
 
     const missing = item.dependsOn.filter((id) => !filled(state, id));
     if (item.dependsOn.length > 0 && missing.length === 0 && !d) reasons.push({ score: 2, text: "前提がそろい、決められるようになりました" });

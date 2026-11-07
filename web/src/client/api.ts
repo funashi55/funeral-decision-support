@@ -7,6 +7,7 @@ import type { SavedRecommendations } from "../server/recommendationStore";
 import type { PlanFitResult } from "../engine/planFit";
 import type { QuickFit } from "../engine/quickFit";
 import type { FactKey } from "../engine/facts";
+import type { Place } from "../domain/directory";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -31,6 +32,8 @@ export const api = {
   recommendations: (caseId: string) => call<SavedRecommendations>(`/api/cases/${caseId}/recommendations`),
   planFit: (caseId: string) => post<PlanFitResult & { basedOn?: number }>(`/api/cases/${caseId}/plan-fit`),
   quickFit: (caseId: string) => post<QuickFit>(`/api/cases/${caseId}/quick-fit`),
+  /** 関係先の名簿（デモは架空、本番は自社の名簿） */
+  directory: (caseId: string) => call<Place[]>(`/api/cases/${caseId}/directory`),
   paperwork: (caseId: string) => call<Paperwork | null>(`/api/cases/${caseId}/paperwork`),
   makePaperwork: (caseId: string) => post<Paperwork>(`/api/cases/${caseId}/paperwork`),
   orderSheets: (caseId: string) => call<OrderSheetMap>(`/api/cases/${caseId}/order-sheets`),

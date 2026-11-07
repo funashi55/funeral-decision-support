@@ -1,0 +1,7 @@
+[
+  { "id": "demo-temple-1", "kind": "temple", "name": "架空山 東光寺（デモ）", "aliases": ["東光寺さん"], "sect": "浄土真宗", "address": "東京都千代田区丸の内1丁目", "phone": "000-0000-0101（デモ）" },
+  { "id": "demo-temple-2", "kind": "temple", "name": "架空山 西福寺（デモ）", "aliases": ["西福寺さん"], "sect": "曹洞宗", "address": "東京都八王子市元本郷町3丁目", "phone": "000-0000-0102（デモ）" },
+  { "id": "demo-crematorium", "kind": "crematorium", "name": "市営斎場（デモ）", "aliases": ["市営斎場", "市の斎場"], "address": "東京都江東区青海2丁目", "phone": "000-0000-0201（デモ）" },
+  { "id": "demo-hall", "kind": "hall", "name": "東会館（デモ）", "aliases": ["東会館"], "address": "東京都中央区日本橋1丁目", "phone": "000-0000-0301（デモ）" },
+  { "id": "demo-cemetery", "kind": "cemetery", "name": "架空市営 青葉霊園（デモ）", "aliases": ["青葉霊園", "市営の霊園"], "address": "東京都府中市多磨町", "phone": "000-0000-0401（デモ）" }
+]
