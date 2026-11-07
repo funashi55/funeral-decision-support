@@ -9,6 +9,7 @@ import type { QuickFit } from "../engine/quickFit";
 import type { FactKey } from "../engine/facts";
 import type { Place } from "../domain/directory";
 import type { TravelView } from "../domain/travel";
+import type { Amount, BuddyProfile, Tone } from "../domain/buddy";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -36,6 +37,10 @@ export const api = {
   /** 関係先の名簿（デモは架空、本番は自社の名簿） */
   directory: (caseId: string) => call<Place[]>(`/api/cases/${caseId}/directory`),
   travel: (caseId: string) => call<TravelView>(`/api/cases/${caseId}/travel`),
+  /** この案件の担当者のバディ（設定・自分の言い方・使った記録） */
+  buddy: (caseId: string) => call<BuddyProfile>(`/api/cases/${caseId}/buddy`),
+  buddySettings: (caseId: string, body: { tone?: Tone; amount?: Amount }) => call<BuddyProfile>(`/api/cases/${caseId}/buddy`, { method: "PATCH", body: JSON.stringify(body) }),
+  buddyPhrase: (caseId: string, action: "add" | "remove", principleId: string, text: string) => post<BuddyProfile>(`/api/cases/${caseId}/buddy`, { action, principleId, text }),
   paperwork: (caseId: string) => call<Paperwork | null>(`/api/cases/${caseId}/paperwork`),
   makePaperwork: (caseId: string) => post<Paperwork>(`/api/cases/${caseId}/paperwork`),
   orderSheets: (caseId: string) => call<OrderSheetMap>(`/api/cases/${caseId}/order-sheets`),

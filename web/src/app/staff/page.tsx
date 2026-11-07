@@ -7,7 +7,7 @@ import s from "../../components/cases/cases.module.css";
 import { SystemBar } from "../../components/system/SystemBar";
 import { store } from "../../server/store";
 
-export const metadata: Metadata = { title: "ご家族｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "ご家族｜sou-buddy", robots: { index: false, follow: false } };
 
 /** 一覧に並べる数（多いときは新しい順にここまで） */
 const LIST_MAX = 30;

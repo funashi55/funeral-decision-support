@@ -243,10 +243,12 @@ export type FarewellResult =
     };
 
 /** 生成 → 機械検査 → 判定役。落ちたら指摘を添えて1回だけ出し直す */
-export async function recommendFarewell(state: CaseState, generate: GenerateDraft, judge: JudgeDraft, knowledge?: Knowledge): Promise<FarewellResult> {
+export async function recommendFarewell(state: CaseState, generate: GenerateDraft, judge: JudgeDraft, knowledge?: Knowledge, style = ""): Promise<FarewellResult> {
   const ctx = buildFarewellContext(state, knowledge);
   const source = yukanReferences(state.profile).source;
-  let prompt = ctx.prompt;
+  // 担当者の話し方（言い方だけ。守る線の検査は同じように通す）
+  const base = ctx.prompt + style;
+  let prompt = base;
   let rejected: GuardViolation[] = [];
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     const draft = FarewellDraftSchema.parse(await generate(FAREWELL_SYSTEM, prompt));
@@ -256,7 +258,7 @@ export async function recommendFarewell(state: CaseState, generate: GenerateDraf
       return { ok: true, recommendation: enrichDraft(draft, ctx, source), attempts: attempt, rejected };
     }
     rejected = [...rejected, ...violations];
-    prompt = `${ctx.prompt}\n\n# 前回の案は次の理由で出せませんでした。直してください\n${violations.map((v) => `- ${v.message}${v.quote ? `（「${v.quote}」）` : ""}`).join("\n")}`;
+    prompt = `${base}\n\n# 前回の案は次の理由で出せませんでした。直してください\n${violations.map((v) => `- ${v.message}${v.quote ? `（「${v.quote}」）` : ""}`).join("\n")}`;
   }
   return { ok: false, violations: rejected, attempts: 2, facts: allOptionFacts() };
 }

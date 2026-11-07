@@ -2,6 +2,8 @@ import { appendAudits, auditOfFarewell } from "../../../../../engine/audit";
 import { recommendFarewell } from "../../../../../engine/farewell";
 import { generateFarewellDraft, judgeRecommendation } from "../../../../../engine/models";
 import { store } from "../../../../../server/store";
+import { loadBuddy } from "../../../../../server/buddy";
+import { stylePrompt } from "../../../../../domain/buddy";
 import { spendAiCall } from "../../../../../server/budget";
 import { fail, handleError, ok } from "../../../../../server/http";
 import { recommendationStore } from "../../../../../server/recommendationStore";
@@ -14,7 +16,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     if (state.utterances.length === 0) return fail("まだ会話がありません", 409);
     const overBudget = await spendAiCall(req);
     if (overBudget) return overBudget;
-    const result = await recommendFarewell(state, generateFarewellDraft, judgeRecommendation);
+    const result = await recommendFarewell(state, generateFarewellDraft, judgeRecommendation, undefined, stylePrompt(await loadBuddy(state)));
     const latest = await store.get(caseId) ?? state;
     await store.save(appendAudits(latest, auditOfFarewell(result, Date.now())));
     const saved = { ...result, basedOn: state.utterances.length };

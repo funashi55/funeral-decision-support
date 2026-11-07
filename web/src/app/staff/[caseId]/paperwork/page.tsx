@@ -9,7 +9,7 @@ import { orderSheetStore } from "../../../../server/orderSheetStore";
 import { paperworkStore } from "../../../../server/paperworkStore";
 import { store } from "../../../../server/store";
 
-export const metadata: Metadata = { title: "発注書｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "発注書｜sou-buddy", robots: { index: false, follow: false } };
 
 
 /** 故人の年齢・性別を書く業者（花は故人に合わせて色や形を選ぶため） */

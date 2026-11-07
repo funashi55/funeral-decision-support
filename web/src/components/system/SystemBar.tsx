@@ -29,7 +29,7 @@ export function SystemBar({
     <>
       <header className={s.bar}>
         <Link href="/" className={s.brand}>
-          葬儀の打合せ支援
+          sou-buddy
         </Link>
         <nav aria-label="システムの画面">
           <ul className={s.items}>

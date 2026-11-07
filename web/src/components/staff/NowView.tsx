@@ -17,6 +17,8 @@ import { stillOpening } from "../../domain/opening";
 import { CheckIcon, TaskRow } from "./TaskBoard";
 import t from "./tasks.module.css";
 import { GriefCareLane } from "./GriefCareLane";
+import { orderCare, type BuddyProfile } from "../../domain/buddy";
+import b from "./buddy.module.css";
 import { PlanFitCard } from "./PlanFitCard";
 import { familyAskedForMore, familyWantsToSave, type PlanFitProposal } from "../../engine/planFit";
 import { FeedbackButtons, type FeedbackHandler } from "./FeedbackButtons";
@@ -45,6 +47,10 @@ interface NowViewProps {
   /** 担当者が自分で足すやること（足す・済みにする・消す） */
   readonly onTodo: TodoHandler;
   readonly onFeedback: FeedbackHandler;
+  /** この担当者のバディ（寄り添いの並び・支援の量・自分の言い方） */
+  readonly buddy?: BuddyProfile | null;
+  /** 寄り添いの言葉を、自分の言い方として残す */
+  readonly onSavePhrase?: (principleId: string, text: string) => Promise<boolean>;
   /** お別れの仕方の詳しい比較と根拠（FarewellPanel）。畳んで置く */
   readonly children: React.ReactNode;
 }
@@ -76,7 +82,9 @@ interface DoneItem {
  * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）。
  * 伝えた提案・確定した項目に関わる提案・会話で触れた提案は、下の「済んだこと」に畳む
  */
-export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onRecommend, onConfirm, onFact, onTodo, onFeedback, children }: NowViewProps) {
+export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onRecommend, onConfirm, onFact, onTodo, onFeedback, buddy, onSavePhrase, children }: NowViewProps) {
+  const [showAll, setShowAll] = useState(false);
+  const focused = buddy?.amount === "focused" && !showAll;
   const [tab, setTab] = useState<NowTab>("proposal");
   const rec = farewell?.ok ? farewell.recommendation : null;
   // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く。
@@ -107,7 +115,8 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
     const cues = keywordCues(text);
     return { target, cues, minHits: keywordHits(cues), basedOn: farewellBasedOn };
   };
-  const care = (rec?.griefCare ?? []).filter((g) => active({ ...byWords(`care:${g.principleId}`, g.words) }, "声かけ", getGriefPrinciple(g.principleId).name));
+  const careAll = orderCare(buddy ?? null, (rec?.griefCare ?? []).filter((g) => active({ ...byWords(`care:${g.principleId}`, g.words) }, "声かけ", getGriefPrinciple(g.principleId).name)));
+  const care = focused ? careAll.slice(0, 1) : careAll;
   // 注意は、きっかけの発言のあとに担当者がその話題に触れたら済んだとみなす
   // （担当者が自分で話題にした発言はきっかけに数えない。きっかけがご家族の発言にないときは、最初から見る）
   const after = (ids: readonly string[]): number => {
@@ -215,7 +224,12 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               </button>
             </p>
           )}
-          <GriefCareLane state={state} items={care} actions={(id) => <div className={c.headActions}>{told(`care:${id}`)}</div>} />
+          <GriefCareLane state={state} items={care} phrases={buddy?.phrases} onSavePhrase={onSavePhrase} actions={(id) => <div className={c.headActions}>{told(`care:${id}`)}</div>} />
+          {careAll.length > care.length && (
+            <button type="button" className={b.more} onClick={() => setShowAll(true)}>
+              ほかの言葉も見る（{careAll.length - care.length}）
+            </button>
+          )}
         </section>
 
         <details className={`${c.block} ${c.proposalFold}`} open={proposalsReady || undefined} data-guide="proposal" key={proposalsReady ? "ready" : "early"}>
@@ -229,7 +243,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
           {rec && (
             <>
               <ul className={c.proposals}>
-                {proposals.map((o) => (
+                {(focused ? proposals.slice(0, 1) : proposals).map((o) => (
                   <li key={o.id} className={c.proposal}>
                     <div className={c.proposalHead}>
                       <b>{o.label}</b>
@@ -246,6 +260,11 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
                   </li>
                 ))}
               </ul>
+              {focused && proposals.length > 1 && (
+                <button type="button" className={b.more} onClick={() => setShowAll(true)}>
+                  ほかの案も見る（{proposals.length - 1}）
+                </button>
+              )}
               {showPlan && planFit && <PlanFitCard state={state} proposal={planFit} actions={<div className={c.headActions}>{told("plan:fit")}</div>} />}
               {rec.timeAdvice && (
                 <details className={c.why}>

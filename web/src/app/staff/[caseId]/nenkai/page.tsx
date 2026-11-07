@@ -3,7 +3,7 @@ import { NenkaiSheet } from "../../../../components/paperwork/NenkaiSheet";
 import s from "../../../../components/paperwork/sheet.module.css";
 import { store } from "../../../../server/store";
 
-export const metadata: Metadata = { title: "年回表｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "年回表｜sou-buddy", robots: { index: false, follow: false } };
 
 export default async function NenkaiPage({ params }: PageProps<"/staff/[caseId]/nenkai">) {
   const { caseId } = await params;

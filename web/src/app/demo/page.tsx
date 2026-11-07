@@ -6,7 +6,7 @@ import { SystemBar } from "../../components/system/SystemBar";
 import { DEMO_CASE_ID } from "../../domain/caseMode";
 import { store } from "../../server/store";
 
-export const metadata: Metadata = { title: "デモ｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "デモ｜sou-buddy", robots: { index: false, follow: false } };
 
 /** 共用デモの山田家（架空）。本番の一覧には並べない */
 async function DemoCard() {

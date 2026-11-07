@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import s from "../../components/trial/trial.module.css";
 import { safeNext } from "../../server/access";
 
-export const metadata: Metadata = { title: "試用の入口｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "試用の入口｜sou-buddy", robots: { index: false, follow: false } };
 
 async function GateForm({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
@@ -27,7 +27,7 @@ export default function GatePage({ searchParams }: PageProps<"/gate">) {
     <main className={s.page}>
       <div className={s.column}>
         <p className={s.eyebrow}>TRIAL</p>
-        <h1 className={s.title}>葬儀の打合せ支援（仮称）<br />試用の入口</h1>
+        <h1 className={s.title}>sou-buddy<br />試用の入口</h1>
         <p className={s.lead}>お知らせした合言葉を入れてください。</p>
         <Suspense>
           <GateForm searchParams={searchParams} />

@@ -7,7 +7,7 @@ import { company } from "../../../../domain/company";
 import { buildJuchu, type Juchu } from "../../../../engine/juchu";
 import { store } from "../../../../server/store";
 
-export const metadata: Metadata = { title: "受注書｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "受注書｜sou-buddy", robots: { index: false, follow: false } };
 
 const SCHEDULE: readonly { readonly key: keyof Juchu["schedule"]; readonly label: string }[] = [
   { key: "death", label: "死亡" },

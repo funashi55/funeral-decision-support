@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import s from "../../components/cases/cases.module.css";
 import { safeNext } from "../../server/access";
 
-export const metadata: Metadata = { title: "ログイン｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "ログイン｜sou-buddy", robots: { index: false, follow: false } };
 
 const ERRORS: Readonly<Record<string, string>> = {
   setup: "Google ログインの設定がまだです（GOOGLE_CLIENT_ID・GOOGLE_CLIENT_SECRET・AUTH_SECRET）。",
@@ -38,7 +38,7 @@ export default function LoginPage(props: PageProps<"/login">) {
   return (
     <main className={s.page}>
       <div className={s.column} style={{ maxWidth: 460, paddingTop: "10vh" }}>
-        <p className={s.eyebrow}>葬儀の打合せ支援</p>
+        <p className={s.eyebrow}>sou-buddy</p>
         <h1 className={s.title}>ログイン</h1>
         <p className={s.lead}>担当者の画面は、登録された Google アカウントで入ります。ご家族の窓口（共有のリンク）はログインなしで開けます。</p>
         <Suspense fallback={null}>

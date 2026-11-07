@@ -16,7 +16,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure", screenshot: "only-on-failure" },
   projects: [
-    { name: "staff-desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testMatch: /(staff|console|mode)\.spec\.ts/ },
+    { name: "staff-desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testMatch: /(staff|console|mode|buddy)\.spec\.ts/ },
     { name: "family-mobile", use: { ...devices["Pixel 7"] }, testMatch: /family(-chat)?\.spec\.ts/ },
     { name: "flow", use: { ...devices["Desktop Chrome"] }, testMatch: /flow\.spec\.ts/ },
   ],

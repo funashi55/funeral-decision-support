@@ -4,7 +4,7 @@ import s from "../../../components/cases/cases.module.css";
 import { RegisterForm } from "../../../components/cases/RegisterForm";
 import { SystemBar } from "../../../components/system/SystemBar";
 
-export const metadata: Metadata = { title: "ご家族の登録｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "ご家族の登録｜sou-buddy", robots: { index: false, follow: false } };
 
 export default function NewCasePage() {
   return (

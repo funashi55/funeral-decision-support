@@ -5,7 +5,7 @@ import { HearingApp } from "../../components/trial/hearing/HearingApp";
 import s from "../../components/trial/trial.module.css";
 
 export const metadata: Metadata = {
-  title: "打合せのロールプレイ｜葬儀の打合せ支援（仮称）",
+  title: "打合せのロールプレイ｜sou-buddy",
   robots: { index: false, follow: false },
 };
 

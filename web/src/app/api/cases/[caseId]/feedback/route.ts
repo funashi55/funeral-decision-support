@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { appendAudit } from "../../../../../engine/audit";
 import { store } from "../../../../../server/store";
+import { updateBuddy } from "../../../../../server/buddy";
+import { recordUsage, type Verdict } from "../../../../../domain/buddy";
 import { fail, handleError, ok } from "../../../../../server/http";
 
 const BodySchema = z.object({
@@ -20,6 +22,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     const { target, verdict } = BodySchema.parse(await req.json());
     const at = Date.now();
     const kept = state.feedback.filter((f) => f.target !== target);
+    const before = state.feedback.find((f) => f.target === target)?.verdict as Verdict | undefined;
+    // 担当者のバディにも数える（案件をまたいで育つ）
+    await updateBuddy(state, (p) => recordUsage(p, target, before, verdict === "clear" ? undefined : verdict));
     const feedback = verdict === "clear" ? kept : [...kept, { target, verdict, at }];
     const next = appendAudit({ ...state, feedback }, { at, actor: "staff", kind: "feedback", summary: VERDICT_LABEL[verdict], refs: [target] });
     return ok(await store.save(next));

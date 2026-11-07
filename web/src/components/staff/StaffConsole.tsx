@@ -25,6 +25,8 @@ import type { NewLine } from "./InputDock";
 import { OrdersPanel } from "./OrdersPanel";
 import { PlansPanel } from "./PlansPanel";
 import { Transcript } from "./Transcript";
+import { BuddyView } from "./BuddyView";
+import type { Amount, BuddyProfile, Tone } from "../../domain/buddy";
 import c from "./console.module.css";
 import s from "./staff.module.css";
 
@@ -47,12 +49,13 @@ const CONSOLE_GUIDE: readonly GuideStep[] = [
 /** デモの画面だけ、最初に「デモを再生」を照らす */
 const DEMO_GUIDE: readonly GuideStep[] = [{ target: "demo", title: "デモを再生", body: "架空の打合せの会話が流れます。実際の打合せでは、会話の欄に打つか、マイクで聞き取ります。" }, ...CONSOLE_GUIDE];
 
-type View = "now" | "decisions" | "plans" | "orders";
+type View = "now" | "decisions" | "plans" | "orders" | "buddy";
 const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon: string }[] = [
   { id: "now", label: "いま", icon: "M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" },
   { id: "decisions", label: "決めること", icon: "M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" },
   { id: "plans", label: "プランの案", icon: "M4 6h16M4 12h16M4 18h10" },
   { id: "orders", label: "書類作成", icon: "M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6ZM14 3v6h6M8 13h8M8 17h5" },
+  { id: "buddy", label: "バディ", icon: "M12 21s-7-4.4-9.3-9A5.3 5.3 0 0 1 12 6.6 5.3 5.3 0 0 1 21.3 12C19 16.6 12 21 12 21Z" },
 ];
 
 function Icon({ d }: { readonly d: string }) {
@@ -93,6 +96,34 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const [impacted, setImpacted] = useState<ReadonlySet<string>>(new Set());
   const [inboxOpen, setInboxOpen] = useState(false);
   const [view, setView] = useState<View>("now");
+  // この担当者のバディ。伝えた／使わなかったを押すたびに数え直す
+  const [buddy, setBuddy] = useState<BuddyProfile | null>(null);
+  const [buddyTick, setBuddyTick] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    api
+      .buddy(caseId)
+      .then((p) => alive && setBuddy(p))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [caseId, buddyTick, state?.registration?.staffName]);
+  const buddySettings = (body: { tone?: Tone; amount?: Amount }): void => {
+    api.buddySettings(caseId, body).then(setBuddy).catch((e: unknown) => setError(message(e)));
+  };
+  const savePhrase = async (principleId: string, text: string): Promise<boolean> => {
+    try {
+      setBuddy(await api.buddyPhrase(caseId, "add", principleId, text));
+      return true;
+    } catch (e) {
+      setError(message(e));
+      return false;
+    }
+  };
+  const removePhrase = (principleId: string, text: string): void => {
+    api.buddyPhrase(caseId, "remove", principleId, text).then(setBuddy).catch((e: unknown) => setError(message(e)));
+  };
   /** 次に流す台本の行（描画には使わない。表示は案件の発話数から導く） */
   const step = useRef(0);
   useEffect(() => {
@@ -326,7 +357,10 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   /** 「いま」から呼ぶ記録。会話で触れた提案を自動で記録するため、描画のたびに変わらない関数にする */
   const recordFeedback = useCallback(
     (target: string, verdict: FeedbackVerdict | "clear"): void => {
-      api.feedback(caseId, target, verdict).catch((e: unknown) => setError(message(e)));
+      api
+        .feedback(caseId, target, verdict)
+        .then(() => setBuddyTick((t) => t + 1))
+        .catch((e: unknown) => setError(message(e)));
     },
     [caseId],
   );
@@ -342,6 +376,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const feedback = async (target: string, verdict: FeedbackVerdict | "clear"): Promise<void> => {
     try {
       await api.feedback(caseId, target, verdict);
+      setBuddyTick((t) => t + 1);
     } catch (e) {
       setError(message(e));
     }
@@ -397,7 +432,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
 
   const readyOrders = buildOrders(state).filter((o) => o.status === "ready").length;
   // 左の帯の数字は「手配できる数」だけにする（いま・決めることの残りは、それぞれの画面の中で数える。数字がずれて見えないように）
-  const badge: Record<View, number> = { now: 0, decisions: 0, plans: 0, orders: readyOrders };
+  const badge: Record<View, number> = { now: 0, decisions: 0, plans: 0, orders: readyOrders, buddy: 0 };
 
   const farewellPanel = (
     <FarewellPanel
@@ -517,6 +552,8 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               onFact={fact}
               onTodo={(body) => void todo(body)}
               onFeedback={recordFeedback}
+              buddy={buddy}
+              onSavePhrase={savePhrase}
             >
               {farewellPanel}
             </NowView>
@@ -530,6 +567,11 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
             <div className={c.view}>
               <h1 className={c.viewTitle}>プランの案</h1>
               <PlansPanel state={state} phase={phase.phase} planFit={planFit?.ok ? planFit.proposal : null} onFeedback={(t, v) => void feedback(t, v)} />
+            </div>
+          )}
+          {view === "buddy" && (
+            <div className={c.view}>
+              <BuddyView profile={buddy} onSettings={buddySettings} onRemovePhrase={removePhrase} />
             </div>
           )}
           {view === "orders" && (
