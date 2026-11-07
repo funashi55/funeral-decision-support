@@ -98,15 +98,14 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
     return first >= 0 ? first + 1 : 1;
   };
   const alerts = oversights.filter((a) => active({ target: `oversight:${a.id}`, decisionId: a.decisionId, cues: TOPIC_CUES[a.decisionId], basedOn: after(a.utteranceIds) }, "注意", a.decisionLabel));
-  // 推奨が挙げた注意。決まりごとの検出と同じ項目は重ねて出さない
+  // 推奨（AI）が一覧から選んだ注意。決まりごとが言い回しの違いで拾えなかったものを補う。同じ注意は重ねて出さない
   const aiCautions = (rec?.cautions ?? [])
-    .filter((x) => !oversights.some((o) => o.decisionLabel === x.label))
-    // AI の注意は文が長く話題も広いので、その注意の文の語が担当者の発言に2つ重なったときだけ済んだとみなす
-    .filter((x) => active(byWords(`caution:${x.decisionId}`, x.message), "注意", x.label));
+    .filter((x) => !oversights.some((o) => o.id === x.id) && state.decisions[x.decisionId]?.status !== "confirmed")
+    .filter((x) => active({ target: `oversight:${x.id}`, decisionId: x.decisionId, cues: TOPIC_CUES[x.decisionId], basedOn: farewellBasedOn }, "注意", x.label));
   const questions = (rec?.questionsToAsk ?? []).filter((q) => active(byWords(`question:${textKey(q)}`, q), "確認", q));
   const nowAlerts = alerts.filter((a) => !later(a.decisionId));
   const nowCautions = aiCautions.filter((x) => !later(x.decisionId));
-  const laterChecks = [...alerts.filter((a) => later(a.decisionId)).map((a) => ({ key: `oversight:${a.id}`, label: a.decisionLabel, message: a.message })), ...aiCautions.filter((x) => later(x.decisionId)).map((x) => ({ key: `caution:${x.decisionId}`, label: x.label, message: x.message }))];
+  const laterChecks = [...alerts.filter((a) => later(a.decisionId)).map((a) => ({ key: `oversight:${a.id}`, label: a.decisionLabel, message: a.message })), ...aiCautions.filter((x) => later(x.decisionId)).map((x) => ({ key: `oversight:${x.id}`, label: x.label, message: x.message }))];
   const checkCount = nowAlerts.length + nowCautions.length + questions.length;
   const told = (target: string): React.ReactNode => <FeedbackButtons state={state} target={target} onFeedback={onFeedback} />;
   // 会話で触れた提案・注意・尋ねることは「伝えた」として記録に残す（推奨が書き直されても戻らないように）
@@ -262,7 +261,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
                 {x.label}
               </h4>
               <p>{x.message}</p>
-              <div className={c.itemActions}>{told(`caution:${x.decisionId}`)}</div>
+              <div className={c.itemActions}>{told(`oversight:${x.id}`)}</div>
             </article>
           ))}
           {questions.length > 0 && (
