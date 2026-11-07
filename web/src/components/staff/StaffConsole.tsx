@@ -404,6 +404,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               state={state}
               impacted={impacted}
               thinking={farewellLoading || listening}
+              extracting={extracting}
               oversights={oversights}
               farewell={farewell}
               planFit={planFit?.ok ? planFit.proposal : null}
@@ -437,7 +438,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       </div>
 
       <aside className={c.live} aria-label="会話">
-        <Transcript state={state} extracting={extracting} onAdd={addLine} onEdit={editLine} onSwapSpeaker={swapSpeaker} />
+        <Transcript state={state} onAdd={addLine} onEdit={editLine} onSwapSpeaker={swapSpeaker} />
       </aside>
       {inboxOpen && <FamilyInbox state={state} onClose={() => setInboxOpen(false)} onAcknowledge={acknowledge} onLink={familyLink} />}
     </div>

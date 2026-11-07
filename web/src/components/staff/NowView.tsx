@@ -27,6 +27,8 @@ interface NowViewProps {
   readonly planFitBasedOn: number;
   /** 推奨を考えている途中か */
   readonly thinking: boolean;
+  /** 会話から家族の事情を拾い上げている途中か */
+  readonly extracting: boolean;
   readonly onConfirm: (decisionId: string, value: string) => void;
   /** 担当者が自分で足すやること（足す・済みにする・消す） */
   readonly onTodo: TodoHandler;
@@ -53,7 +55,7 @@ interface DoneItem {
  * 左に「この流れでの提案」と「確認・注意」、右に「やることリスト」（会話から自動で埋まり、残りが見える）。
  * 伝えた提案・確定した項目に関わる提案・会話で触れた提案は、下の「済んだこと」に畳む
  */
-export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
+export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
   const rec = farewell?.ok ? farewell.recommendation : null;
   const done: DoneItem[] = [];
   /** 済んでいれば done に積んで false、まだなら true */
@@ -87,6 +89,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
   return (
     <div className={`${c.view} ${c.wide} ${c.nowGrid}`}>
       <div className={c.nowMain}>
+        <Facts state={state} extracting={extracting} />
         <section aria-labelledby="proposal-title" className={c.block}>
           <h2 id="proposal-title" className={c.blockTitle}>
             この流れでの提案
@@ -348,5 +351,45 @@ function AddTodo({ onAdd }: { readonly onAdd: (text: string) => void }) {
         足す
       </button>
     </form>
+  );
+}
+
+/** わかったことを最初から見せる数（多いと提案が下に押し出されるため、古いものは畳む） */
+const FACTS_SHOWN = 4;
+
+/** わかったこと：ご遺族の言葉から拾い上げた家族の事情。新しいものを先に、文として読める大きさで並べる */
+function Facts({ state, extracting }: { readonly state: CaseState; readonly extracting: boolean }) {
+  const facts = [...state.circumstances].reverse();
+  return (
+    <section aria-labelledby="facts-title" className={c.block} aria-live="polite">
+      <h2 id="facts-title" className={c.blockTitle}>
+        わかったこと
+        {facts.length > 0 && <span className={c.factsCount}>{facts.length}</span>}
+        {extracting && <span className={c.thinking}>整理中…</span>}
+      </h2>
+      {facts.length === 0 ? (
+        <p className={c.quiet}>ご遺族の言葉から、家族の事情をここに拾い上げます。</p>
+      ) : (
+        <>
+          <ul className={c.facts}>
+            {facts.slice(0, FACTS_SHOWN).map((f, i) => (
+              <li key={f.id} className={i === 0 ? c.factNew : undefined}>
+                {f.text}
+              </li>
+            ))}
+          </ul>
+          {facts.length > FACTS_SHOWN && (
+            <details className={c.factsMore}>
+              <summary>ほかに {facts.length - FACTS_SHOWN} 件</summary>
+              <ul className={c.facts}>
+                {facts.slice(FACTS_SHOWN).map((f) => (
+                  <li key={f.id}>{f.text}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </>
+      )}
+    </section>
   );
 }

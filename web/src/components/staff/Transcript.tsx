@@ -6,7 +6,6 @@ import s from "./staff.module.css";
 
 interface TranscriptProps {
   readonly state: CaseState;
-  readonly extracting: boolean;
   readonly onAdd: (line: NewLine) => Promise<void>;
   readonly onEdit: (utteranceId: string, text: string) => Promise<void>;
   /** 自動の聞き分けを直す（担当者 ↔ ご遺族） */
@@ -60,7 +59,7 @@ function Line({ u, onEdit, onSwapSpeaker }: { readonly u: Utterance; readonly on
   );
 }
 
-export function Transcript({ state, extracting, onAdd, onEdit, onSwapSpeaker }: TranscriptProps) {
+export function Transcript({ state, onAdd, onEdit, onSwapSpeaker }: TranscriptProps) {
   const end = useRef<HTMLDivElement>(null);
   const count = state.utterances.length;
   // 新しい発言が届いたら、いちばん下まで送る
@@ -73,25 +72,6 @@ export function Transcript({ state, extracting, onAdd, onEdit, onSwapSpeaker }: 
       <div className={s.colHead}>
         <h2 id="transcript-title">会話</h2>
         <span className={s.count}>{count} 発話</span>
-      </div>
-      <div className={s.facts} aria-live="polite">
-        <h3>
-          わかったこと
-          {state.circumstances.length > 0 && <span className={s.factsCount}>{state.circumstances.length}</span>}
-          {extracting && <span className={s.thinking}>整理中</span>}
-        </h3>
-        {state.circumstances.length === 0 ? (
-          <p className={s.factsEmpty}>ご遺族の言葉から、家族の事情をここに拾い上げます</p>
-        ) : (
-          <ul className={s.factList}>
-            {/* 新しくわかったことを上に出す（スクロールしなくても目に入るように） */}
-            {[...state.circumstances].reverse().map((c) => (
-              <li key={c.id} className={s.fact}>
-                {c.text}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
       <div className={s.scroll} aria-live="polite">
         {count === 0 && (

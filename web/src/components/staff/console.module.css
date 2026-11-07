@@ -272,3 +272,11 @@
 .todoEnter:hover { background: var(--accent-soft); color: var(--accent); text-decoration: none; }
 .todoEnter:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 a.navItem { text-decoration: none; }
+
+/* わかったこと（中央）：ご遺族の言葉から拾った事情を、カードで2列に並べる */
+.factsCount { font-size: var(--text-xs); font-weight: 800; padding: 0 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.facts { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-2); margin-top: var(--space-3); }
+.facts li { position: relative; padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 12px); border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); font-size: var(--text-base); line-height: 1.7; animation: rise 400ms var(--ease); }
+.facts li::before { content: ""; position: absolute; left: var(--space-3); top: calc(var(--space-3) + 0.6em); width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.facts .factNew { background: var(--accent-soft); border-color: color-mix(in oklab, var(--accent) 30%, transparent); }
+.factsMore { margin-top: var(--space-2); } .factsMore summary { cursor: pointer; font-size: var(--text-sm); font-weight: 700; color: var(--accent); }
