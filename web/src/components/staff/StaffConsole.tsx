@@ -52,6 +52,8 @@ const message = (e: unknown): string => (e instanceof Error ? e.message : "問�
 export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const { state, connected } = useCaseStream(caseId);
   const [playing, setPlaying] = useState(false);
+  // スマホでは「会話」と中央の画面を切り替えて見せる（広い画面では両方とも出ている）
+  const [talkOpen, setTalkOpen] = useState(false);
   // ログインしている担当者の名前（ログインの設定がなければ null のまま）
   const [staffName, setStaffName] = useState<string | null>(null);
   useEffect(() => {
@@ -336,7 +338,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   );
 
   return (
-    <div className={c.app}>
+    <div className={c.app} data-pane={talkOpen ? "talk" : "main"}>
       <nav className={c.rail} aria-label="画面の切り替え">
         <div className={c.brand}>
           <span className={c.brandFamily}>{state.familyName}</span>
@@ -350,16 +352,24 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               type="button"
               role="tab"
               id={`tab-${v.id}`}
-              aria-selected={view === v.id}
+              aria-selected={view === v.id && !talkOpen}
               aria-controls="main-view"
               className={c.navItem}
-              onClick={() => setView(v.id)}
+              onClick={() => {
+                setView(v.id);
+                setTalkOpen(false);
+              }}
             >
               <Icon d={v.icon} />
               <span>{v.label}</span>
               {badge[v.id] > 0 && <span className={`${c.navBadge} ${v.id === "now" ? c.navBadgeWarn : ""}`}>{badge[v.id]}</span>}
             </button>
           ))}
+          <button type="button" className={`${c.navItem} ${c.mobileOnly}`} aria-pressed={talkOpen} onClick={() => setTalkOpen(true)}>
+            <Icon d="M8 10h8M8 14h5M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12Z" />
+            <span>会話</span>
+            <span className={c.navBadge}>{state.utterances.length}</span>
+          </button>
         </div>
         <div className={c.railFoot}>
           <Link href="/staff" className={c.navItem} title="ご家族の一覧・新しいご家族の登録">

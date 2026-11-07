@@ -296,3 +296,34 @@ a.navItem { text-decoration: none; }
 .infoList dt { color: var(--ink-3); font-weight: 700; }
 .infoList dd { color: var(--ink); line-height: 1.7; }
 .nowPanel[hidden] { display: none; }
+
+/* スマホ：下に固定のナビ。「会話」と中央の画面を切り替えて、どちらか1つを画面いっぱいに出す */
+.mobileOnly { display: none !important; }
+@media (max-width: 760px) {
+  .app { height: 100dvh; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .rail { order: 2; position: static; flex-direction: row; align-items: stretch; gap: 0; padding: 4px 4px max(4px, env(safe-area-inset-bottom)); overflow-x: auto; scrollbar-width: none; }
+  .rail::-webkit-scrollbar { display: none; }
+  .brand { display: none; }
+  .navList, .railFoot { display: flex; flex: none; gap: 0; margin: 0; padding: 0; border: 0; }
+  .navList { flex: 1; }
+  .navItem { flex: 1; min-width: 44px; min-height: 52px; padding: 0; justify-content: center; }
+  .mobileOnly { display: flex !important; }
+  .main, .live { order: 1; min-height: 0; }
+  .app[data-pane="talk"] .main { display: none; }
+  .app[data-pane="main"] .live { display: none; }
+  .live { border: 0; display: flex; flex-direction: column; }
+  .live > * { flex: 1; min-height: 0; }
+  .topbar { padding: var(--space-2) var(--space-3); justify-content: center; }
+  .demo { padding-left: var(--space-2); }
+  .demo button { padding-inline: 0.7rem; font-size: var(--text-xs); }
+  .view { padding: var(--space-4) var(--space-3) 2rem; }
+  .nowTabs { display: flex; width: 100%; margin-bottom: var(--space-4); }
+  .nowTab { flex: 1; justify-content: center; padding: 0 0.4rem; font-size: var(--text-sm); }
+  .infoList > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .checklist .todoItem { grid-template-columns: 16px minmax(0, 1fr); }
+  .checklist .todoItem > :nth-child(3), .checklist .todoEnter, .checklist .todoForm { grid-column: 2; justify-self: start; }
+  .checklist .todoForm input { width: auto; flex: 1; }
+  .checklist .todoText small { display: block; margin-left: 0; }
+  .facts { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) { .live :global(textarea) { font-size: 16px; } }

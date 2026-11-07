@@ -64,8 +64,24 @@ export function Transcript({ state, onAdd, onEdit, onSwapSpeaker }: TranscriptPr
   const count = state.utterances.length;
   // 新しい発言が届いたら、いちばん下まで送る
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    // ページ全体ではなく、会話の欄の中だけを送る（スマホで画面ごと動かないように）
+    const box = end.current?.parentElement;
+    box?.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
   }, [count]);
+
+  // スマホで会話の画面を開いたとき（隠れていた欄が見えたとき）も、いちばん下から見せる
+  useEffect(() => {
+    const box = end.current?.parentElement;
+    if (!box) return;
+    let wasHidden = box.clientHeight === 0;
+    const observer = new ResizeObserver(() => {
+      const hidden = box.clientHeight === 0;
+      if (wasHidden && !hidden) box.scrollTop = box.scrollHeight;
+      wasHidden = hidden;
+    });
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className={s.col} aria-labelledby="transcript-title">
