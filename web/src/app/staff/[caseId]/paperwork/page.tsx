@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { PrintButton } from "../../../../components/paperwork/PrintButton";
+import { company } from "../../../../domain/company";
 import s from "../../../../components/paperwork/sheet.module.css";
 import type { SheetContext } from "../../../../engine/orderSheet";
 import type { OrderSheet } from "../../../../engine/paperwork";
 import { orderSheetStore } from "../../../../server/orderSheetStore";
 import { paperworkStore } from "../../../../server/paperworkStore";
+import { store } from "../../../../server/store";
 
 export const metadata: Metadata = { title: "発注書｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
 
-/** 発注元（デモ用の架空の葬儀社） */
-const SENDER = "葬儀社（デモ・架空）";
 
 /** 故人の年齢・性別を書く業者（花は故人に合わせて色や形を選ぶため） */
 const NEEDS_DECEASED = new Set(["flowers", "farewell_flowers", "pillow_set"]);
@@ -20,8 +20,9 @@ const jstDate = (ms: number): string => new Date(ms).toLocaleDateString("ja-JP-u
  * FAX で送る発注書。東北地方の互助会系葬儀社が実際に使っていた発注書の並びに合わせた：
  * 宛先・発注元と担当・葬家名 → 式場（届け先）・届け日時 → 葬儀日程 → 注文内容 → 業者ごとの確認欄 → 確認の返信のお願い
  */
-function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly paperwork: SheetContext }) {
+function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly paperwork: SheetContext & { readonly staffName?: string } }) {
   const sc = paperwork.schedule;
+  const sender = company();
   return (
     <article className={s.sheet} aria-label={`${sheet.vendor}への発注書`}>
       <div className={s.head}>
@@ -37,9 +38,9 @@ function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly pape
         <p className={s.note}>
           {jstDate(paperwork.createdAt)}
           <br />
-          {SENDER}　担当：＿＿＿＿＿＿
+          {sender.name}　担当：{paperwork.staffName ?? "＿＿＿＿＿＿"}
           <br />
-          TEL：＿＿＿＿＿＿＿＿＿
+          TEL：{sender.tel}　FAX：{sender.fax}
         </p>
       </div>
       <div className={s.to}>{paperwork.familyName}</div>
@@ -113,7 +114,7 @@ function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly pape
         <p>
           <b>FAX が届き次第、確認の FAX をご返信ください。</b>
           <br />
-          返信先 FAX：＿＿＿＿＿＿＿＿＿（{SENDER}）
+          返信先 FAX：{sender.fax}（{sender.name}）
           <br />
           「要確認」の欄は、ご家族に確かめたうえで担当者が書き込んでから送ります。金額は見積書でご確認ください。
         </p>
@@ -129,12 +130,15 @@ function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly pape
 export default async function PaperworkPage({ params, searchParams }: PageProps<"/staff/[caseId]/paperwork">) {
   const { caseId } = await params;
   const { order } = await searchParams;
-  const [paperwork, singles] = await Promise.all([paperworkStore.get(caseId), orderSheetStore.all(caseId)]);
+  const [paperwork, singles, state] = await Promise.all([paperworkStore.get(caseId), orderSheetStore.all(caseId), store.get(caseId)]);
   // 1枚ずつ作った発注書は、まとめて作ったものより新しければそちらを出す
   const single = typeof order === "string" ? singles[order] : undefined;
   const fromBatch = typeof order === "string" ? paperwork?.sheets.filter((x) => x.orderId === order) : paperwork?.sheets;
   const useSingle = single && (!fromBatch?.length || !paperwork || single.context.createdAt >= paperwork.createdAt);
-  const context: SheetContext | undefined = useSingle ? single.context : paperwork;
+  const base: SheetContext | undefined = useSingle ? single.context : paperwork;
+  // 担当者の名前は、この喪家の登録から（まとめて作った発注書にも入れる）
+  const staffName = state?.registration?.staffName;
+  const context = base ? { ...base, ...(staffName ? { staffName } : {}) } : undefined;
   const sheets = useSingle ? [single.sheet] : (fromBatch ?? []);
   if (!context || sheets.length === 0) {
     return (

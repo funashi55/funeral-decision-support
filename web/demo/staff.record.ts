@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { DEMO_SETTLED } from "../src/engine/fixtures/demoSettled";
+import { demoSettled } from "../src/engine/fixtures/demoSettled";
 
 /**
  * 担当者の画面（デモ動画 0:30–1:55）：喪家の登録 → 打合せの再生（寄り添い → 見落としの先回り → 提案）→ 手配と発注書
@@ -38,12 +38,25 @@ test("担当者の画面", async ({ page, request }) => {
   await page.getByTestId("oversights").scrollIntoViewIfNeeded();
   await page.waitForTimeout(3000);
 
-  // 手配：香典返しの数を確定して、発注書を1件作る
-  // 担当者がご家族と確かめて確定した、という想定の値（台本に合わせた架空の値）
-  for (const [decisionId, value] of Object.entries(DEMO_SETTLED)) {
+  // 決めること：会話から出た候補を、担当者が丸を押して確定する（候補ありの表示で上から順に）
+  await page.getByRole("tab", { name: /決めること/ }).click();
+  await page.getByRole("button", { name: /候補あり/ }).click();
+  await page.waitForTimeout(1500);
+  for (let i = 0; i < 30; i++) {
+    const next = page.getByRole("button", { name: /」で確定する$/ }).first();
+    if ((await next.count()) === 0) break;
+    await next.click();
+    await page.waitForTimeout(700);
+  }
+  // 会話から拾い切れなかった値だけ、担当者が書き込んだ想定で補う（台本に合わせた架空の値）
+  const res = await request.get("/api/cases/demo-yamada");
+  const body = (await res.json()) as { data?: { decisions?: Record<string, { status: string }>; registration?: { deceased?: { diedAt?: string } } } };
+  const settled = demoSettled(body.data?.registration?.deceased?.diedAt ?? "");
+  for (const [decisionId, value] of Object.entries(settled)) {
+    if (body.data?.decisions?.[decisionId]?.status === "confirmed") continue;
     await request.post("/api/cases/demo-yamada/decisions", { data: { decisionId, value } });
   }
-  await page.getByRole("tab", { name: /決めること/ }).click();
+  await page.getByRole("button", { name: /すべて/ }).click();
   await page.waitForTimeout(2500);
   await page.getByRole("tab", { name: /手配と書き出し/ }).click();
   await page.waitForTimeout(1500);
@@ -52,4 +65,7 @@ test("担当者の画面", async ({ page, request }) => {
   const sheet = await popup;
   await sheet.waitForLoadState();
   await sheet.waitForTimeout(3000);
+  // 受注書（施行の親の表）も開く
+  await sheet.goto("/staff/demo-yamada/juchu");
+  await sheet.waitForTimeout(4000);
 });

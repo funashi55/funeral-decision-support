@@ -26,6 +26,9 @@ export function OrdersPanel({ state }: { readonly state: CaseState }) {
       </div>
       <PaperworkSection state={state} />
       <div className={s.linkRow}>
+        <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/juchu`} target="_blank" rel="noopener">
+          受注書
+        </a>
         <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/nenkai`} target="_blank" rel="noopener">
           年回表（中陰月日表）
         </a>

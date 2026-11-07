@@ -18,6 +18,15 @@ describe("打合せの段階の判定", () => {
       ...["schedule", "schedule"], // 火葬場の空き
       "plan",
       "logistics",
+      // 後半：日程を決め直し、祭壇・料理・香典返しを決める
+      "schedule", // お寺の都合を先に伺うべきでした
+      "hearing", // お寺さんに電話した
+      ...["schedule", "schedule"], // 通夜と葬儀の日時
+      "plan", // 納棺の日時（愛用の品を入れる）
+      "farewell", // 湯灌はしない
+      ...["plan", "plan", "plan", "plan", "plan"], // 祭壇・花の色・料理・香典返し・香典とお悔やみ欄
+      "schedule", // 火葬場へ行く人数
+      "logistics",
     ];
     const actual = DEMO_SCRIPT.map((_, i) => detectPhase(asUtterances(i + 1)).phase);
     expect(actual).toEqual(expected);

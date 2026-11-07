@@ -3,10 +3,11 @@ import { FAMILY_PATH, addUtterance, confirmDecision, resetCase } from "./helpers
 
 test.beforeEach(async ({ request }) => resetCase(request));
 
-test("決まったことがまだない状態を、責めない言葉で示す", async ({ page }) => {
+test("打合せの前は、受付で伺ったこと（喪主・葬儀の形）だけが決まったこととして出る", async ({ page }) => {
   await page.goto(FAMILY_PATH);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("山田家さま");
-  await expect(page.getByText("まだ確定したことはありません")).toBeVisible();
+  await expect(page.getByTestId("decided-chief_mourner")).toContainText("長女");
+  await expect(page.getByTestId("decided-funeral_style")).toContainText("家族葬");
   await expect(page.getByRole("status").filter({ hasText: "いつも最新の内容です" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "これから決めること" })).toBeVisible();
 });
@@ -60,9 +61,9 @@ test("空のままでは送れず、長すぎるときは数で知らせる", as
   await expect(send).toBeDisabled();
 });
 
-test("決まったことがないうちは『変えたいこと』を選べない", async ({ page }) => {
+test("決まったことがあれば『変えたいこと』を選べる", async ({ page }) => {
   await page.goto(FAMILY_PATH);
-  await expect(page.getByRole("radio", { name: "変えたいこと" })).toBeDisabled();
+  await expect(page.getByRole("radio", { name: "変えたいこと" })).toBeEnabled();
 });
 
 test("無効なリンクでは、案件の中身を出さずに案内だけを出す", async ({ page }) => {

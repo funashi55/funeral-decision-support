@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../client/api";
 import { useCaseStream } from "../../client/useCaseStream";
 import { impactedBy } from "../../domain/decisions";
 import type { FeedbackVerdict } from "../../engine/case";
 import type { FarewellResult } from "../../engine/farewell";
-import { DEMO_SCRIPT } from "../../engine/fixtures/demoScript";
+import { demoScript } from "../../engine/fixtures/demoScript";
+import { demoDiedAt } from "../../engine/fixtures/demoTimeline";
 import { buildOrders } from "../../engine/orders";
 import { detectOversights } from "../../engine/oversight";
 import { allowsPrices, detectPhase } from "../../engine/phase";
@@ -62,6 +63,9 @@ const message = (e: unknown): string => (e instanceof Error ? e.message : "問�
 
 export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const { state, connected } = useCaseStream(caseId);
+  // デモの台本：日付は、この家族の亡くなった日（「最初から」を押した日）から数える
+  const diedAt = state?.registration?.deceased.diedAt;
+  const script = useMemo(() => demoScript(diedAt ?? demoDiedAt()), [diedAt]);
   const [playing, setPlaying] = useState(false);
   // スマホでは「会話」と中央の画面を切り替えて見せる（広い画面では両方とも出ている）
   const [talkOpen, setTalkOpen] = useState(false);
@@ -236,7 +240,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   }, [caseId, runExtract, runFarewell]);
 
   const advance = useCallback(async (): Promise<boolean> => {
-    const line = DEMO_SCRIPT[step.current];
+    const line = script[step.current];
     if (!line) return false;
     step.current += 1;
     try {
@@ -246,8 +250,8 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       setError(message(e));
       return false;
     }
-    return step.current < DEMO_SCRIPT.length;
-  }, [caseId, listen]);
+    return step.current < script.length;
+  }, [caseId, listen, script]);
 
   useEffect(() => {
     if (!playing) return;
@@ -363,12 +367,12 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       setPlaying(false);
       return;
     }
-    if (state && state.utterances.length >= DEMO_SCRIPT.length) await reset();
+    if (state && state.utterances.length >= script.length) await reset();
     setPlaying(true);
   };
 
   if (!state) return <p className={s.empty} style={{ padding: "2rem" }}>読み込み中…</p>;
-  const finished = state.utterances.length >= DEMO_SCRIPT.length;
+  const finished = state.utterances.length >= script.length;
   const openRequests = state.requests.filter((r) => r.status === "open").length;
   const recording = playing;
   const phase = detectPhase(state.utterances);
@@ -397,7 +401,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       <nav className={c.rail} aria-label="画面の切り替え">
         <div className={c.brand}>
           <span className={c.brandFamily}>{state.familyName}</span>
-          <span className={c.brandMeta}>{staffName ? `担当：${staffName}` : "担当：新人（2年目）"}</span>
+          <span className={c.brandMeta}>{`担当：${state.registration?.staffName ?? staffName ?? "担当者"}`}</span>
           {!connected && <span className={c.reconnect}>再接続中…</span>}
         </div>
         <div className={c.navList} role="tablist" aria-orientation="vertical" aria-label="画面" data-guide="nav">

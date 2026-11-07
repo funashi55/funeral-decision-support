@@ -72,17 +72,17 @@ export const IN_HOUSE = "自社（プランに含む）";
  * プランに含まれ、ほぼすべての施行で用意する一式（受注書の定番の行）。
  * 基幹システムの施行の記録では、宗派を問わずほぼ全施行に入っていた。AI が書き漏らしても必ず載せる
  */
-const STANDARD_ROWS: readonly { readonly category: (typeof LEDGER_CATEGORIES)[number]; readonly name: string; readonly key: string }[] = [
-  { category: "お迎え・安置", name: "お迎え", key: "迎え" },
-  { category: "枕飾り", name: "枕飾り一式", key: "枕飾り" },
-  { category: "納棺", name: "寝棺一式", key: "棺" },
-  { category: "納棺", name: "納棺処置", key: "処置" },
-  { category: "納棺", name: "仏衣一式", key: "仏衣" },
-  { category: "納棺", name: "ドライアイス", key: "ドライアイス" },
-  { category: "納棺", name: "骨箱一式", key: "骨箱" },
-  { category: "写真", name: "遺影写真（額）", key: "写真" },
-  { category: "位牌・仏具", name: "位牌", key: "位牌" },
-  { category: "車両", name: "霊柩車", key: "霊柩車" },
+const STANDARD_ROWS: readonly { readonly category: (typeof LEDGER_CATEGORIES)[number]; readonly name: string; readonly key: RegExp }[] = [
+  { category: "お迎え・安置", name: "お迎え", key: /迎え/ },
+  { category: "枕飾り", name: "枕飾り一式", key: /枕飾り/ },
+  { category: "納棺", name: "寝棺一式", key: /(?<!出)棺(?!花)/ },
+  { category: "納棺", name: "納棺処置", key: /処置/ },
+  { category: "納棺", name: "仏衣一式", key: /仏衣/ },
+  { category: "納棺", name: "ドライアイス", key: /ドライアイス/ },
+  { category: "納棺", name: "骨箱一式", key: /骨箱/ },
+  { category: "写真", name: "遺影写真（額）", key: /写真/ },
+  { category: "位牌・仏具", name: "位牌", key: /位牌/ },
+  { category: "車両", name: "霊柩車", key: /霊柩車/ },
 ];
 
 const orderIds = ORDERS.map((o) => o.id) as [string, ...string[]];
@@ -351,7 +351,7 @@ export function assemblePaperwork(state: CaseState, draft: PaperworkDraft, now =
 
 /** 定番の一式を、AI の行に同じ品目がなければ足し、受注書の区分の順に並べる */
 export function withStandardRows(rows: readonly LedgerRow[]): LedgerRow[] {
-  const missing = STANDARD_ROWS.filter((std) => !rows.some((r) => r.name.includes(std.key))).map(
+  const missing = STANDARD_ROWS.filter((std) => !rows.some((r) => std.key.test(r.name))).map(
     (std): LedgerRow => ({ category: std.category, name: std.name, quantity: "一式", note: "", orderId: null, vendor: IN_HOUSE, status: null }),
   );
   return [...rows, ...missing]

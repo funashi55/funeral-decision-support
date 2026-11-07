@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { PrintButton } from "../../../../components/paperwork/PrintButton";
 import s from "../../../../components/paperwork/sheet.module.css";
-import type { Paperwork } from "../../../../engine/paperwork";
-import { paperworkStore } from "../../../../server/paperworkStore";
+import { company } from "../../../../domain/company";
+import { buildJuchu, type Juchu } from "../../../../engine/juchu";
+import { store } from "../../../../server/store";
 
 export const metadata: Metadata = { title: "受注書｜葬儀の打合せ支援（仮称）", robots: { index: false, follow: false } };
 
-const SCHEDULE: readonly { readonly key: keyof Paperwork["schedule"]; readonly label: string }[] = [
+const SCHEDULE: readonly { readonly key: keyof Juchu["schedule"]; readonly label: string }[] = [
   { key: "death", label: "死亡" },
   { key: "layingIn", label: "納棺" },
   { key: "departure", label: "出棺" },
@@ -21,29 +23,36 @@ const jstDate = (ms: number): string => new Date(ms).toLocaleDateString("ja-JP-u
 
 /**
  * 受注書：施行ごとの親の表。東北地方の互助会系葬儀社の受注書の並び（日程・品目・数量・追加・返品・発注先・チェック）に合わせた。
- * 氏名・住所・電話は保存しないので、手書きの欄にする。追加・返品・計・チェックは当日に手で書き込む
+ * 確定した決定と登録の内容から、決まった規則で作る（AI は使わない）。住所・電話は保存しないので手書きの欄にする。
+ * 追加・返品・計・チェックは当日に手で書き込む
  */
 export default async function JuchuPage({ params }: PageProps<"/staff/[caseId]/juchu">) {
   const { caseId } = await params;
-  const pw = await paperworkStore.get(caseId);
-  if (!pw) {
+  // 作成日に今日の日付を入れるので、毎回その場で作る
+  await connection();
+  const state = await store.get(caseId);
+  if (!state) {
     return (
       <main className={s.page} data-print-page>
-        <p className={s.bar}>まだ受注書がありません。担当者の画面の「手配と書き出し」で「まとめて発注書を作る」を押してください。</p>
+        <p className={s.bar}>この喪家は見つかりません。</p>
       </main>
     );
   }
+  const pw = buildJuchu(state);
+  const sender = company();
   return (
     <main className={s.page} data-print-page>
       <div className={s.bar}>
-        <span>{pw.familyName}・受注書（A4）。氏名・住所・電話と、追加・返品・チェックの欄は手で書き込んでください。</span>
+        <span>{pw.familyName}・受注書（A4）。確定した内容から作っています。住所・電話と、追加・返品・チェックの欄は手で書き込んでください。</span>
         <PrintButton />
       </div>
       <article className={s.sheet} aria-label="受注書">
         <div className={s.head}>
           <h1 className={s.title}>受注書</h1>
           <p className={s.note}>
-            {jstDate(pw.createdAt)}　担当者＿＿＿＿＿＿
+            {jstDate(pw.createdAt)}　{sender.name}
+            <br />
+            担当者　{pw.staffName ?? "＿＿＿＿＿＿"}
           </p>
         </div>
         <div className={s.to}>{pw.familyName}</div>
@@ -51,16 +60,16 @@ export default async function JuchuPage({ params }: PageProps<"/staff/[caseId]/j
           <tbody>
             <tr>
               <th scope="row">故人様</th>
-              <td aria-label="手書きで記入する欄" />
+              {pw.deceased.name ? <td>{pw.deceased.name}</td> : <td aria-label="手書きで記入する欄" />}
               <th scope="row">年齢・性別</th>
               <td>
                 {pw.deceased.age}・{pw.deceased.sex}
               </td>
             </tr>
             <tr>
-              <th scope="row">喪主</th>
-              <td aria-label="手書きで記入する欄" />
-              <th scope="row">続柄・TEL</th>
+              <th scope="row">喪主（続柄）</th>
+              <td>{pw.mourner}</td>
+              <th scope="row">TEL</th>
               <td aria-label="手書きで記入する欄" />
             </tr>
             <tr>

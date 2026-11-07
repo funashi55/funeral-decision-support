@@ -94,6 +94,7 @@ npm run dev                  # http://localhost:3000 （ご家族の一覧が開
 任意の設定（`.env.example` に説明があります）：
 - Google ログイン：`GOOGLE_CLIENT_ID`・`GOOGLE_CLIENT_SECRET`・`AUTH_SECRET`（入れる人は `AUTH_ALLOWED_EMAILS`）。3つそろったときだけ担当者の画面がログイン必須になり、窓口はログインなしで開ける
 - 公開して試してもらうときの合言葉：`ACCESS_CODE`。AI の呼び出しの上限：`AI_DAILY_LIMIT`（1日、既定 3000回）・`AI_HOURLY_PER_CLIENT`（1人1時間、既定なし）
+- 発注書・受注書に書く発注元：`COMPANY_NAME`・`COMPANY_TEL`・`COMPANY_FAX`（既定はデモ用の架空の会社）。担当者の名前は喪家の登録で入れる
 
 想定している運用は、葬儀社の中（社内のネットワーク）で動かすことです。ご遺族の名前・電話・会話を社外に出さずに済むためです。公開している URL は、架空のご家族で試すための体験版です。
 

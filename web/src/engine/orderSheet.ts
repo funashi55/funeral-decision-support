@@ -13,7 +13,8 @@ export type SheetContext = Pick<Paperwork, "familyName" | "createdAt" | "schedul
 
 export interface SingleOrderSheet {
   readonly sheet: OrderSheet;
-  readonly context: SheetContext;
+  /** staffName：この喪家の担当者（登録で入れた名前） */
+  readonly context: SheetContext & { readonly staffName?: string };
 }
 
 const UNKNOWN = "要確認";
@@ -195,26 +196,33 @@ export function buildOrderSheet(state: CaseState, orderId: string, now = Date.no
   const deliverTo = spec?.deliverTo?.(state, f) ?? f.venue ?? UNKNOWN;
   const extras = spec?.extras?.(state, f) ?? [];
   const blanks = countBlanks([deliverAt, deliverTo, quantity, name, ...extras.map((e) => e.value)]);
-  const reg = state.registration;
-  const age = state.profile.deceasedAge ?? reg?.deceased.age;
 
   return {
     sheet: { orderId, label: row.label, vendor: VENDOR_OF[orderId] ?? row.label, status: row.status, waitingFor: row.waitingFor, items, deliverAt, deliverTo, notes: "", extras, utteranceIds: [], blanks },
-    context: {
-      familyName: state.familyName,
-      createdAt: now,
-      schedule: {
-        death: orUnknown(deathText(reg?.deceased.diedAt)),
-        layingIn: orUnknown(f.layingIn),
-        departure: dateOf(f.funeral) ? `${dateOf(f.funeral)}（葬儀のあと）` : UNKNOWN,
-        cremation: orUnknown(f.cremation),
-        wake: f.hasWake ? orUnknown(f.wake) : "行わない",
-        funeral: orUnknown(f.funeral),
-        burial: orUnknown(v(state, "burial_place")),
-        meal: v(state, "meals") ?? UNKNOWN,
-      },
-      venue: f.venue ?? UNKNOWN,
-      deceased: { age: age !== undefined ? `${age}歳` : UNKNOWN, sex: reg?.deceased.sex && reg.deceased.sex !== "答えない" ? reg.deceased.sex : UNKNOWN },
+    context: caseContext(state, now),
+  };
+}
+
+/** 発注書・受注書の頭に書く案件の情報（日程・式場・故人・担当者）。確定した決定と登録から作る */
+export function caseContext(state: CaseState, now = Date.now()): SingleOrderSheet["context"] {
+  const f = factsOf(state);
+  const reg = state.registration;
+  const age = state.profile.deceasedAge ?? reg?.deceased.age;
+  return {
+    familyName: state.familyName,
+    createdAt: now,
+    schedule: {
+      death: orUnknown(deathText(reg?.deceased.diedAt)),
+      layingIn: orUnknown(f.layingIn),
+      departure: dateOf(f.funeral) ? `${dateOf(f.funeral)}（葬儀のあと）` : UNKNOWN,
+      cremation: orUnknown(f.cremation),
+      wake: f.hasWake ? orUnknown(f.wake) : "行わない",
+      funeral: orUnknown(f.funeral),
+      burial: orUnknown(v(state, "burial_place")),
+      meal: v(state, "meals") ?? UNKNOWN,
     },
+    venue: f.venue ?? UNKNOWN,
+    deceased: { age: age !== undefined ? `${age}歳` : UNKNOWN, sex: reg?.deceased.sex && reg.deceased.sex !== "答えない" ? reg.deceased.sex : UNKNOWN },
+    ...(reg?.staffName ? { staffName: reg.staffName } : {}),
   };
 }

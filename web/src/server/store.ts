@@ -5,7 +5,8 @@
 import { randomBytes } from "node:crypto";
 import type { CaseState } from "../engine/case";
 import { DEMO_CASE } from "../engine/fixtures/demoCase";
-import { caseFromRegistration, type Registration } from "../engine/registration";
+import { demoDiedAt, demoRegistration } from "../engine/fixtures/demoTimeline";
+import { caseFromRegistration, decisionsFrom, type Registration } from "../engine/registration";
 import { getKv, type Kv } from "./kv";
 
 export interface CaseStore {
@@ -43,9 +44,12 @@ export const TRIAL_PREFIX = "trial-";
 export const CASE_PREFIX = "case-";
 
 function seedFor(caseId: string, familyToken: string): CaseState {
-  // 受付で伺ったこと（架空）は、共用デモの山田家だけに付ける。試用・ロールプレイの案件には付けない
-  const { registration, ...rest } = DEMO_CASE;
-  return { ...rest, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 }, ...(caseId === DEMO_CASE.caseId ? { registration } : {}) };
+  const seed: CaseState = { ...DEMO_CASE, registration: undefined, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 } };
+  if (caseId !== DEMO_CASE.caseId) return seed;
+  // 共用デモの山田家だけ、受付で伺ったこと（架空）を付け、受付で確定した事実（喪主・葬儀の形・安置先）を確定済みにする。
+  // 亡くなった日は「最初から」を押した日にする（日付が古くならないように）。試用・ロールプレイの案件には付けない
+  const registration = demoRegistration(demoDiedAt());
+  return { ...seed, registration, decisions: decisionsFrom(registration) };
 }
 
 /**

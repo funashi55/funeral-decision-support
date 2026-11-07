@@ -17,6 +17,8 @@ export const RESTING_OPTIONS = ["自宅", "会館", "未定"] as const;
 export const RegistrationSchema = z.object({
   /** 家名（例：山田家）。「家」がなければ足す */
   familyName: text(30).min(1, "家名を入れてください"),
+  /** この喪家を受け持つ担当者の名前（発注書・受注書の担当欄に入る） */
+  staffName: optional(20),
   deceased: z.object({
     name: optional(40),
     age: z.coerce.number().int().min(0).max(120).optional(),

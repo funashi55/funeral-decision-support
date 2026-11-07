@@ -1,4 +1,6 @@
 import type { Speaker } from "../case";
+import { DEMO_CASE } from "./demoCase";
+import { demoDates } from "./demoTimeline";
 
 export interface ScriptLine {
   readonly speaker: Speaker;
@@ -10,8 +12,31 @@ export interface ScriptLine {
  * デモの打合せの台本（架空）。収録音声がないときは、これを順に流す。
  * 実際の打合せの順に沿う：お悔やみと挨拶 → 関係性 → 亡くなるまでの流れとお別れの様子 → 故人の好きだったこと → 来てほしい人と親戚 → お寺 → 日程 → 費用 → 手配。
  * 担当者は新人という設定で、お寺の都合や孫の到着を確かめる前に火葬場の空きを伝えてしまう（見落としが起きやすい場面）。
+ * 後半は、お寺と孫の到着に合わせて日程を決め直し、祭壇・料理・香典返しの数を決める（会話から候補が出て、担当者が確定する）。
+ * 日付は、亡くなった日（「最初から」を押した日）から数える
  */
-export const DEMO_SCRIPT: readonly ScriptLine[] = [
+export function demoScript(diedAt: string): readonly ScriptLine[] {
+  const d = demoDates(diedAt);
+  return [
+    ...FIRST_HALF,
+    { speaker: "staff", speakerLabel: "担当者", text: "失礼いたしました。お寺さんのご都合と、お孫さんのご到着を先に伺うべきでした。お寺さんには、このあと私からもご連絡いたします。" },
+    { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "さきほどお寺さんに電話したら、" + d.wake + "の夜と、次の日の午前なら来ていただけるそうです。" },
+    { speaker: "staff", speakerLabel: "担当者", text: "それでは、お通夜は" + d.wake + "の18時、ご葬儀は" + d.funeral + "の10時、どちらも当社の東会館でいかがでしょうか。火葬は" + d.funeral + "の12時に市営斎場を押さえます。" },
+    { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "それでお願いします。それなら孫も間に合います。" },
+    { speaker: "staff", speakerLabel: "担当者", text: "ご納棺は、お孫さんが着かれてから、" + d.wake + "の14時にいたしましょう。お母さまの愛用の品があれば、一緒にお入れできます。" },
+    { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "湯灌はしなくて大丈夫です。普通の納棺で、母の好きだった物を入れてあげたいです。" },
+    { speaker: "staff", speakerLabel: "担当者", text: "祭壇は、小さめの生花祭壇でも、お花を中心にお飾りできます。お花の色のご希望はございますか。" },
+    { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "小さめので。お花は、白と淡い黄色にしてもらえますか。庭の花みたいな色で。" },
+    { speaker: "staff", speakerLabel: "担当者", text: "ご参列は15名ほどですね。お料理と香典返しは、どのくらいご用意しましょうか。" },
+    { speaker: "family", speakerLabel: "喪主の夫", text: "料理は15人分で。香典返しは30個あれば足りると思います。" },
+    { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "お香典はいただくことにします。お悔やみ欄は、家族葬なので今回は載せないでおきます。" },
+    { speaker: "staff", speakerLabel: "担当者", text: "承知しました。火葬場へは、何名さまでいらっしゃいますか。" },
+    { speaker: "family", speakerLabel: "喪主の夫", text: "10人くらいです。" },
+  ];
+}
+
+/** 前半：お悔やみから、費用とお悔やみ欄の相談まで */
+const FIRST_HALF: readonly ScriptLine[] = [
   { speaker: "staff", speakerLabel: "担当者", text: "このたびは、心よりお悔やみ申し上げます。この度のご葬儀のお手伝いを、精一杯させていただきます。よろしくお願いいたします。" },
   { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "よろしくお願いします。娘です。私が喪主をします。" },
   { speaker: "staff", speakerLabel: "担当者", text: "まず初めに、お母さまがお亡くなりになるまでの流れを、お伺いしてもよろしいでしょうか。" },
@@ -32,3 +57,6 @@ export const DEMO_SCRIPT: readonly ScriptLine[] = [
   { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "それと、正直、費用はできるだけ抑えたいんですけど…" },
   { speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "あと、新聞のお悔やみ欄にも出したほうがいいんでしょうか。" },
 ];
+
+/** テスト用：日付を固定した台本 */
+export const DEMO_SCRIPT: readonly ScriptLine[] = demoScript(DEMO_CASE.registration?.deceased.diedAt ?? "2026-11-07T05:30");

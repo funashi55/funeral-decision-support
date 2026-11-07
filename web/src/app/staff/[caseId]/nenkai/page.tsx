@@ -10,7 +10,7 @@ export default async function NenkaiPage({ params }: PageProps<"/staff/[caseId]/
   const state = await store.get(caseId);
   return (
     <main className={s.page} data-print-page>
-      <NenkaiSheet familyName={state?.familyName ?? ""} />
+      <NenkaiSheet familyName={state?.familyName ?? ""} initialDeathDate={state?.registration?.deceased.diedAt?.slice(0, 10)} deceasedName={state?.registration?.deceased.name} />
     </main>
   );
 }

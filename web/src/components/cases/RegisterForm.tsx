@@ -57,6 +57,7 @@ export function RegisterForm() {
     const age = value(f, "age");
     const body = {
       familyName: value(f, "familyName"),
+      staffName: value(f, "staffName"),
       deceased: { name: value(f, "deceasedName"), age: age === "" ? undefined : age, sex: value(f, "sex") || undefined, diedAt: value(f, "diedAt"), diedPlace: value(f, "diedPlace") },
       chiefMourner: { name: value(f, "mournerName"), relation: value(f, "relation"), phone: value(f, "phone") },
       membership: value(f, "membership"),
@@ -167,6 +168,10 @@ export function RegisterForm() {
             <input name="temple" maxLength={60} placeholder="例：市外のお寺（お付き合いあり）" autoComplete="off" />
           </label>
         </div>
+        <label className={s.field}>
+          担当者
+          <input name="staffName" maxLength={20} placeholder="例：佐藤（発注書・受注書の担当欄に入ります）" autoComplete="off" />
+        </label>
         <label className={s.field}>
           受付のメモ
           <textarea name="memo" rows={3} maxLength={400} placeholder="お迎えのときの様子、気をつけることなど" />

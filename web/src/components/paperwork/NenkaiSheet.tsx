@@ -31,8 +31,9 @@ function Rows({ rows }: { readonly rows: readonly NenkaiRow[] }) {
  * 年回表（中陰月日表）。亡くなった日を入れると、法要の日付を数えて A4 で印刷できる。
  * 入れた日付は保存しない（このページを閉じると消える）
  */
-export function NenkaiSheet({ familyName }: { readonly familyName: string }) {
-  const [deathDate, setDeathDate] = useState(todayJst);
+export function NenkaiSheet({ familyName, initialDeathDate, deceasedName }: { readonly familyName: string; readonly initialDeathDate?: string; readonly deceasedName?: string }) {
+  // 登録で亡くなった日を伺っていれば、それを最初から入れる（なければ今日）
+  const [deathDate, setDeathDate] = useState(() => initialDeathDate ?? todayJst());
   let table: ReturnType<typeof buildNenkai> | null = null;
   try {
     table = buildNenkai(deathDate);
@@ -65,7 +66,7 @@ export function NenkaiSheet({ familyName }: { readonly familyName: string }) {
               </tr>
               <tr>
                 <th scope="row">俗名</th>
-                <td aria-label="手書きで記入する欄" />
+                {deceasedName ? <td>{deceasedName}</td> : <td aria-label="手書きで記入する欄" />}
               </tr>
               <tr>
                 <th scope="row">ご逝去日</th>

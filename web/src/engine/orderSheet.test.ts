@@ -37,6 +37,7 @@ describe("発注書に、案件で確定した値を入れる", () => {
     ...DEMO_CASE,
     registration: {
       familyName: "山田",
+      staffName: undefined,
       deceased: { name: "山田 ハナ", age: 84, sex: "女性", diedAt: "2026-11-07T05:30", diedPlace: "市内の病院" },
       chiefMourner: { relation: "長女", name: undefined, phone: undefined },
       membership: "わからない",
@@ -109,5 +110,15 @@ describe("デモの打合せのあとに確定する値で、発注書が埋ま�
     expect(ready.length).toBeGreaterThan(4);
     const left = ready.map((o) => buildOrderSheet(s, o.id)).filter((x) => x.sheet.blanks > 0).map((x) => `${x.sheet.orderId}:${JSON.stringify(x.sheet)}`);
     expect(left).toEqual([]);
+  });
+});
+
+describe("要らない手配の見分け", () => {
+  it("「湯灌はせず」のように湯灌を断っているときは、湯灌の依頼を出さない", async () => {
+    const { buildOrders } = await import("./orders");
+    const row = buildOrders({ ...DEMO_CASE, decisions: { laying_in_style: done("湯灌はせず、普通の納棺"), laying_in_date: done("11月10日14時") } }).find((o) => o.id === "yukan");
+    expect(row?.status).toBe("not_needed");
+    const want = buildOrders({ ...DEMO_CASE, decisions: { laying_in_style: done("湯灌をお願いする"), laying_in_date: done("11月10日14時") } }).find((o) => o.id === "yukan");
+    expect(want?.status).toBe("ready");
   });
 });

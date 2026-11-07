@@ -82,7 +82,7 @@ export const ORDERS: readonly OrderDefinition[] = [
   { id: "parking", label: "駐車場の交通誘導員", stage: "order", needs: ["parking"], skipIf: { decisionId: "parking", pattern: DECLINED } },
   { id: "obituary", label: "新聞広告（お悔やみ欄）", stage: "order", needs: ["obituary"], skipIf: { decisionId: "obituary", pattern: DECLINED } },
   { id: "taxi", label: "タクシー", stage: "order", needs: ["crematorium_party"] },
-  { id: "yukan", label: "湯灌の依頼", stage: "order", needs: ["laying_in_style", "laying_in_date"], skipIf: { decisionId: "laying_in_style", pattern: /^(?!.*湯灌)/ } },
+  { id: "yukan", label: "湯灌の依頼", stage: "order", needs: ["laying_in_style", "laying_in_date"], skipIf: { decisionId: "laying_in_style", pattern: /^(?!.*湯灌)|湯灌(?:は|を)?(?:せず|しない|なし|不要|行わない)/ } },
   { id: "embalming", label: "エンバーミングの依頼", stage: "order", needs: ["embalming"], skipIf: { decisionId: "embalming", pattern: DECLINED } },
 ];
 
