@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3200;
+/** 開発サーバー（3200）とぶつからないよう、別のポートで立てる */
+const PORT = Number(process.env.E2E_PORT ?? 3300);
 
 /**
  * E2E は本番ビルドを別ポートで立てて行う。

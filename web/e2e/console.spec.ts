@@ -41,7 +41,7 @@ test("信頼関係の段階ではプランの金額を出さず、段階が進�
   const ids = await page.locator("[data-testid^=plan-]").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
   expect(ids).toEqual(["plan-simple", "plan-standard", "plan-gratitude"]);
   await expect(page.getByTestId("plan-simple")).toContainText("円");
-  await expect(page.getByTestId("plan-simple")).toContainText("会食（人数が決まってから）");
+  await expect(page.getByTestId("plan-simple")).toContainText("料理（人数が決まってから）");
 });
 
 test("確定したものだけが手配に回り、CSV に書き出される", async ({ page, request }) => {

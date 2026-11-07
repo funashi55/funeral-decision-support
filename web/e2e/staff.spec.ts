@@ -6,7 +6,7 @@ test.beforeEach(async ({ request }) => resetCase(request));
 test("担当者の画面は「いま」から始まり、決めることに切り替えられる", async ({ page }) => {
   await page.goto("/staff/demo-yamada");
   await expect(page.getByText("山田家")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "次にすること" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "まず、寄り添う" })).toBeVisible();
   await page.getByRole("tab", { name: /決めること/ }).click();
   await expect(page.getByRole("heading", { name: "決めること", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "▶ 打合せを再生" })).toBeEnabled();
@@ -14,9 +14,10 @@ test("担当者の画面は「いま」から始まり、決めることに切�
 
 test("確定した決定はボードに『確定』と出る", async ({ page, request }) => {
   await page.goto("/staff/demo-yamada");
-  await expect(page.getByRole("heading", { name: "次にすること" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "まず、寄り添う" })).toBeVisible();
   await confirmDecision(request, "funeral_style", "家族葬");
-  await expect(page.getByLabel("決まったこと")).toContainText("家族葬");
+  await page.getByRole("tab", { name: /基本情報/ }).click();
+  await expect(page.getByRole("region", { name: /決まったこと/ })).toContainText("家族葬");
 });
 
 test("ご家族の窓口を開くと、共有のリンクと QR コードが出る", async ({ page }) => {
@@ -33,6 +34,6 @@ test("ご家族の窓口を開くと、共有のリンクと QR コードが出�
 test("AI が使えないときは、画面を壊さずに理由を出す", async ({ page }) => {
   await page.goto("/staff/demo-yamada");
   await page.getByRole("button", { name: "1行すすめる" }).click();
-  await expect(page.getByText("このたびはご愁傷さまでございます")).toBeVisible();
+  await expect(page.getByText(/心よりお悔やみ申し上げます/)).toBeVisible();
   await expect(page.getByText(/API キー未設定/).first()).toBeVisible();
 });

@@ -364,7 +364,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       quick={quick}
       listening={listening}
       loading={farewellLoading}
-      error={error}
+      error={null}
       onRun={() => void runFarewell()}
       onFeedback={(t, v) => void feedback(t, v)}
     />
@@ -446,6 +446,14 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           </div>
           <Guide steps={CONSOLE_GUIDE} storageKey="console" label="打合せの画面" inline />
         </header>
+        {error && (
+          <p className={c.errorBar} role="alert">
+            <span>{error}</span>
+            <button type="button" onClick={() => setError(null)} aria-label="閉じる">
+              ×
+            </button>
+          </p>
+        )}
         <main className={c.stage} id="main-view" role="tabpanel" aria-labelledby={`tab-${view}`}>
           {view === "now" && (
             <NowView

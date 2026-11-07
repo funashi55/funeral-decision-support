@@ -61,7 +61,8 @@ export function Guide({ steps, storageKey, label = "使い方", inline = false, 
     } catch {
       seen = true;
     }
-    if (seen || !autoStart) return;
+    // 自動操作（テストや録画）のときは、勝手に始めない
+    if (seen || !autoStart || navigator.webdriver) return;
     const t = window.setTimeout(start, 900);
     return () => window.clearTimeout(t);
   }, [start, storageKey, autoStart]);

@@ -365,3 +365,9 @@ a.navItem { text-decoration: none; }
 .sheetItem .navBadgeWarn { background: var(--accent); }
 .sheetItem:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 @media (max-width: 760px) { .nowTab { white-space: nowrap; font-size: 0.76rem; gap: 4px; padding: 0 0.3rem; } .nowTabCount { min-width: 18px; height: 18px; padding: 0 4px; } }
+/* うまくいかなかったことは、どの画面を開いていても上に出す */
+.main { grid-template-rows: auto auto minmax(0, 1fr); }
+.errorBar { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-2) var(--space-5) 0; padding: var(--space-2) var(--space-3); border-radius: var(--r-sm); background: color-mix(in oklab, var(--care) 10%, white); color: var(--care); font-size: var(--text-sm); font-weight: 700; }
+.errorBar span { flex: 1; }
+.errorBar button { font-size: 1.1rem; color: inherit; padding: 0 var(--space-2); }
+.main:not(:has(.errorBar)) { grid-template-rows: auto minmax(0, 1fr); }
