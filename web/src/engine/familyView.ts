@@ -5,6 +5,7 @@
  */
 import { PHASE_LABEL, blockersOf, decisionOrder, getDecision } from "../domain/decisions";
 import type { CaseState, ChatTurn, FamilyNote, FamilyRequest } from "./case";
+import { isDemoCase } from "../domain/caseMode";
 
 /**
  * 担当者が確かめる項目で、遺族に「決めること」として見せないもの。
@@ -44,6 +45,8 @@ export interface FamilyRequestView {
 
 export interface FamilyView {
   readonly familyName: string;
+  /** デモ（架空のご家族）の窓口か。本番の窓口と見分けて札を出す */
+  readonly demo: boolean;
   readonly decided: readonly FamilyDecided[];
   readonly upcoming: readonly FamilyUpcoming[];
   /** 「これから決めること」に並べきれなかった件数 */
@@ -82,6 +85,7 @@ export function toFamilyView(state: CaseState): FamilyView {
 
   return {
     familyName: state.familyName,
+    demo: isDemoCase(state.caseId),
     decided,
     upcoming,
     moreUpcoming: open.length - upcoming.length,

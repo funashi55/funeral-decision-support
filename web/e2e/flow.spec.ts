@@ -11,7 +11,7 @@ test("遺族が変更を希望し、担当者が返事をすると、遺族の�
   const family = await familyCtx.newPage();
   const staff = await staffCtx.newPage();
 
-  await staff.goto("/staff/demo-yamada");
+  await staff.goto("/demo/demo-yamada");
   await family.goto(FAMILY_PATH);
 
   // 遺族：変更の希望を送る

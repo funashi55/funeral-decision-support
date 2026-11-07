@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { PrintButton } from "../../../../components/paperwork/PrintButton";
 import s from "../../../../components/paperwork/sheet.module.css";
+import { caseMode } from "../../../../domain/caseMode";
 import { company } from "../../../../domain/company";
 import { buildJuchu, type Juchu } from "../../../../engine/juchu";
 import { store } from "../../../../server/store";
@@ -39,7 +40,7 @@ export default async function JuchuPage({ params }: PageProps<"/staff/[caseId]/j
     );
   }
   const pw = buildJuchu(state);
-  const sender = company();
+  const sender = company(caseMode(caseId) ?? "live");
   return (
     <main className={s.page} data-print-page>
       <div className={s.bar}>
@@ -50,7 +51,7 @@ export default async function JuchuPage({ params }: PageProps<"/staff/[caseId]/j
         <div className={s.head}>
           <h1 className={s.title}>受注書</h1>
           <p className={s.note}>
-            {jstDate(pw.createdAt)}　{sender.name}
+            {jstDate(pw.createdAt)}　{sender.name || "＿＿＿＿＿＿"}
             <br />
             担当者　{pw.staffName ?? "＿＿＿＿＿＿"}
           </p>

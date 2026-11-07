@@ -5,7 +5,7 @@ import { store } from "../../../server/store";
 export async function POST(req: Request): Promise<Response> {
   try {
     const created = await store.createTrial();
-    return Response.redirect(new URL(`/staff/${created.caseId}`, req.url), 303);
+    return Response.redirect(new URL(`/demo/${created.caseId}`, req.url), 303);
   } catch (error) {
     return handleError(error);
   }

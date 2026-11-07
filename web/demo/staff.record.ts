@@ -20,7 +20,7 @@ test("担当者の画面", async ({ page, request }) => {
   await page.getByLabel(/家名/).fill("佐藤");
   await page.getByLabel(/喪主の続柄/).fill("長男");
   await page.waitForTimeout(1500);
-  await page.goto("/staff/demo-yamada");
+  await page.goto("/demo/demo-yamada");
 
   // 打合せを再生：まず寄り添い、見落としの先回り、お気持ちを伺い終えると提案が開く
   await page.getByRole("button", { name: "▶ 打合せを再生" }).click();
@@ -66,6 +66,6 @@ test("担当者の画面", async ({ page, request }) => {
   await sheet.waitForLoadState();
   await sheet.waitForTimeout(3000);
   // 受注書（施行の親の表）も開く
-  await sheet.goto("/staff/demo-yamada/juchu");
+  await sheet.goto("/demo/demo-yamada/juchu");
   await sheet.waitForTimeout(4000);
 });

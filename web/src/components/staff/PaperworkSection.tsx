@@ -4,6 +4,7 @@ import { api } from "../../client/api";
 import type { CaseState } from "../../engine/case";
 import { TODO_STAGES, isSendable, type OrderSheet, type Paperwork } from "../../engine/paperwork";
 import s from "./staff.module.css";
+import { caseHref } from "../../domain/caseMode";
 
 const message = (e: unknown): string => (e instanceof Error ? e.message : "問題が起きました");
 function sheetStatus(sheet: OrderSheet): string {
@@ -51,7 +52,7 @@ export function PaperworkSection({ state }: { readonly state: CaseState }) {
     });
 
   const stale = paperwork && paperwork.basedOn < state.utterances.length;
-  const sheetsUrl = `/staff/${encodeURIComponent(state.caseId)}/paperwork`;
+  const sheetsUrl = caseHref(state.caseId, "paperwork");
 
   return (
     <section className={s.group} aria-labelledby="paperwork-title" data-testid="paperwork">
@@ -96,7 +97,7 @@ export function PaperworkSection({ state }: { readonly state: CaseState }) {
                         </span>
                       </label>
                       {t.task.includes("年回表") && (
-                        <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/nenkai`} target="_blank" rel="noopener">
+                        <a className={s.btn} href={caseHref(state.caseId, "nenkai")} target="_blank" rel="noopener">
                           年回表を作る
                         </a>
                       )}
@@ -121,7 +122,7 @@ export function PaperworkSection({ state }: { readonly state: CaseState }) {
           <h3>
             発注書<span>{paperwork.sheets.length}</span>
           </h3>
-          <a className={`${s.btn} ${s.btnPrimary}`} href={`/staff/${encodeURIComponent(state.caseId)}/juchu`} target="_blank" rel="noopener">
+          <a className={`${s.btn} ${s.btnPrimary}`} href={caseHref(state.caseId, "juchu")} target="_blank" rel="noopener">
             受注書を開く（{paperwork.ledger.length} 品目・チェック表）
           </a>{" "}
           <a className={`${s.btn} ${s.btnPrimary}`} href={sheetsUrl} target="_blank" rel="noopener">

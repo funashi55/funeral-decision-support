@@ -7,6 +7,7 @@ import type { CaseState } from "../engine/case";
 import { DEMO_CASE } from "../engine/fixtures/demoCase";
 import { demoDiedAt, demoRegistration } from "../engine/fixtures/demoTimeline";
 import { caseFromRegistration, decisionsFrom, type Registration } from "../engine/registration";
+import { CASE_PREFIX, TRIAL_PREFIX, isDemoCase } from "../domain/caseMode";
 import { getKv, type Kv } from "./kv";
 
 export interface CaseStore {
@@ -14,7 +15,7 @@ export interface CaseStore {
   /** 遺族の窓口の合言葉から案件を引く */
   findByToken(token: string): Promise<CaseState | undefined>;
   save(state: CaseState): Promise<CaseState>;
-  /** 案件を最初の状態に戻す（家族の名前と条件だけがあり、会話はこれから） */
+  /** デモの案件を最初の状態に戻す（家族の名前と条件だけがあり、会話はこれから）。本番の案件は戻せない */
   reset(caseId: string): Promise<CaseState | undefined>;
   /** 試してもらう人ごとに、デモと同じ条件の新しい案件を作る */
   createTrial(): Promise<CaseState>;
@@ -39,9 +40,7 @@ const revKey = (id: string): string => `v${STORE_VERSION}:rev:${id}`;
 const tokenKey = (token: string): string => `v${STORE_VERSION}:token:${token}`;
 const INDEX_KEY = `v${STORE_VERSION}:cases`;
 
-export const TRIAL_PREFIX = "trial-";
-/** 喪家の登録で作った案件 */
-export const CASE_PREFIX = "case-";
+export { CASE_PREFIX, TRIAL_PREFIX };
 
 function seedFor(caseId: string, familyToken: string): CaseState {
   const seed: CaseState = { ...DEMO_CASE, registration: undefined, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 } };
@@ -58,10 +57,6 @@ function seedFor(caseId: string, familyToken: string): CaseState {
  */
 function demoToken(): string {
   return process.env.ACCESS_CODE ? randomBytes(12).toString("base64url") : (DEMO_CASE.familyToken ?? "");
-}
-
-function isKnownCase(caseId: string): boolean {
-  return caseId === DEMO_CASE.caseId || caseId.startsWith(TRIAL_PREFIX) || caseId.startsWith(CASE_PREFIX);
 }
 
 export function createCaseStore(kv: Kv): CaseStore {
@@ -90,12 +85,11 @@ export function createCaseStore(kv: Kv): CaseStore {
       return state?.familyToken === token ? state : undefined;
     },
     reset: async (caseId) => {
-      if (!isKnownCase(caseId)) return undefined;
+      // 本番の案件（登録した喪家）は戻さない。会話と決めたことを消してしまうため
+      if (!isDemoCase(caseId)) return undefined;
       const current = await kv.get<CaseState>(caseKey(caseId));
       if (!current && caseId !== DEMO_CASE.caseId) return undefined;
       const token = caseId === DEMO_CASE.caseId ? demoToken() : (current?.familyToken ?? "");
-      // 登録した喪家は、登録したときの内容（受付で聞いた事実）に戻す
-      if (current?.registration && caseId !== DEMO_CASE.caseId) return save(caseFromRegistration(caseId, token, current.registration));
       const seed = seedFor(caseId, token);
       // 試用・ロールプレイの案件は、家族の名前と条件を作ったときのまま残す
       return save(current ? { ...seed, familyName: current.familyName, profile: current.profile } : seed);

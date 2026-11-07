@@ -4,7 +4,7 @@ import { confirmDecision, resetCase } from "./helpers";
 test.beforeEach(async ({ request }) => resetCase(request));
 
 test("担当者の画面は「いま」から始まり、決めることに切り替えられる", async ({ page }) => {
-  await page.goto("/staff/demo-yamada");
+  await page.goto("/demo/demo-yamada");
   await expect(page.getByText("山田家")).toBeVisible();
   await expect(page.getByRole("heading", { name: "まず、寄り添う" })).toBeVisible();
   await page.getByRole("tab", { name: /決めること/ }).click();
@@ -13,7 +13,7 @@ test("担当者の画面は「いま」から始まり、決めることに切�
 });
 
 test("確定した決定はボードに『確定』と出る", async ({ page, request }) => {
-  await page.goto("/staff/demo-yamada");
+  await page.goto("/demo/demo-yamada");
   await expect(page.getByRole("heading", { name: "まず、寄り添う" })).toBeVisible();
   await confirmDecision(request, "funeral_style", "家族葬");
   await page.getByRole("tab", { name: /基本情報/ }).click();
@@ -21,7 +21,7 @@ test("確定した決定はボードに『確定』と出る", async ({ page, re
 });
 
 test("ご家族の窓口を開くと、共有のリンクと QR コードが出る", async ({ page }) => {
-  await page.goto("/staff/demo-yamada");
+  await page.goto("/demo/demo-yamada");
   await page.getByRole("button", { name: "ご家族の窓口" }).click();
   const drawer = page.getByRole("dialog", { name: "ご家族の窓口" });
   await expect(drawer).toBeVisible();
@@ -32,7 +32,7 @@ test("ご家族の窓口を開くと、共有のリンクと QR コードが出�
 });
 
 test("AI が使えないときは、画面を壊さずに理由を出す", async ({ page }) => {
-  await page.goto("/staff/demo-yamada");
+  await page.goto("/demo/demo-yamada");
   await page.getByRole("button", { name: "1行すすめる" }).click();
   await expect(page.getByText(/心よりお悔やみ申し上げます/)).toBeVisible();
   await expect(page.getByText(/API キー未設定/).first()).toBeVisible();

@@ -18,13 +18,20 @@ describe("喪家の登録（保存）", () => {
     expect((await store.listCases()).map((c) => c.familyName)).toEqual(["鈴木家", "佐藤家"]);
   });
 
-  it("最初からやり直すと、会話は消えて登録した内容は残る", async () => {
+  it("本番の案件は最初に戻せない（会話と決めたことを消さない）", async () => {
     const store = createCaseStore(createTestKv());
     const a = await store.createCase(reg("佐藤", 1));
-    await store.save({ ...a, utterances: [{ id: "U1", speaker: "staff", speakerLabel: "担当者", text: "よろしくお願いします", at: 0 }] });
-    const reset = await store.reset(a.caseId);
-    expect(reset?.utterances).toEqual([]);
-    expect(reset?.decisions.funeral_style?.value).toBe("家族葬");
-    expect(reset?.familyToken).toBe(a.familyToken);
+    const said = { ...a, utterances: [{ id: "U1", speaker: "staff" as const, speakerLabel: "担当者", text: "よろしくお願いします", at: 0 }] };
+    await store.save(said);
+    expect(await store.reset(a.caseId)).toBeUndefined();
+    expect((await store.get(a.caseId))?.utterances).toHaveLength(1);
+  });
+
+  it("本番の一覧にデモの案件は並ばない", async () => {
+    const store = createCaseStore(createTestKv());
+    await store.createTrial();
+    await store.get("demo-yamada");
+    await store.createCase(reg("佐藤", 1));
+    expect((await store.listCases()).map((c) => c.caseId)).toEqual([expect.stringMatching(/^case-/)]);
   });
 });

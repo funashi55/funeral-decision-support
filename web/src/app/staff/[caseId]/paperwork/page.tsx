@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PrintButton } from "../../../../components/paperwork/PrintButton";
-import { company } from "../../../../domain/company";
+import { caseMode } from "../../../../domain/caseMode";
+import { company, type Company } from "../../../../domain/company";
 import s from "../../../../components/paperwork/sheet.module.css";
 import type { SheetContext } from "../../../../engine/orderSheet";
 import type { OrderSheet } from "../../../../engine/paperwork";
@@ -20,9 +21,8 @@ const jstDate = (ms: number): string => new Date(ms).toLocaleDateString("ja-JP-u
  * FAX で送る発注書。東北地方の互助会系葬儀社が実際に使っていた発注書の並びに合わせた：
  * 宛先・発注元と担当・葬家名 → 式場（届け先）・届け日時 → 葬儀日程 → 注文内容 → 業者ごとの確認欄 → 確認の返信のお願い
  */
-function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly paperwork: SheetContext & { readonly staffName?: string } }) {
+function Sheet({ sheet, paperwork, sender }: { readonly sheet: OrderSheet; readonly paperwork: SheetContext & { readonly staffName?: string }; readonly sender: Company }) {
   const sc = paperwork.schedule;
-  const sender = company();
   return (
     <article className={s.sheet} aria-label={`${sheet.vendor}への発注書`}>
       <div className={s.head}>
@@ -38,9 +38,9 @@ function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly pape
         <p className={s.note}>
           {jstDate(paperwork.createdAt)}
           <br />
-          {sender.name}　担当：{paperwork.staffName ?? "＿＿＿＿＿＿"}
+          {sender.name || "＿＿＿＿＿＿"}　担当：{paperwork.staffName ?? "＿＿＿＿＿＿"}
           <br />
-          TEL：{sender.tel}　FAX：{sender.fax}
+          TEL：{sender.tel || "＿＿＿＿＿＿"}　FAX：{sender.fax || "＿＿＿＿＿＿"}
         </p>
       </div>
       <div className={s.to}>{paperwork.familyName}</div>
@@ -114,7 +114,7 @@ function Sheet({ sheet, paperwork }: { readonly sheet: OrderSheet; readonly pape
         <p>
           <b>FAX が届き次第、確認の FAX をご返信ください。</b>
           <br />
-          返信先 FAX：{sender.fax}（{sender.name}）
+          返信先 FAX：{sender.fax || "＿＿＿＿＿＿"}（{sender.name || "＿＿＿＿＿＿"}）
           <br />
           「要確認」の欄は、ご家族に確かめたうえで担当者が書き込んでから送ります。金額は見積書でご確認ください。
         </p>
@@ -156,7 +156,7 @@ export default async function PaperworkPage({ params, searchParams }: PageProps<
         <PrintButton />
       </div>
       {sheets.map((sheet) => (
-        <Sheet key={sheet.orderId} sheet={sheet} paperwork={context} />
+        <Sheet key={sheet.orderId} sheet={sheet} paperwork={context} sender={company(caseMode(caseId) ?? "live")} />
       ))}
     </main>
   );

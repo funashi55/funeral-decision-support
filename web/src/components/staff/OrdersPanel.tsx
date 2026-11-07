@@ -3,6 +3,7 @@ import { buildChecklist, buildOrders } from "../../engine/orders";
 import { OrderList } from "./OrderList";
 import { PaperworkSection } from "./PaperworkSection";
 import s from "./staff.module.css";
+import { caseHref } from "../../domain/caseMode";
 
 
 /** 確認表と発注リスト、基幹システム向けの書き出し。確定したものだけが手配に回る */
@@ -26,10 +27,10 @@ export function OrdersPanel({ state }: { readonly state: CaseState }) {
       </div>
       <PaperworkSection state={state} />
       <div className={s.linkRow}>
-        <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/juchu`} target="_blank" rel="noopener">
+        <a className={s.btn} href={caseHref(state.caseId, "juchu")} target="_blank" rel="noopener">
           受注書
         </a>
-        <a className={s.btn} href={`/staff/${encodeURIComponent(state.caseId)}/nenkai`} target="_blank" rel="noopener">
+        <a className={s.btn} href={caseHref(state.caseId, "nenkai")} target="_blank" rel="noopener">
           年回表（中陰月日表）
         </a>
         <a className={s.btn} href={`/api/cases/${encodeURIComponent(state.caseId)}/export`} download>

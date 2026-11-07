@@ -73,7 +73,7 @@ export function RegisterForm() {
       const res = await fetch("/api/cases", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const json = (await res.json()) as Envelope;
       if (!json.success || !json.data) throw new Error(json.error ?? "登録できませんでした");
-      router.push(`/staff/${json.data.caseId}`);
+      router.push(`/staff/${encodeURIComponent(json.data.caseId)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "登録できませんでした");
       setBusy(false);

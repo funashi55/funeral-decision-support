@@ -6,6 +6,7 @@ import { SHEETABLE_ORDERS } from "../../engine/orderSheet";
 import { buildOrders, type OrderStatus } from "../../engine/orders";
 import type { OrderSheetMap } from "../../server/orderSheetStore";
 import s from "./staff.module.css";
+import { caseHref } from "../../domain/caseMode";
 
 const STATUS_LABEL: Record<OrderStatus, string> = { ready: "手配できる", waiting: "確定待ち", not_needed: "不要" };
 const STATUS_CLASS: Record<OrderStatus, string> = { ready: s.stateDone ?? "", waiting: s.stateCand ?? "", not_needed: s.stateOpen ?? "" };
@@ -17,7 +18,7 @@ const message = (e: unknown): string => (e instanceof Error ? e.message : "発�
  */
 export function OrderList({ state }: { readonly state: CaseState }) {
   const orders = buildOrders(state);
-  const sheetsUrl = `/staff/${encodeURIComponent(state.caseId)}/paperwork`;
+  const sheetsUrl = caseHref(state.caseId, "paperwork");
   const [made, setMade] = useState<OrderSheetMap>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

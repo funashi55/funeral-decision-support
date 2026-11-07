@@ -5,7 +5,7 @@ import { meetingHref, roleplayHref } from "./links";
 import s from "./system.module.css";
 
 /** 担当者の画面と同じ暗い帯。システムの中の画面どうしを行き来する */
-export type SystemSection = "families" | "meeting" | "roleplay";
+export type SystemSection = "families" | "meeting" | "roleplay" | "demo";
 
 export function SystemBar({
   current,
@@ -22,6 +22,8 @@ export function SystemBar({
     { id: "families", label: "ご家族の一覧", href: "/staff" },
     { id: "meeting", label: "打合せ", href: meetingHref(caseId) },
     { id: "roleplay", label: "ロールプレイ", href: roleplayHref(caseId) },
+    // デモ（架空のご家族）は本番の一覧と分けて置く
+    { id: "demo", label: "デモ", href: "/demo" },
   ];
   return (
     <>
@@ -37,6 +39,7 @@ export function SystemBar({
                   href={item.href}
                   className={s.item}
                   aria-current={item.id === current ? "page" : undefined}
+                  data-guide={`nav-${item.id}`}
                 >
                   {item.label}
                 </Link>

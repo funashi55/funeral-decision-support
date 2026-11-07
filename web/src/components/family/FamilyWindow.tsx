@@ -60,7 +60,9 @@ export function FamilyWindow({ token }: { readonly token: string }) {
   return (
     <main className={s.page}>
       <header className={s.hero}>
-        <p className={s.eyebrow}>ご家族の窓口</p>
+        <p className={s.eyebrow}>
+          ご家族の窓口{view.demo && <span className={s.demoBadge}>デモ・架空のご家族</span>}
+        </p>
         <h1 className={s.title}>{view.familyName}さま</h1>
         <p className={s.lead}>決めたことは、ここにいつでも残っています。急がなくて大丈夫です。</p>
         <p className={`${s.live} ${status === "open" ? s.liveOn : ""}`} role="status">

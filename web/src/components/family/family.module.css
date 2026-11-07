@@ -117,3 +117,6 @@
 .hero { position: relative; isolation: isolate; padding-right: 0; }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--bg, #fbf8f3) 38%, rgba(251, 248, 243, 0.55) 62%, rgba(251, 248, 243, 0) 100%), url("/images/web/family-hero.webp") right center / auto 100% no-repeat; opacity: 0.95; }
 @media (max-width: 520px) { .hero::before { background: linear-gradient(180deg, rgba(251, 248, 243, 0.2) 0%, var(--bg, #fbf8f3) 72%), url("/images/web/family-hero.webp") 80% top / cover no-repeat; } }
+
+/* デモの窓口だけに出す札 */
+.demoBadge { margin-left: 0.6em; padding: 1px 8px; border-radius: 999px; background: #f2c14e; color: #3a2b00; font-size: 0.66rem; letter-spacing: 0.06em; }

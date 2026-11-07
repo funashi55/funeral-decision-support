@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../client/api";
 import { useCaseStream } from "../../client/useCaseStream";
+import { isDemoCase, listHref } from "../../domain/caseMode";
 import { impactedBy } from "../../domain/decisions";
 import type { FeedbackVerdict } from "../../engine/case";
 import type { FarewellResult } from "../../engine/farewell";
@@ -34,7 +35,6 @@ const PLAN_REWRITE_AFTER = 3;
 
 /** 打合せの画面のガイド（見えている場所だけを順に照らす） */
 const CONSOLE_GUIDE: readonly GuideStep[] = [
-  { target: "demo", title: "デモを再生", body: "架空の打合せの会話が流れます。実際の打合せでは、会話の欄に打つか、マイクで聞き取ります。" },
   { target: "now-tabs", title: "いま見ること", body: "寄り添い・提案、やること、基本情報を切り替えます。数字は残っている件数です。" },
   { target: "care", title: "まず、寄り添う", body: "ご遺族に安心して、心ゆくまでお別れしていただくための言葉の例です。提案より先に、ここから始めます。" },
   { target: "proposal", title: "提案は、信頼のあとで", body: "お気持ちを伺い、お別れの話に入ると開きます。見せるのは切り出し方だけ。理由は「なぜ」に畳んでいます。" },
@@ -42,6 +42,9 @@ const CONSOLE_GUIDE: readonly GuideStep[] = [
   { target: "nav", title: "画面の切り替え", body: "決めることの一覧、プランの見積もり、手配（発注書）に移れます。" },
   { target: "inbox", title: "ご家族の窓口", body: "ご家族のスマホで開くページのリンクと QR コード、ご家族からの質問がここに届きます。" },
 ];
+
+/** デモの画面だけ、最初に「デモを再生」を照らす */
+const DEMO_GUIDE: readonly GuideStep[] = [{ target: "demo", title: "デモを再生", body: "架空の打合せの会話が流れます。実際の打合せでは、会話の欄に打つか、マイクで聞き取ります。" }, ...CONSOLE_GUIDE];
 
 type View = "now" | "decisions" | "plans" | "orders";
 const VIEWS: readonly { readonly id: View; readonly label: string; readonly icon: string }[] = [
@@ -63,9 +66,11 @@ const message = (e: unknown): string => (e instanceof Error ? e.message : "問�
 
 export function StaffConsole({ caseId }: { readonly caseId: string }) {
   const { state, connected } = useCaseStream(caseId);
+  // デモ（架空のご家族）か本番（登録した喪家）か。本番では台本の再生も「最初から」も出さない
+  const demo = isDemoCase(caseId);
   // デモの台本：日付は、この家族の亡くなった日（「最初から」を押した日）から数える
   const diedAt = state?.registration?.deceased.diedAt;
-  const script = useMemo(() => demoScript(diedAt ?? demoDiedAt()), [diedAt]);
+  const script = useMemo(() => (demo ? demoScript(diedAt ?? demoDiedAt()) : []), [demo, diedAt]);
   const [playing, setPlaying] = useState(false);
   // スマホでは「会話」と中央の画面を切り替えて見せる（広い画面では両方とも出ている）
   const [talkOpen, setTalkOpen] = useState(false);
@@ -401,6 +406,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       <nav className={c.rail} aria-label="画面の切り替え">
         <div className={c.brand}>
           <span className={c.brandFamily}>{state.familyName}</span>
+          {demo && <span className={c.demoBadge}>デモ・架空のご家族</span>}
           <span className={c.brandMeta}>{`担当：${state.registration?.staffName ?? staffName ?? "担当者"}`}</span>
           {!connected && <span className={c.reconnect}>再接続中…</span>}
         </div>
@@ -435,9 +441,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           </button>
         </div>
         <div className={c.railFoot}>
-          <Link href="/staff" className={c.navItem} title="ご家族の一覧・新しいご家族の登録">
+          <Link href={listHref(caseId)} className={c.navItem} title={demo ? "デモの入口" : "ご家族の一覧・新しいご家族の登録"}>
             <Icon d="M3 6h18M3 12h18M3 18h18" />
-            <span>ご家族の一覧</span>
+            <span>{demo ? "デモの入口" : "ご家族の一覧"}</span>
           </Link>
           <Link href={roleplayHref(caseId)} className={c.navItem} title="架空のご家族と打合せの練習をする">
             <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
@@ -457,6 +463,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
 
       <div className={c.main}>
         <header className={c.topbar}>
+          {demo && (
           <div className={c.demo} role="group" aria-label="デモの操作" data-guide="demo">
             <span className={c.demoLabel}>デモ</span>
             <button type="button" className={`${s.btn} ${recording ? s.btnRec : s.btnPrimary}`} onClick={() => void togglePlay()}>
@@ -470,7 +477,8 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
               最初から
             </button>
           </div>
-          <Guide steps={CONSOLE_GUIDE} storageKey="console" label="打合せの画面" inline />
+          )}
+          <Guide steps={demo ? DEMO_GUIDE : CONSOLE_GUIDE} storageKey="console" label="打合せの画面" inline />
         </header>
         {error && (
           <p className={c.errorBar} role="alert">
@@ -557,9 +565,9 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
                 ご家族の窓口
                 {openRequests > 0 && <span className={`${c.navBadge} ${c.navBadgeWarn}`}>{openRequests}</span>}
               </button>
-              <Link href="/staff" className={c.sheetItem}>
+              <Link href={listHref(caseId)} className={c.sheetItem}>
                 <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-                ご家族の一覧
+                {demo ? "デモの入口" : "ご家族の一覧"}
               </Link>
               <Link href={roleplayHref(caseId)} className={c.sheetItem}>
                 <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
