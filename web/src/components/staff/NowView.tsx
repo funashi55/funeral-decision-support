@@ -42,6 +42,12 @@ interface NowViewProps {
 export type TodoAction = { readonly action: "add"; readonly text: string } | { readonly action: "done"; readonly id: string; readonly done: boolean } | { readonly action: "remove"; readonly id: string };
 export type TodoHandler = (body: TodoAction) => void;
 
+/** 見立てがこれだけ発言に遅れたら、古いことを示す */
+const STALE_AFTER = 4;
+
+/** 有料の選択肢・お金に関わる決めごと（信頼を得てから話す） */
+const OFFER_DECISIONS: ReadonlySet<string> = new Set(["laying_in_style", "laying_in_date", "embalming", "resting_place", "altar_plan", "flower_color", "coffin", "meals", "return_gifts", "budget_scope", "estimate", "membership"]);
+
 const FIT_TEXT = { suits: "合う", consider: "尋ねてみる" } as const;
 
 /** 済んだ提案（画面の下に畳む） */
@@ -60,6 +66,10 @@ interface DoneItem {
 export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
   const [tab, setTab] = useState<NowTab>("proposal");
   const rec = farewell?.ok ? farewell.recommendation : null;
+  // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く
+  const proposalsReady = allowsPrices(detectPhase(state.utterances).phase);
+  // 有料の選択肢やお金に関わる注意は、提案と同じく信頼を得てから。それまでは提案と一緒に畳む
+  const later = (decisionId: string): boolean => !proposalsReady && OFFER_DECISIONS.has(decisionId);
   const done: DoneItem[] = [];
   /** 済んでいれば done に積んで false、まだなら true */
   const active = (check: HandledCheck, kind: string, label: string): boolean => {
@@ -94,7 +104,10 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
     // AI の注意は文が長く話題も広いので、その注意の文の語が担当者の発言に2つ重なったときだけ済んだとみなす
     .filter((x) => active(byWords(`caution:${x.decisionId}`, x.message), "注意", x.label));
   const questions = (rec?.questionsToAsk ?? []).filter((q) => active(byWords(`question:${textKey(q)}`, q), "確認", q));
-  const checkCount = alerts.length + aiCautions.length + questions.length;
+  const nowAlerts = alerts.filter((a) => !later(a.decisionId));
+  const nowCautions = aiCautions.filter((x) => !later(x.decisionId));
+  const laterChecks = [...alerts.filter((a) => later(a.decisionId)).map((a) => ({ key: `oversight:${a.id}`, label: a.decisionLabel, message: a.message })), ...aiCautions.filter((x) => later(x.decisionId)).map((x) => ({ key: `caution:${x.decisionId}`, label: x.label, message: x.message }))];
+  const checkCount = nowAlerts.length + nowCautions.length + questions.length;
   const told = (target: string): React.ReactNode => <FeedbackButtons state={state} target={target} onFeedback={onFeedback} />;
   // 会話で触れた提案・注意・尋ねることは「伝えた」として記録に残す（推奨が書き直されても戻らないように）
   const spoken = done.filter((d) => d.by === "spoken").map((d) => d.target);
@@ -104,10 +117,9 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
   }, [spokenKey, onFeedback]);
 
   const remaining = todoRemaining(state);
-  // 提案は、ご家族のお気持ち（ヒアリング）を伺い終えて、お別れの話に入ってから開く
-  const proposalsReady = allowsPrices(detectPhase(state.utterances).phase);
+
   const tabs: readonly { readonly id: NowTab; readonly label: string; readonly count: number }[] = [
-    { id: "proposal", label: "寄り添い・提案", count: oversights.length },
+    { id: "proposal", label: "寄り添い・提案", count: checkCount },
     { id: "todo", label: "やること", count: remaining },
     { id: "info", label: "基本情報", count: state.circumstances.length },
   ];
@@ -154,7 +166,10 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
           </h2>
           {rec && (
             <p className={c.wishBand}>
-              <small>ご家族が望んでいること</small>
+              <small>
+                ご家族が望んでいること
+                {state.utterances.length - farewellBasedOn >= STALE_AFTER && <span className={c.staleTag}>{state.utterances.length - farewellBasedOn}発言前までの見立て</span>}
+              </small>
               {rec.familyWish}
             </p>
           )}
@@ -200,6 +215,20 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               )}
             </>
           )}
+          {laterChecks.length > 0 && (
+            <div className={c.laterChecks}>
+              <h3>提案のときに確かめること</h3>
+              <ul>
+                {laterChecks.map((x) => (
+                  <li key={x.key}>
+                    <b>{x.label}</b>
+                    <span>{x.message}</span>
+                    <div className={c.itemActions}>{told(x.key)}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <details className={c.more}>
             <summary>選択肢の比較と根拠をすべて見る</summary>
             {children}
@@ -211,7 +240,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
             確認・注意<span className={c.laneCount}>{checkCount}</span>
           </h2>
           {checkCount === 0 && <p className={c.quiet}>いまはありません</p>}
-          {alerts.map((a) => (
+          {nowAlerts.map((a) => (
             <article key={a.id} className={c.alert}>
               <h4>
                 <span className={c.tagWarn}>注意</span>
@@ -226,7 +255,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               </div>
             </article>
           ))}
-          {aiCautions.map((x) => (
+          {nowCautions.map((x) => (
             <article key={x.decisionId + x.message} className={c.alert}>
               <h4>
                 <span className={c.tagWarn}>注意</span>

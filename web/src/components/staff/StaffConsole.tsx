@@ -146,15 +146,23 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
   /** 理由づけ（推奨）がどの発言までを見て書かれたか */
   const [farewellBasedOn, setFarewellBasedOn] = useState(0);
   const farewellRunning = useRef(false);
+  // 書いている途中に頼まれたら、終わってから最新の会話でもう一度書く（古い「望んでいること」を残さない）
+  const farewellQueued = useRef(false);
   const runFarewell = useCallback(async () => {
-    if (farewellRunning.current) return;
+    if (farewellRunning.current) {
+      farewellQueued.current = true;
+      return;
+    }
     farewellRunning.current = true;
     setFarewellLoading(true);
     setError(null);
     try {
-      const result = await api.farewell(caseId);
-      setFarewell(result);
-      if (result.ok) setFarewellBasedOn(result.basedOn ?? 0);
+      do {
+        farewellQueued.current = false;
+        const result = await api.farewell(caseId);
+        setFarewell(result);
+        if (result.ok) setFarewellBasedOn(result.basedOn ?? 0);
+      } while (farewellQueued.current);
     } catch (e) {
       setError(message(e));
     } finally {
@@ -189,7 +197,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
         setQuick(next);
         // 見立てが変わったとき、または理由を書いてから発言が十分に増えたときに、理由と根拠を書き直す
         const grown = next.basedOn - reasonedAt.current >= REWRITE_AFTER_LINES;
-        if ((fitsChanged(reasonedFits.current, next.fits) || grown) && !farewellRunning.current) {
+        if (fitsChanged(reasonedFits.current, next.fits) || grown) {
           reasonedFits.current = next.fits;
           reasonedAt.current = next.basedOn;
           void runFarewell();
