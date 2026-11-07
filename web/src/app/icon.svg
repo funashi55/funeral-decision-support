@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- sou-buddy：寄り添うふたり（担当者とバディ）。画面の左の帯と同じ夜の色に、生成りと青 -->
+  <rect width="64" height="64" rx="15" fill="#1f3a47"/>
+  <circle cx="24.5" cy="31" r="13.5" fill="#ece6da"/>
+  <circle cx="40" cy="33" r="13.5" fill="#6fa6c0" fill-opacity="0.9"/>
+</svg>
