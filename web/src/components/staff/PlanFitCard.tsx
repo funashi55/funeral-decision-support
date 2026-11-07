@@ -22,6 +22,7 @@ export function PlanFitCard({ state, proposal, actions }: { readonly state: Case
             {best.planLabel}　{yen(best.estimate.total)}
           </span>
         )}
+        {actions}
       </div>
       <p className={c.raise}>
         <small>こう切り出しましょう</small>「{proposal.howToRaise}」
@@ -55,7 +56,6 @@ export function PlanFitCard({ state, proposal, actions }: { readonly state: Case
       </ul>
       <p className={c.planFitNote}>並びは費用を抑える順です。どの幅にするかを決めるのはご家族です。</p>
       </details>
-      {actions}
     </article>
   );
 }

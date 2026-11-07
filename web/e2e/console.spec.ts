@@ -10,16 +10,20 @@ test("メモ入力で発言を足すと、確認・注意に見落としの注�
 
   await expect(page.getByText("新聞のお悔やみ欄にも出したほうがいいんでしょうか")).toBeVisible();
   const oversights = page.getByTestId("oversights");
+  // 見出しだけが出て、説明は開いたときに見える
+  await expect(oversights.getByText("お悔やみ欄は取り消せない")).toBeVisible();
+  await expect(oversights.getByText(/掲載すると取り消せません/)).toBeHidden();
+  await oversights.getByText("お悔やみ欄は取り消せない").click();
   await expect(oversights.getByText(/掲載すると取り消せません/)).toBeVisible();
 
   // 伝えたものは「済んだこと」に畳まれ、戻せる
   await oversights.getByRole("button", { name: "伝えた" }).first().click();
   const handled = page.getByTestId("handled");
   await expect(handled).toContainText("お悔やみ欄");
-  await expect(oversights.getByText(/掲載すると取り消せません/)).toHaveCount(0);
+  await expect(oversights.getByText("お悔やみ欄は取り消せない")).toHaveCount(0);
   await handled.locator("summary").click();
   await handled.getByRole("button", { name: "戻す" }).click();
-  await expect(oversights.getByText(/掲載すると取り消せません/)).toBeVisible();
+  await expect(oversights.getByText("お悔やみ欄は取り消せない")).toBeVisible();
 });
 
 test("字幕を直すと、直した文が残る", async ({ page, request }) => {

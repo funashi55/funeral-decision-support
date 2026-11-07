@@ -23,11 +23,13 @@ export function GriefCareLane({ state, items, actions }: GriefCareLaneProps) {
         const quote = state.utterances.find((u) => u.id === g.utteranceIds.at(-1));
         return (
           <article key={g.principleId} className={c.care}>
-            <h4>{p.name}</h4>
+            <div className={c.careHead}>
+              <h4>{p.name}</h4>
+              {actions?.(g.principleId)}
+            </div>
             <p className={c.careWords}>
               <small>かける言葉の例</small>「{g.words}」
             </p>
-            {actions?.(g.principleId)}
             <details className={c.careMore}>
               <summary>なぜ・ほかの言い方・避けたい言葉</summary>
               <p className={c.careWhy}>

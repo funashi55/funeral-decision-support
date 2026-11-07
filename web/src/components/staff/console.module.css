@@ -380,3 +380,27 @@ a.navItem { text-decoration: none; }
 .checkFold li { display: grid; gap: 2px; font-size: var(--text-sm); line-height: 1.7; }
 .checkFold b { font-weight: 800; }
 .inlineAction { margin-left: var(--space-2); min-height: 36px; padding: 0 0.9rem; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; font-size: var(--text-sm); } .inlineAction:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+/* 見出しだけの1行。説明は開いたときだけ（必要最小限を標準にする） */
+.compact { display: flex; align-items: flex-start; gap: var(--space-3); }
+.compact > details { flex: 1; min-width: 0; }
+.compact > details > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: var(--space-2); min-height: 36px; font-weight: 800; font-size: var(--text-sm); }
+.compact > details > summary::-webkit-details-marker { display: none; }
+.compact > details > summary::after { content: "▸"; margin-left: 2px; color: var(--ink-3); font-size: 0.75em; transition: transform var(--duration-fast, 150ms); }
+.compact > details[open] > summary::after { transform: rotate(90deg); }
+.compact > details > p { margin: var(--space-1) 0 var(--space-2); font-size: var(--text-sm); line-height: 1.75; color: var(--ink-2); }
+.compact > details > summary:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; border-radius: 4px; }
+.compact > .itemActions { flex-shrink: 0; margin-top: 0; }
+.questions li.compact { display: flex; align-items: center; padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4); }
+.askLine { flex: 1; min-width: 0; margin: 0; font-size: var(--text-sm); line-height: 1.7; }
+.alert.compact { align-items: center; padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4); }
+.alert.compact > details > p { color: var(--ink); }
+.checkFold li.compact { align-items: center; }
+/* 「伝えた／使わない」は見出しの行の右に置き、カードを低く保つ */
+.headActions { margin-left: auto; flex-shrink: 0; }
+.careHead { display: flex; align-items: center; gap: var(--space-2); }
+.careHead h4 { margin: 0; }
+.proposal { padding: var(--space-3) var(--space-4); }
+.moreText > summary { cursor: pointer; list-style: none; }
+.moreText > summary::-webkit-details-marker { display: none; }
+.moreText:not([open]) > summary::after { content: " 続き"; font-size: 0.75em; opacity: 0.7; text-decoration: underline; }
+.moreText > summary:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 4px; }

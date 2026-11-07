@@ -176,13 +176,13 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
             {thinking && <span className={c.thinking}>考えています…</span>}
           </h2>
           {rec && (
-            <p className={c.wishBand}>
+            <div className={c.wishBand}>
               <small>
                 ご家族が望んでいること
                 {state.utterances.length - farewellBasedOn >= STALE_AFTER && <span className={c.staleTag}>{state.utterances.length - farewellBasedOn}発言前までの見立て</span>}
               </small>
-              {rec.familyWish}
-            </p>
+              <FirstSentence text={rec.familyWish} />
+            </div>
           )}
           {care.length === 0 && !rec && state.utterances.length === 0 && <p className={c.quiet}>会話が進むと、かける言葉の例が出ます</p>}
           {!rec && !thinking && state.utterances.length > 0 && (
@@ -193,7 +193,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               </button>
             </p>
           )}
-          <GriefCareLane state={state} items={care} actions={(id) => <div className={c.itemActions}>{told(`care:${id}`)}</div>} />
+          <GriefCareLane state={state} items={care} actions={(id) => <div className={c.headActions}>{told(`care:${id}`)}</div>} />
         </section>
 
         <details className={`${c.block} ${c.proposalFold}`} open={proposalsReady || undefined} data-guide="proposal" key={proposalsReady ? "ready" : "early"}>
@@ -213,6 +213,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
                     <div className={c.proposalHead}>
                       <b>{o.label}</b>
                       <span className={o.fit === "suits" ? c.fitSuits : c.fitAsk}>{FIT_TEXT[o.fit as keyof typeof FIT_TEXT]}</span>
+                      <div className={c.headActions}>{told(`farewell:${o.id}`)}</div>
                     </div>
                     <p className={c.raise}>
                       <small>こう切り出しましょう</small>「{o.howToRaise}」
@@ -221,11 +222,10 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
                       <summary>なぜ</summary>
                       <p className={c.reason}>{o.reason}</p>
                     </details>
-                    <div className={c.itemActions}>{told(`farewell:${o.id}`)}</div>
                   </li>
                 ))}
               </ul>
-              {showPlan && planFit && <PlanFitCard state={state} proposal={planFit} actions={<div className={c.itemActions}>{told("plan:fit")}</div>} />}
+              {showPlan && planFit && <PlanFitCard state={state} proposal={planFit} actions={<div className={c.headActions}>{told("plan:fit")}</div>} />}
               {rec.timeAdvice && (
                 <details className={c.why}>
                   <summary>日程について</summary>
@@ -239,9 +239,11 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               <h3>提案のときに確かめること</h3>
               <ul>
                 {laterChecks.map((x) => (
-                  <li key={x.key}>
-                    <b>{x.label}</b>
-                    <span>{x.message}</span>
+                  <li key={x.key} className={c.compact}>
+                    <details>
+                      <summary>{x.label}</summary>
+                      <p>{x.message}</p>
+                    </details>
                     <div className={c.itemActions}>{told(x.key)}</div>
                   </li>
                 ))}
@@ -259,17 +261,18 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
             確認・注意<span className={c.laneCount}>{checkCount}</span>
           </h2>
           {checkCount === 0 && <p className={c.quiet}>いまはありません</p>}
+          {/* 見出しだけを出し、説明は開いたときだけ見せる（打合せ中は画面を読み込まずに済むように） */}
           {mustItems.map((x) => (
-            <article key={x.key} className={c.alert}>
-              <h4>
-                <span className={c.tagWarn}>注意</span>
-                {x.title}
-              </h4>
-              <p>{x.message}</p>
-              <div className={s.meta2}>
+            <article key={x.key} className={`${c.alert} ${c.compact}`}>
+              <details>
+                <summary>
+                  <span className={c.tagWarn}>注意</span>
+                  {x.title}
+                </summary>
+                <p>{x.message}</p>
                 {x.quote && <span className={s.tag}>きっかけ：「{state.utterances.find((u) => u.id === x.quote)?.text.slice(0, 18)}…」</span>}
-                {told(x.key)}
-              </div>
+              </details>
+              <div className={c.itemActions}>{told(x.key)}</div>
             </article>
           ))}
           {checkItems.length > 0 && (
@@ -279,9 +282,11 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               </summary>
               <ul>
                 {checkItems.map((x) => (
-                  <li key={x.key}>
-                    <b>{x.title}</b>
-                    <span>{x.message}</span>
+                  <li key={x.key} className={c.compact}>
+                    <details>
+                      <summary>{x.title}</summary>
+                      <p>{x.message}</p>
+                    </details>
                     <div className={c.itemActions}>{told(x.key)}</div>
                   </li>
                 ))}
@@ -291,9 +296,11 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
           {questions.length > 0 && (
             <ul className={c.questions}>
               {questions.map((q) => (
-                <li key={q}>
-                  <span className={c.tagAsk}>確認</span>
-                  {q}
+                <li key={q} className={c.compact}>
+                  <p className={c.askLine}>
+                    <span className={c.tagAsk}>確認</span>
+                    {q}
+                  </p>
                   <div className={c.itemActions}>{told(`question:${textKey(q)}`)}</div>
                 </li>
               ))}
@@ -578,5 +585,17 @@ function Facts({ state, extracting }: { readonly state: CaseState; readonly extr
         </>
       )}
     </section>
+  );
+}
+
+/** 最初の一文だけを出し、続きは開いたときに見せる（必要最小限を標準に） */
+function FirstSentence({ text }: { readonly text: string }) {
+  const cut = text.indexOf("。");
+  if (cut < 0 || cut === text.length - 1) return <>{text}</>;
+  return (
+    <details className={c.moreText}>
+      <summary>{text.slice(0, cut + 1)}</summary>
+      {text.slice(cut + 1)}
+    </details>
   );
 }
