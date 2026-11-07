@@ -98,8 +98,8 @@ export function TaskBoard({ state, impacted, onConfirm }: TaskBoardProps) {
   );
 }
 
-/** 1行：丸（確定）・項目名・候補や期限の小さな情報・編集 */
-function TaskRow({ item, state, impacted, onConfirm }: { readonly item: DecisionItem; readonly state: CaseState; readonly impacted: boolean; readonly onConfirm: TaskBoardProps["onConfirm"] }) {
+/** 1行：丸（確定）・項目名・候補や期限の小さな情報・編集。note は「次に進めること」の理由など */
+export function TaskRow({ item, state, impacted, onConfirm, note }: { readonly item: DecisionItem; readonly state: CaseState; readonly impacted: boolean; readonly onConfirm: TaskBoardProps["onConfirm"]; readonly note?: string }) {
   const decision = state.decisions[item.id];
   const candidate = decision?.status === "candidate" ? decision.value : undefined;
   const [editing, setEditing] = useState(false);
@@ -152,6 +152,7 @@ function TaskRow({ item, state, impacted, onConfirm }: { readonly item: Decision
           </form>
         ) : (
           <span className={t.meta}>
+            {note && <span className={t.note}>{note}</span>}
             {impacted && <span className={t.warn}>見直しが必要</span>}
             {candidate && (
               <span className={t.candidate}>
@@ -171,7 +172,7 @@ function TaskRow({ item, state, impacted, onConfirm }: { readonly item: Decision
   );
 }
 
-function CheckIcon() {
+export function CheckIcon() {
   return (
     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M5 12.5l4.5 4.5L19 7.5" />

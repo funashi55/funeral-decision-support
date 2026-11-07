@@ -9,7 +9,8 @@ import type { OversightAlert } from "../../engine/oversight";
 import { getGriefPrinciple } from "../../domain/griefCare";
 import { FAREWELL_CUES, FAREWELL_DECISION, HANDLED_LABEL, PLAN_CUES, handledBy, keywordCues, keywordHits, textKey, type HandledBy, type HandledCheck } from "../../engine/handled";
 import { TOPIC_CUES } from "../../engine/nextSteps";
-import { ConfirmControl, ManualEntry } from "./DecisionBoard";
+import { CheckIcon, TaskRow } from "./TaskBoard";
+import t from "./tasks.module.css";
 import { GriefCareLane } from "./GriefCareLane";
 import { PlanFitCard } from "./PlanFitCard";
 import { familyAskedForMore, familyWantsToSave, type PlanFitProposal } from "../../engine/planFit";
@@ -411,119 +412,101 @@ function TodoList({ state, impacted, oversights, onConfirm, onTodo }: Pick<NowVi
   const waiting = DECISIONS.filter((d) => !pushed.has(d.id) && (state.decisions[d.id]?.status === "candidate" || (impacted.has(d.id) && state.decisions[d.id]?.status !== "confirmed")));
   const open = today.filter((d) => !pushed.has(d.id) && !state.decisions[d.id] && !impacted.has(d.id));
   const customs = todosOf(state);
+  const customOpen = customs.filter((x) => !x.done);
+  const customDone = customs.filter((x) => x.done);
   const total = today.length + customs.length;
-  const finished = done.length + customs.filter((t) => t.done).length;
+  const finished = done.length + customDone.length;
+  const section = (title: string, count: number, children: React.ReactNode, extra?: string) => (
+    <details className={`${t.section} ${extra ?? ""}`} open>
+      <summary>
+        <span className={t.chevron} aria-hidden="true" />
+        {title}
+        <span className={t.sectionCount}>{count}</span>
+      </summary>
+      <ul className={t.list}>{children}</ul>
+    </details>
+  );
   return (
-    <aside className={c.todo} aria-labelledby="todo-title">
-      <h2 id="todo-title" className={c.blockTitle}>
-        やることリスト
-      </h2>
-      <p className={c.todoCount}>
-        残り <b>{total - finished}</b> / {total}
-      </p>
-      <div className={c.todoBar} aria-hidden="true">
-        <i style={{ width: `${(finished / Math.max(total, 1)) * 100}%` }} />
-      </div>
+    <section className={t.board} aria-labelledby="todo-title">
+      <header className={t.head}>
+        <h2 id="todo-title">やること</h2>
+        <p className={t.progress}>
+          残り <b>{total - finished}</b>/{total}
+          <span className={t.bar} aria-hidden="true">
+            <i style={{ width: `${(finished / Math.max(total, 1)) * 100}%` }} />
+          </span>
+        </p>
+      </header>
 
       {next.length > 0 && (
-        <div className={c.nextBox} data-testid="next-steps">
-          <h3 className={c.nextTitle}>次に進めること</h3>
-          <ul className={c.todoList}>
-            {next.map((n) => {
-              const value = state.decisions[n.item.id]?.value;
-              return (
-                <li key={n.item.id} className={`${c.todoItem} ${c.nextItem}`}>
-                  <span className={c.todoMark} aria-hidden="true">→</span>
-                  <span className={c.todoText}>
-                    {n.item.label}
-                    <small className={c.nextReason}>{n.reason}</small>
-                    {value && <small>候補：{value}</small>}
-                  </span>
-                  {n.kind === "confirm" && value ? <ConfirmControl item={n.item} value={value} onConfirm={onConfirm} /> : <ManualEntry item={n.item} onConfirm={onConfirm} />}
-                </li>
-              );
-            })}
-          </ul>
+        <div data-testid="next-steps">
+          {section(
+            "次に進めること",
+            next.length,
+            next.map((n) => <TaskRow key={n.item.id} item={n.item} state={state} impacted={impacted.has(n.item.id)} onConfirm={onConfirm} note={n.reason} />),
+            t.nextSection,
+          )}
         </div>
       )}
+      {waiting.length > 0 && section("確定を待つ", waiting.length, waiting.map((d) => <TaskRow key={d.id} item={d} state={state} impacted={impacted.has(d.id)} onConfirm={onConfirm} />))}
+      {open.length > 0 && section("今日まだ", open.length, open.map((d) => <TaskRow key={d.id} item={d} state={state} impacted={false} onConfirm={onConfirm} />))}
 
-      {waiting.length > 0 && (
+      {section(
+        "自分で足したこと",
+        customOpen.length,
         <>
-          <h3 className={c.todoGroup}>確定を待つ {waiting.length}</h3>
-          <ul className={c.todoList}>
-            {waiting.map((d) => {
-              const value = state.decisions[d.id]?.value;
-              return (
-                <li key={d.id} className={`${c.todoItem} ${c.todoWaiting} ${impacted.has(d.id) ? c.todoImpacted : ""}`}>
-                  <span className={c.todoMark} aria-hidden="true">●</span>
-                  <span className={c.todoText}>
-                    {d.label}
-                    <small>{impacted.has(d.id) ? "見直しが必要です" : value}</small>
-                  </span>
-                  {value ? <ConfirmControl item={d} value={value} onConfirm={onConfirm} /> : <ManualEntry item={d} onConfirm={onConfirm} />}
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      )}
-
-      {open.length > 0 && (
-        <>
-          <h3 className={c.todoGroup}>まだ {open.length}</h3>
-          <ul className={c.todoList}>
-            {open.map((d) => (
-              <li key={d.id} className={c.todoItem}>
-                <span className={c.todoMark} aria-hidden="true">○</span>
-                <span className={c.todoText}>{d.label}</span>
-                <ManualEntry item={d} onConfirm={onConfirm} />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      <h3 className={c.todoGroup}>自分で足したこと {customs.length > 0 ? customs.length : ""}</h3>
-      {customs.length > 0 && (
-        <ul className={c.todoList}>
-          {customs.map((t) => (
-            <li key={t.id} className={`${c.todoItem} ${t.done ? c.todoDone : ""}`}>
-              <button
-                type="button"
-                className={c.todoCheck}
-                aria-pressed={t.done}
-                aria-label={t.done ? `「${t.text}」を未済に戻す` : `「${t.text}」を済みにする`}
-                onClick={() => onTodo({ action: "done", id: t.id, done: !t.done })}
-              >
-                {t.done ? "✓" : ""}
+          {customOpen.map((x) => (
+            <li key={x.id} className={t.row}>
+              <button type="button" className={t.check} aria-pressed={false} aria-label={`「${x.text}」を済みにする`} onClick={() => onTodo({ action: "done", id: x.id, done: true })}>
+                <CheckIcon />
               </button>
-              <span className={c.todoText}>{t.text}</span>
-              <button type="button" className={c.todoRemove} aria-label={`「${t.text}」を消す`} onClick={() => onTodo({ action: "remove", id: t.id })}>
+              <span className={t.body}>
+                <span className={t.title}>{x.text}</span>
+              </span>
+              <button type="button" className={t.edit_btn} aria-label={`「${x.text}」を消す`} title="消す" onClick={() => onTodo({ action: "remove", id: x.id })}>
                 ×
               </button>
             </li>
           ))}
-        </ul>
+          <li className={t.addRow}>
+            <AddTodo onAdd={(text) => onTodo({ action: "add", text })} />
+          </li>
+        </>,
       )}
-      <AddTodo onAdd={(text) => onTodo({ action: "add", text })} />
 
-      {done.length > 0 && (
-        <>
-          <h3 className={c.todoGroup}>決まった {done.length}</h3>
-          <ul className={c.todoList}>
+      {done.length + customDone.length > 0 && (
+        <details className={`${t.section} ${t.doneSection}`}>
+          <summary>
+            <span className={t.chevron} aria-hidden="true" />
+            完了
+            <span className={t.sectionCount}>{done.length + customDone.length}</span>
+          </summary>
+          <ul className={t.list}>
             {done.map((d) => (
-              <li key={d.id} className={`${c.todoItem} ${c.todoDone}`}>
-                <span className={c.todoMark} aria-hidden="true">✓</span>
-                <span className={c.todoText}>
-                  {d.label}
-                  <small>{state.decisions[d.id]?.value}</small>
+              <li key={d.id} className={`${t.row} ${t.rowDone}`}>
+                <span className={`${t.check} ${t.checkDone}`} aria-hidden="true">
+                  <CheckIcon />
+                </span>
+                <span className={t.body}>
+                  <span className={t.title}>{d.label}</span>
+                  <span className={t.meta}>{state.decisions[d.id]?.value}</span>
+                </span>
+              </li>
+            ))}
+            {customDone.map((x) => (
+              <li key={x.id} className={`${t.row} ${t.rowDone}`}>
+                <button type="button" className={`${t.check} ${t.checkDone}`} aria-pressed aria-label={`「${x.text}」を未済に戻す`} onClick={() => onTodo({ action: "done", id: x.id, done: false })}>
+                  <CheckIcon />
+                </button>
+                <span className={t.body}>
+                  <span className={t.title}>{x.text}</span>
                 </span>
               </li>
             ))}
           </ul>
-        </>
+        </details>
       )}
-    </aside>
+    </section>
   );
 }
 
@@ -532,7 +515,7 @@ function AddTodo({ onAdd }: { readonly onAdd: (text: string) => void }) {
   const [text, setText] = useState("");
   return (
     <form
-      className={c.todoForm}
+      className={t.addForm}
       onSubmit={(e) => {
         e.preventDefault();
         if (!text.trim()) return;
@@ -540,6 +523,7 @@ function AddTodo({ onAdd }: { readonly onAdd: (text: string) => void }) {
         setText("");
       }}
     >
+      <span className={t.plus} aria-hidden="true">＋</span>
       <input aria-label="やることを足す" placeholder="やることを足す（例：親戚に到着時刻を確かめる）" value={text} maxLength={TODO_TEXT_MAX} onChange={(e) => setText(e.target.value)} />
       <button type="submit" disabled={!text.trim()}>
         足す
