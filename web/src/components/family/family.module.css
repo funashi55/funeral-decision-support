@@ -120,3 +120,11 @@
 
 /* デモの窓口だけに出す札 */
 .demoBadge { margin-left: 0.6em; padding: 1px 8px; border-radius: 999px; background: #f2c14e; color: #3a2b00; font-size: 0.66rem; letter-spacing: 0.06em; }
+/* お願いしたいこと（担当者からの TODO） */
+.taskGroup { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
+.taskGroup h3 { font-size: 0.9rem; font-weight: 700; color: var(--ink-2); }
+.taskList { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.taskList label { display: flex; align-items: flex-start; gap: 0.75rem; min-height: 48px; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; font-size: 1rem; line-height: 1.6; cursor: pointer; }
+.taskList input { flex: none; width: 22px; height: 22px; margin-top: 0.15rem; accent-color: var(--accent); }
+.taskDone label { color: var(--ink-3); background: #f6f4ef; }
+.taskDone span { text-decoration: line-through; }

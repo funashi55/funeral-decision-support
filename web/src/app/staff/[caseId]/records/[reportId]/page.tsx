@@ -90,8 +90,10 @@ export default async function RecordPage({ params }: PageProps<"/staff/[caseId]/
         </section>
         <Bullets title="ご家族が大事にしたいこと" items={report.familyVoice.map((v) => v.text)} />
         <Decided report={report} />
-        <Bullets title="まだ決まっていないこと" items={report.pending} />
-        <Bullets title="次にすること" items={report.nextSteps} />
+        <Bullets title="これから決めること" items={report.toDecide} />
+        <Bullets title="ご家族に調べていただくこと" items={report.familyResearch} />
+        <Bullets title="ご家族にご用意いただくこと" items={report.familyPrepare} />
+        <Bullets title="担当者がすること" items={report.staffTasks} />
 
         <section className={r.section}>
           <h2>会話（清書）</h2>

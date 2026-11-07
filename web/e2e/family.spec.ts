@@ -79,3 +79,16 @@ test("スマホの幅で横にはみ出さない", async ({ page, request }) => 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test("担当者が「見せる」にしたお願いだけが窓口に出て、ご家族が済みの印を付けられる", async ({ page, request }) => {
+  const add = async (text: string, shared: boolean) =>
+    (await (await request.post("/api/cases/demo-yamada/family-tasks", { data: { action: "add", kind: "prepare", text, shared } })).json()) as { data: { familyTasks: { id: string; text: string }[] } };
+  await add("まだ見せない下書き", false);
+  await add("遺影に使うお写真を1〜2枚", true);
+  await page.goto(FAMILY_PATH);
+  const list = page.getByTestId("family-task-list");
+  await expect(list).toContainText("遺影に使うお写真を1〜2枚");
+  await expect(list).not.toContainText("まだ見せない下書き");
+  await list.getByRole("checkbox", { name: "遺影に使うお写真を1〜2枚" }).check();
+  await expect(list.getByRole("checkbox", { name: "遺影に使うお写真を1〜2枚" })).toBeChecked();
+});

@@ -16,8 +16,10 @@ export const ReportDraftSchema = z.object({
   familyVoice: z
     .array(z.object({ text: z.string().describe("ご家族が大事にしたいこと・気がかり（ご家族の言葉に近く）"), utteranceIds: z.array(z.string()) }))
     .describe("ご家族の言葉として出た、大事にしたいこと・気がかり"),
-  pending: z.array(z.string()).describe("まだ決まっていないこと・次に確かめること（会話に出たものだけ）"),
-  nextSteps: z.array(z.string()).describe("担当者が次にすること（会話で約束したこと・手配）"),
+  toDecide: z.array(z.string()).describe("これから決めること（会話に出て、まだ決まっていないもの）"),
+  familyResearch: z.array(z.string()).describe("ご家族に調べていただくこと（例：親戚の連絡先、お寺の都合の確認）。会話で頼んだもの・話に出たものだけ。ご家族に向けた丁寧な一文"),
+  familyPrepare: z.array(z.string()).describe("ご家族にご用意いただくもの（例：遺影の写真、着せたいお洋服）。会話で頼んだもの・話に出たものだけ。ご家族に向けた丁寧な一文"),
+  staffTasks: z.array(z.string()).describe("担当者がすること（会話で約束したこと・手配）"),
 });
 export type ReportDraft = z.output<typeof ReportDraftSchema>;
 
@@ -46,8 +48,10 @@ export interface MeetingReport {
   readonly staffName?: string;
   readonly overview: string;
   readonly familyVoice: readonly { readonly text: string; readonly utteranceIds: readonly string[] }[];
-  readonly pending: readonly string[];
-  readonly nextSteps: readonly string[];
+  readonly toDecide: readonly string[];
+  readonly familyResearch: readonly string[];
+  readonly familyPrepare: readonly string[];
+  readonly staffTasks: readonly string[];
   /** 案件の決定から（モデルは書かない） */
   readonly decided: readonly { readonly label: string; readonly value: string }[];
   readonly candidates: readonly { readonly label: string; readonly value: string }[];
@@ -83,9 +87,9 @@ export const CLEAN_SYSTEM = `打合せの文字起こしを清書します。
 - 意味を変えない。言っていないことを足さない。話した人の口調（です・ます／くだけた言い方）は残す
 - 発言は1つも抜かず、同じ ID で同じ順に返す`;
 
-export function reportPrompt(state: CaseState, lines: readonly Utterance[]): string {
+export function reportPrompt(state: CaseState, lines: readonly Utterance[], previous: readonly MeetingReport[] = []): string {
   return `# ご家族
-${state.familyName}
+${state.familyName}${previousMeetingsPrompt(previous)}
 
 # この回の会話
 ${lines.map(line).join("\n")}`;
@@ -126,6 +130,32 @@ export function decisionsOf(state: CaseState): Pick<MeetingReport, "decided" | "
   };
 }
 
+/** 前の形で保存された記録（pending・nextSteps）も、いまの形で読む */
+export function normalizeReport(raw: MeetingReport & { readonly pending?: readonly string[]; readonly nextSteps?: readonly string[] }): MeetingReport {
+  return {
+    ...raw,
+    toDecide: raw.toDecide ?? raw.pending ?? [],
+    familyResearch: raw.familyResearch ?? [],
+    familyPrepare: raw.familyPrepare ?? [],
+    staffTasks: raw.staffTasks ?? raw.nextSteps ?? [],
+    familyVoice: raw.familyVoice ?? [],
+    decided: raw.decided ?? [],
+    candidates: raw.candidates ?? [],
+    transcript: raw.transcript ?? [],
+  };
+}
+
+const tidy = (xs: readonly string[]): string[] => [...new Set(xs.map((x) => x.trim()).filter(Boolean))];
+
+/** 推奨・記録に渡す、これまでの打合せの要点（新しい3回まで） */
+export function previousMeetingsPrompt(reports: readonly MeetingReport[]): string {
+  if (reports.length === 0) return "";
+  const parts = reports.slice(-3).map((r) =>
+    [`## 第${r.number}回`, r.overview, r.toDecide.length > 0 ? `これから決めること：${r.toDecide.join("／")}` : "", r.familyVoice.length > 0 ? `ご家族が大事にしたいこと：${r.familyVoice.map((v) => v.text).join("／")}` : ""].filter(Boolean).join("\n"),
+  );
+  return `\n\n# これまでの打合せの記録（続きの打合せです。前回までの話を踏まえてください）\n${parts.join("\n\n")}`;
+}
+
 /** この回の記録を作る */
 export async function buildReport(
   state: CaseState,
@@ -137,7 +167,7 @@ export async function buildReport(
   const lines = utterancesSince(state, previous.at(-1));
   if (lines.length === 0) return undefined;
   const known = new Set(lines.map((u) => u.id));
-  const [draft, transcript] = await Promise.all([models.summarize(REPORT_SYSTEM, reportPrompt(state, lines)), clean(lines, models.clean)]);
+  const [draft, transcript] = await Promise.all([models.summarize(REPORT_SYSTEM, reportPrompt(state, lines, previous)), clean(lines, models.clean)]);
   return {
     id,
     caseId: state.caseId,
@@ -147,8 +177,10 @@ export async function buildReport(
     staffName: state.registration?.staffName,
     overview: draft.overview.trim(),
     familyVoice: draft.familyVoice.map((v) => ({ text: v.text.trim(), utteranceIds: v.utteranceIds.filter((x) => known.has(x)) })).filter((v) => v.text),
-    pending: draft.pending.map((x) => x.trim()).filter(Boolean),
-    nextSteps: draft.nextSteps.map((x) => x.trim()).filter(Boolean),
+    toDecide: tidy(draft.toDecide),
+    familyResearch: tidy(draft.familyResearch),
+    familyPrepare: tidy(draft.familyPrepare),
+    staffTasks: tidy(draft.staffTasks),
     ...decisionsOf(state),
     transcript,
   };

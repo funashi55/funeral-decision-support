@@ -11,6 +11,7 @@ import type { Place } from "../domain/directory";
 import type { TravelView } from "../domain/travel";
 import type { Amount, BuddyProfile, Tone } from "../domain/buddy";
 import type { MeetingReport } from "../engine/report";
+import type { FamilyTaskKind, TaskAction } from "../engine/familyTasks";
 
 interface Envelope<T> {
   readonly success: boolean;
@@ -54,6 +55,10 @@ export const api = {
   /** 打合せの記録（古い順）・打合せを終えて記録を作る */
   reports: (caseId: string) => call<MeetingReport[]>(`/api/cases/${caseId}/reports`),
   endMeeting: (caseId: string) => post<MeetingReport[]>(`/api/cases/${caseId}/reports`),
+  /** ご家族へのお願い（担当者の操作） */
+  familyTask: (caseId: string, body: TaskAction | { action: "add"; kind: FamilyTaskKind; text: string; shared?: boolean }) => post<CaseState>(`/api/cases/${caseId}/family-tasks`, body),
+  /** ご家族が、お願いに済んだ印を付ける */
+  familyTaskDone: (token: string, id: string, done: boolean) => post<FamilyView>(`/api/family/${encodeURIComponent(token)}/tasks`, { id, done }),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
   acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),
   swapSpeaker: (caseId: string, utteranceId: string, speaker: "staff" | "family") =>

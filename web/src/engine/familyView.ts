@@ -1,3 +1,4 @@
+import { sharedTasks, type FamilyTaskKind } from "./familyTasks";
 /**
  * 遺族の窓口に渡す情報。担当者の画面とは分ける。
  * 遺族に見せるのは「確定したこと」「これから決めること」「送った依頼」だけで、
@@ -56,6 +57,15 @@ export interface FamilyView {
   readonly chat: readonly ChatTurn[];
   /** ご家族の検討メモ */
   readonly notes: readonly FamilyNote[];
+  /** 担当者が見せると決めた、ご家族へのお願い */
+  readonly tasks: readonly FamilyTaskView[];
+}
+
+export interface FamilyTaskView {
+  readonly id: string;
+  readonly kind: FamilyTaskKind;
+  readonly text: string;
+  readonly done: boolean;
 }
 
 export function toFamilyView(state: CaseState): FamilyView {
@@ -92,5 +102,6 @@ export function toFamilyView(state: CaseState): FamilyView {
     requests,
     chat: state.familyChat,
     notes: state.familyNotes,
+    tasks: sharedTasks(state).map(({ id, kind, text, done }) => ({ id, kind, text, done })),
   };
 }

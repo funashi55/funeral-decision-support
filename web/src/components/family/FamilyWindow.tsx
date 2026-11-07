@@ -7,6 +7,7 @@ import { ChatWidget } from "./ChatWidget";
 import { DecidedList } from "./DecidedList";
 import { RequestComposer, type ComposerDraft } from "./RequestComposer";
 import { SentList } from "./SentList";
+import { TaskList } from "./TaskList";
 import s from "./family.module.css";
 
 /** ご家族向けのガイド（自動では始めず、右上の「？」から） */
@@ -70,6 +71,7 @@ export function FamilyWindow({ token }: { readonly token: string }) {
         </p>
       </header>
 
+      <TaskList token={token} tasks={view.tasks ?? []} />
       <DecidedList decided={view.decided} onAskChange={askChange} />
       <Upcoming view={view} />
       {view.notes.length > 0 && (

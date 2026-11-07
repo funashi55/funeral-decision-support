@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CaseState, Utterance } from "../../engine/case";
+import { utterancesSince, type MeetingReport } from "../../engine/report";
 import { InputDock, type NewLine } from "./InputDock";
 import s from "./staff.module.css";
 
@@ -10,6 +11,27 @@ interface TranscriptProps {
   readonly onEdit: (utteranceId: string, text: string) => Promise<void>;
   /** 自動の聞き分けを直す（担当者 ↔ ご遺族） */
   readonly onSwapSpeaker: (utteranceId: string, speaker: "staff" | "family") => Promise<void>;
+  /** これまでの打合せの記録（古い順） */
+  readonly reports?: readonly MeetingReport[] | null;
+  readonly ending?: boolean;
+  /** 打合せを終えて、この回の記録を作る */
+  readonly onEnd?: () => void;
+}
+
+/** 前回までの記録の札。前の会話は畳んでおき、押すと開く */
+function PreviousMeeting({ report, earlier, onEdit, onSwapSpeaker }: { readonly report: MeetingReport; readonly earlier: readonly Utterance[]; readonly onEdit: TranscriptProps["onEdit"]; readonly onSwapSpeaker: TranscriptProps["onSwapSpeaker"] }) {
+  return (
+    <details className={s.prevMeeting} data-testid="previous-meeting">
+      <summary>
+        <b>第{report.number}回までの打合せ</b>
+        <span>{report.overview}</span>
+        {report.toDecide.length > 0 && <small>これから決めること：{report.toDecide.join("・")}</small>}
+      </summary>
+      {earlier.map((u) => (
+        <Line key={`${u.id}:${u.text}:${u.speaker}`} u={u} onEdit={onEdit} onSwapSpeaker={onSwapSpeaker} />
+      ))}
+    </details>
+  );
 }
 
 const mmss = (sec: number): string => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
@@ -60,9 +82,13 @@ function Line({ u, onEdit, onSwapSpeaker }: { readonly u: Utterance; readonly on
   );
 }
 
-export function Transcript({ state, onAdd, onEdit, onSwapSpeaker }: TranscriptProps) {
+export function Transcript({ state, onAdd, onEdit, onSwapSpeaker, reports, ending = false, onEnd }: TranscriptProps) {
   const end = useRef<HTMLDivElement>(null);
   const count = state.utterances.length;
+  // 前回の記録のあとの発言が、この回の会話
+  const last = reports?.at(-1);
+  const current = utterancesSince(state, last);
+  const earlier = state.utterances.slice(0, count - current.length);
   // 新しい発言が届いたら、いちばん下まで送る
   useEffect(() => {
     // ページ全体ではなく、会話の欄の中だけを送る（スマホで画面ごと動かないように）
@@ -88,15 +114,21 @@ export function Transcript({ state, onAdd, onEdit, onSwapSpeaker }: TranscriptPr
     <section className={s.col} aria-labelledby="transcript-title">
       <div className={s.colHead}>
         <h2 id="transcript-title">会話</h2>
-        <span className={s.count}>{count} 発話</span>
+        <span className={s.count}>{last ? `第${last.number + 1}回・` : ""}{current.length} 発話</span>
+        {onEnd && (
+          <button type="button" className={s.endMeeting} onClick={onEnd} disabled={ending || current.length === 0} data-testid="end-meeting">
+            {ending ? "記録を作っています…" : "打合せを終える"}
+          </button>
+        )}
       </div>
       <div className={s.scroll} aria-live="polite">
+        {last && <PreviousMeeting report={last} earlier={earlier} onEdit={onEdit} onSwapSpeaker={onSwapSpeaker} />}
         {count === 0 && (
           <div className={s.emptyState}>
             <p className={s.emptyTitle}>まだ会話がありません</p>
           </div>
         )}
-        {state.utterances.map((u) => (
+        {current.map((u) => (
           <Line key={`${u.id}:${u.text}:${u.speaker}`} u={u} onEdit={onEdit} onSwapSpeaker={onSwapSpeaker} />
         ))}
         <div ref={end} />

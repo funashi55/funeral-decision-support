@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import type { CaseState, Utterance } from "./case";
 import { DEMO_CASE } from "./fixtures/demoCase";
-import { CLEAN_CHUNK, applyCleaned, buildReport, type CleanModel, type ReportModel } from "./report";
+import { CLEAN_CHUNK, applyCleaned, buildReport, previousMeetingsPrompt, type CleanModel, type ReportModel } from "./report";
 
 const u = (id: string, text: string, speaker: Utterance["speaker"] = "family"): Utterance => ({ id, text, speaker, speakerLabel: speaker === "staff" ? "担当者" : "喪主", at: 0 });
 
 const state = (utterances: Utterance[], decisions: CaseState["decisions"] = {}): CaseState => ({ ...DEMO_CASE, utterances, decisions });
 
-const summarize: ReportModel = async () => ({ overview: " 母の思い出を伺った。 ", familyVoice: [{ text: "家で過ごしたい", utteranceIds: ["u1", "zzz"] }], pending: ["日程"], nextSteps: ["お寺に連絡"] });
+const summarize: ReportModel = async () => ({ overview: " 母の思い出を伺った。 ", familyVoice: [{ text: "家で過ごしたい", utteranceIds: ["u1", "zzz"] }], toDecide: ["日程"], familyResearch: ["親戚の連絡先を確かめていただく"], familyPrepare: ["遺影の写真", "遺影の写真"], staffTasks: ["お寺に連絡"] });
 const echoClean: CleanModel = async (_s, prompt) => ({
   lines: prompt.split("\n").map((l) => {
     const m = /^\[(.+?)\] .+?：(.*)$/.exec(l);
@@ -36,6 +36,8 @@ describe("打合せの記録", () => {
     expect(r?.transcript.map((l) => l.text)).toEqual(["家で過ごしたいです", "承知しました"]);
     expect(r?.decided.map((d) => d.value)).toEqual(["長女"]);
     expect(r?.candidates.map((d) => d.value)).toEqual(["自宅"]);
+    expect(r?.familyPrepare).toEqual(["遺影の写真"]);
+    expect(r?.toDecide).toEqual(["日程"]);
   });
 
   it("2回目は、前回の記録のあとの発言だけを使い、新しい発言がなければ作らない", async () => {
@@ -58,5 +60,15 @@ describe("打合せの記録", () => {
     expect(flaky).toHaveBeenCalledTimes(2);
     expect(r?.transcript[0]?.text).toBe("発言0です");
     expect(r?.transcript.at(-1)?.text).toBe(`えー、発言${CLEAN_CHUNK + 4}です`);
+  });
+});
+
+describe("これまでの打合せの記録", () => {
+  it("続きの打合せでは、前回までの要点を指示に足す（なければ足さない）", async () => {
+    const first = await buildReport(state([u("u1", "一回目の話です")]), [], { summarize, clean: echoClean }, 1, "r1");
+    expect(previousMeetingsPrompt([])).toBe("");
+    const p = previousMeetingsPrompt([first!]);
+    expect(p).toContain("第1回");
+    expect(p).toContain("これから決めること：日程");
   });
 });

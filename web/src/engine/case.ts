@@ -1,3 +1,4 @@
+import type { FamilyTask } from "./familyTasks";
 import type { FactCandidate, FactKey } from "./facts";
 import type { Registration } from "./registration";
 import type { FamilyProfile } from "../domain/similarFamilies";
@@ -60,6 +61,7 @@ export type AuditKind =
   | "family_chat_handoff" // 窓口の対話が担当者に回した
   | "export" // 基幹システム向けに書き出した
   | "todo" // 担当者が自分でやることを足した・済ませた・消した
+  | "family_task" // ご家族へのお願いを足した・直した・見せた・済んだ
   | "register"; // 喪家を登録した
 
 /** 監査ログ。誰が・いつ・何をしたかを残す（AI の判定の結果も含む） */
@@ -129,4 +131,6 @@ export interface CaseState {
   readonly registration?: Registration;
   /** 会話から拾った受付の事実の候補（故人のお名前など）。担当者が確定すると registration に移る */
   readonly factCandidates?: Readonly<Partial<Record<FactKey, FactCandidate>>>;
+  /** ご家族へのお願い（調べていただくこと・ご用意いただくこと）。見せると決めたものだけ窓口に出る */
+  readonly familyTasks?: readonly FamilyTask[];
 }

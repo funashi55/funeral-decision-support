@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { appendAudit } from "../../../../../engine/audit";
 import { cleanTranscript, generateReport } from "../../../../../engine/models";
 import { buildReport } from "../../../../../engine/report";
+import { addDrafts } from "../../../../../engine/familyTasks";
 import { spendAiCall } from "../../../../../server/budget";
 import { fail, handleError, ok } from "../../../../../server/http";
 import { reportStore } from "../../../../../server/reportStore";
@@ -33,7 +34,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     if (!report) return fail("前の記録のあとに会話がありません", 409);
     const all = await reportStore.add(report);
     const latest = (await store.get(caseId)) ?? state;
-    await store.save(appendAudit(latest, { at, actor: "staff", kind: "report", summary: `第${report.number}回の打合せの記録を作成`, refs: [report.id] }));
+    // 調べていただくこと・ご用意いただくことは、ご家族へのお願いの下書きにする（見せるかは担当者が決める）
+    const drafts = [...report.familyResearch.map((text) => ({ kind: "research" as const, text })), ...report.familyPrepare.map((text) => ({ kind: "prepare" as const, text }))];
+    await store.save(appendAudit(addDrafts(latest, drafts, at, report.id), { at, actor: "staff", kind: "report", summary: `第${report.number}回の打合せの記録を作成`, refs: [report.id] }));
     return ok(all);
   } catch (error) {
     return handleError(error);

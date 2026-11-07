@@ -28,6 +28,7 @@ import { Transcript } from "./Transcript";
 import { BuddyView } from "./BuddyView";
 import { RecordsView } from "./RecordsView";
 import type { MeetingReport } from "../../engine/report";
+import type { TaskAction } from "../../engine/familyTasks";
 import type { Amount, BuddyProfile, Tone } from "../../domain/buddy";
 import c from "./console.module.css";
 import s from "./staff.module.css";
@@ -128,8 +129,6 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       alive = false;
     };
   }, [caseId]);
-  const lastRecorded = reports?.at(-1)?.transcript.at(-1)?.id;
-  const canEnd = (state?.utterances.length ?? 0) > 0 && state?.utterances.at(-1)?.id !== lastRecorded;
   const endMeeting = async (): Promise<void> => {
     setView("records");
     setTalkOpen(false);
@@ -140,6 +139,15 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       setError(message(e));
     } finally {
       setEnding(false);
+    }
+  };
+  const familyTask = async (action: TaskAction): Promise<boolean> => {
+    try {
+      await api.familyTask(caseId, action);
+      return true;
+    } catch (e) {
+      setError(message(e));
+      return false;
     }
   };
   const buddySettings = (body: { tone?: Tone; amount?: Amount }): void => {
@@ -560,9 +568,6 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
             </button>
           </div>
           )}
-          <button type="button" className={[s.btn, s.btnGhost, c.endBtn].join(" ")} onClick={() => void endMeeting()} disabled={ending || !canEnd} data-testid="end-meeting">
-            {ending ? "記録を作っています…" : "打合せを終える"}
-          </button>
           <Guide steps={demo ? DEMO_GUIDE : CONSOLE_GUIDE} storageKey="console" label="打合せの画面" inline />
         </header>
         {error && (
@@ -609,7 +614,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
           )}
           {view === "records" && (
             <div className={c.view}>
-              <RecordsView caseId={caseId} reports={reports} ending={ending} canEnd={canEnd} onEnd={() => void endMeeting()} />
+              <RecordsView caseId={caseId} state={state} reports={reports} ending={ending} onTask={familyTask} />
             </div>
           )}
           {view === "buddy" && (
@@ -627,7 +632,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       </div>
 
       <aside className={c.live} aria-label="会話">
-        <Transcript state={state} onAdd={addLine} onEdit={editLine} onSwapSpeaker={swapSpeaker} />
+        <Transcript state={state} onAdd={addLine} onEdit={editLine} onSwapSpeaker={swapSpeaker} reports={reports} ending={ending} onEnd={() => void endMeeting()} />
       </aside>
       {menuOpen && (
         <div className={c.sheetLayer} role="dialog" aria-modal="true" aria-label="メニュー" onKeyDown={(e) => e.key === "Escape" && setMenuOpen(false)}>
