@@ -101,7 +101,7 @@ async function main(): Promise<void> {
   const report = [
     "# 知見の前後比較（お別れの仕方の推奨）",
     "",
-    `実行日：${new Date().toISOString().slice(0, 10)}／推奨・判定：claude-opus-5-5／抽出：claude-haiku-5-5`,
+    `実行日：${new Date().toISOString().slice(0, 10)}／推奨：claude-haiku-5-5（少しだけ考える）／判定：claude-opus-5-5／抽出：claude-haiku-5-5`,
     "",
     "場面は `web/redteam/judgment-scenes.ts`（すべて架空）、実行は `npm run compare:knowledge`。",
     provisional ? "\n> 答えの一部は作者の仮の答えです。ベテランが同じ場面に答えたら置き換えます。\n" : "",

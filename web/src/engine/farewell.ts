@@ -5,7 +5,8 @@
  * 「どれを、なぜ使うか」だけを構造化して返させる。金額・割合・できること/できないことは
  * サーバー側で差し込む。守る線の検査に落ちたら1回だけ出し直し、それでも落ちたら出さない。
  */
-import { OVERSIGHT_IDS, OVERSIGHT_RULES } from "./oversight";
+import { OVERSIGHT_RULES } from "./oversight";
+import { familyWantsToSave } from "./planFit";
 import { z } from "zod";
 import { FAREWELL_OPTIONS, getFarewellOption, type FarewellOptionId } from "../domain/farewell";
 import { getCatalogItem } from "../domain/pricing";
@@ -50,8 +51,9 @@ export const FarewellDraftSchema = z.object({
       }),
     )
     .describe("ご遺族への配慮（グリーフケア）。この会話で特に大事なものを最大3つ。当てはまるものがなければ空"),
+  // 一覧にない ID が返っても読み取りを止めないよう文字列で受け、使うときに一覧にあるものだけを残す
   cautionIds: z
-    .array(z.enum(OVERSIGHT_IDS))
+    .array(z.string())
     .describe(`取り返しのつかない見落としの注意を、決まった一覧から選ぶ（文章は書かない）。会話から当てはまるものだけ。なければ空。\n${OVERSIGHT_RULES.map((r) => `- ${r.id}：${r.message}`).join("\n")}`),
 });
 
@@ -62,6 +64,8 @@ export interface FarewellContext {
   readonly references: ReadonlyMap<string, Reference>;
   readonly rules: ReadonlyMap<string, Rule>;
   readonly utteranceIds: ReadonlySet<string>;
+  /** ご家族が費用を抑えたいと話したか（そのときは費用のかからない選択肢を「合う」に入れる） */
+  readonly wantsToSave?: boolean;
 }
 
 /** knowledge を渡すと、その知見で推奨を作る（聞き取りの前後の比べ方に使う） */
@@ -93,6 +97,7 @@ export function buildFarewellContext(state: CaseState, knowledge: Knowledge = wi
     references,
     rules: new Map(rules.map((r) => [r.id, r])),
     utteranceIds: new Set(state.utterances.map((u) => u.id)),
+    wantsToSave: familyWantsToSave(state),
   };
 }
 
@@ -175,6 +180,9 @@ export function validateDraft(draft: FarewellDraft, ctx: FarewellContext): Guard
 
   const shown = draft.options.filter((o) => o.fit !== "not_now");
   problems.push(...checkBudgetOption(shown.map((o) => ({ id: o.optionId, lowCost: getFarewellOption(o.optionId).catalogItemId === null }))));
+  if (ctx.wantsToSave && !draft.options.some((o) => o.fit === "suits" && getFarewellOption(o.optionId).catalogItemId === null)) {
+    problems.push({ rule: "upsell", message: "ご家族は費用を抑えたいと話しています。費用のかからない選択肢を「合う」に入れてください" });
+  }
 
   const unknown = (kind: string, id: string): GuardViolation => ({ rule: "unknown_reference", message: `材料にない${kind}の ID を使っています: ${id}` });
   for (const o of draft.options) {

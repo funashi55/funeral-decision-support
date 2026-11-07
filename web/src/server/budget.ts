@@ -7,7 +7,7 @@ import { fail } from "./http";
 import { getKv, type Kv } from "./kv";
 import { clientKey } from "./rateLimit";
 
-export const DEFAULT_DAILY_LIMIT = 600;
+export const DEFAULT_DAILY_LIMIT = 3000;
 /** 1人あたり1時間の上限は、既定ではなし */
 export const DEFAULT_HOURLY_PER_CLIENT = Number.POSITIVE_INFINITY;
 

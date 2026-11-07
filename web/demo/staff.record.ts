@@ -1,20 +1,47 @@
 import { expect, test } from "@playwright/test";
 
-/** 担当者の画面：打合せの再生から、お別れの仕方の推奨、プランの案と祭壇のイメージまで */
+/**
+ * 担当者の画面（デモ動画 0:30–1:55）：喪家の登録 → 打合せの再生（寄り添い → 見落としの先回り → 提案）→ 手配と発注書
+ * 実際のモデルを呼ぶ。出力は毎回変わるので、何回か撮ってきれいに出た回を使う
+ */
 test("担当者の画面", async ({ page, request }) => {
+  await page.addInitScript(() => {
+    // ガイドは動画では出さない
+    for (const k of ["cases", "register", "console"]) localStorage.setItem(`guide:${k}`, "1");
+  });
   await request.post("/api/cases/demo-yamada/reset");
-  await page.goto("/staff/demo-yamada");
-  await page.getByRole("button", { name: "▶ 打合せを再生" }).click();
-  // 台本を流し終えると、推奨が自動で始まる。推奨と判定役の応答を待つ
-  await expect(page.getByText("家族が望んでいるお別れ")).toBeVisible({ timeout: 180_000 });
-  await page.waitForTimeout(2500);
-  await page.getByText("根拠を見る").first().click();
-  await page.waitForTimeout(2500);
 
-  await request.post("/api/cases/demo-yamada/decisions", { data: { decisionId: "flower_color", value: "母の好きだった紫を入れて" } });
-  await page.getByRole("tab", { name: "プランの案" }).click();
-  await expect(page.getByTestId("altar-preview")).toBeVisible();
+  // 入口：ご家族の一覧 → 登録の画面を見せて、山田家（デモ）の打合せへ
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "ご家族" })).toBeVisible();
+  await page.waitForTimeout(1500);
+  await page.locator("[data-guide=register]").click();
+  await page.getByLabel(/家名/).fill("佐藤");
+  await page.getByLabel(/喪主の続柄/).fill("長男");
+  await page.waitForTimeout(1500);
+  await page.goto("/staff/demo-yamada");
+
+  // 打合せを再生：まず寄り添い、見落としの先回り、お気持ちを伺い終えると提案が開く
+  await page.getByRole("button", { name: "▶ 打合せを再生" }).click();
+  await expect(page.getByRole("button", { name: /もう一度再生/ })).toBeVisible({ timeout: 240_000 });
+  await expect(page.getByTestId("plan-fit")).toBeVisible({ timeout: 120_000 });
+  await page.waitForTimeout(2000);
+  await page.locator("[data-guide=care]").scrollIntoViewIfNeeded();
   await page.waitForTimeout(3000);
-  await page.getByRole("tab", { name: "手配と書き出し" }).click();
+  await page.locator("[data-guide=proposal]").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(3000);
+  await page.getByTestId("oversights").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(3000);
+
+  // 手配：香典返しの数を確定して、発注書を1件作る
+  await request.post("/api/cases/demo-yamada/decisions", { data: { decisionId: "return_gifts", value: "30個" } });
+  await page.getByRole("tab", { name: /決めること/ }).click();
   await page.waitForTimeout(2500);
+  await page.getByRole("tab", { name: /手配と書き出し/ }).click();
+  await page.waitForTimeout(1500);
+  const popup = page.waitForEvent("popup");
+  await page.getByTestId("orders").locator("li", { hasText: "香典返し" }).getByRole("button", { name: /発注書を作る/ }).click();
+  const sheet = await popup;
+  await sheet.waitForLoadState();
+  await sheet.waitForTimeout(3000);
 });

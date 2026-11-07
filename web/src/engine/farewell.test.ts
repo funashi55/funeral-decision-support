@@ -5,8 +5,8 @@ import { DEMO_CASE } from "./fixtures/demoCase";
 const goodDraft: FarewellDraft = {
   familyWish: "お風呂が好きだったお母さまを清めて送り出し、お孫さんにも顔を見てお別れさせたいと望まれているようです",
   options: [
-    { optionId: "standard_laying", fit: "consider", reason: "費用を抑えたいご意向に合います", howToRaise: "身支度を整えてお棺にお納めする形でも、愛用の品を一緒に入れて差し上げられます", utteranceIds: ["U5"], ruleIds: [] },
-    { optionId: "yukan", fit: "suits", reason: "お風呂に入りたがっていたお母さまを、ご家族の手で清めて送り出せます", howToRaise: "お風呂がお好きだったとおっしゃっていましたね。納棺の前に、お体を清めて差し上げる形もあります。ご家族も手を添えたいですか", utteranceIds: ["U2"], ruleIds: ["R-farewell-03"] },
+    { optionId: "standard_laying", fit: "suits", reason: "費用を抑えたいご意向に合います", howToRaise: "身支度を整えてお棺にお納めする形でも、愛用の品を一緒に入れて差し上げられます", utteranceIds: ["U5"], ruleIds: [] },
+    { optionId: "yukan", fit: "consider", reason: "お風呂に入りたがっていたお母さまを、ご家族の手で清めて送り出せます", howToRaise: "お風呂がお好きだったとおっしゃっていましたね。納棺の前に、お体を清めて差し上げる形もあります。ご家族も手を添えたいですか", utteranceIds: ["U2"], ruleIds: ["R-farewell-03"] },
     { optionId: "extend_resting", fit: "suits", reason: "お孫さんの到着を待ってから、顔を見てお別れできます", howToRaise: "お孫さんが着かれてから、ゆっくりお顔を見ていただく日取りにもできます", utteranceIds: ["U3", "U4"], ruleIds: ["R-farewell-02"] },
     { optionId: "embalming", fit: "not_now", reason: "日を延ばす方法で、お孫さんのお別れには間に合いそうです", howToRaise: "今回は触れなくてよさそうです", utteranceIds: ["U3"], ruleIds: ["R-farewell-02"] },
   ],
@@ -114,5 +114,15 @@ describe("お別れの仕方の推奨", () => {
     const ctx = buildFarewellContext(DEMO_CASE);
     expect(ctx.prompt).toContain("[continuing_bonds]");
     expect(ctx.prompt).toContain("避けたい言葉");
+  });
+});
+
+describe("費用を抑えたいご家族", () => {
+  test("費用のかからない選択肢を「合う」に入れていない案は、出し直させる", async () => {
+    const pricey: FarewellDraft = { ...goodDraft, options: goodDraft.options.map((o) => (o.optionId === "standard_laying" ? { ...o, fit: "consider" as const } : o)) };
+    const generate = vi.fn().mockResolvedValueOnce(pricey).mockResolvedValueOnce(goodDraft);
+    const result = await recommendFarewell(DEMO_CASE, generate, vi.fn().mockResolvedValue([]));
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(result.ok).toBe(true);
   });
 });

@@ -122,7 +122,7 @@ function report(outcomes: readonly Outcome[]): string {
   return [
     "# 意地悪な場面の評価（お別れの仕方の推奨）",
     "",
-    `実行日：${new Date().toISOString().slice(0, 10)}／推奨・判定：claude-opus-5-5／抽出：claude-haiku-5-5`,
+    `実行日：${new Date().toISOString().slice(0, 10)}／推奨：claude-haiku-5-5（少しだけ考える）／判定：claude-opus-5-5／抽出：claude-haiku-5-5`,
     "",
     "家族・発言はすべて架空です。場面の定義は `web/redteam/scenarios.ts`、実行は `npm run redteam`。",
     "",

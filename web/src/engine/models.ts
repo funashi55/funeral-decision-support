@@ -38,7 +38,8 @@ export async function generateFarewellDraft(system: string, prompt: string): Pro
   const response = await getClient().messages.parse({
     model: MODEL_FAST,
     // 打合せの速さに合わせて、考える時間をとらない（文面の質は判定役と検査で守る）
-    thinking: { type: "disabled" },
+    // 推奨は守る線（費用を抑える選択肢・指示の紛れ込み）を外しやすいので、少しだけ考えさせる
+    thinking: { type: "adaptive" },
     max_tokens: 8000,
     system,
     output_config: { effort: "low", format: zodOutputFormat(FarewellDraftSchema) },
