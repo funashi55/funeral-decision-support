@@ -18,7 +18,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/cases/[caseId]/
     const latest = await store.get(caseId) ?? state;
     await store.save(appendAudits(latest, auditOfFarewell(result, Date.now())));
     const saved = { ...result, basedOn: state.utterances.length };
-    await recommendationStore.put(caseId, { farewell: saved });
+    // 出せなかった結果で、前に出せた推奨を上書きしない
+    const before = await recommendationStore.get(caseId);
+    if (result.ok || !before?.farewell?.ok) await recommendationStore.put(caseId, { farewell: saved });
     return ok(saved);
   } catch (error) {
     return handleError(error);

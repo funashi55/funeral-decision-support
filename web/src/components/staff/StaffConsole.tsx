@@ -161,7 +161,8 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       do {
         farewellQueued.current = false;
         const result = await api.farewell(caseId);
-        setFarewell(result);
+        // 新しい案が守る線にかかって出せなかったときは、直前に出せた案を残す（画面から急に消さない）
+        setFarewell((prev) => (result.ok || !prev?.ok ? result : prev));
         if (result.ok) setFarewellBasedOn(result.basedOn ?? 0);
       } while (farewellQueued.current);
     } catch (e) {

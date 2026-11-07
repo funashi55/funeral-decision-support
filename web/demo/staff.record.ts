@@ -24,11 +24,15 @@ test("担当者の画面", async ({ page, request }) => {
   // 打合せを再生：まず寄り添い、見落としの先回り、お気持ちを伺い終えると提案が開く
   await page.getByRole("button", { name: "▶ 打合せを再生" }).click();
   await expect(page.getByRole("button", { name: /もう一度再生/ })).toBeVisible({ timeout: 240_000 });
-  await expect(page.getByTestId("plan-fit")).toBeVisible({ timeout: 120_000 });
-  await page.waitForTimeout(2000);
+  // 推奨が出そろうのを待つ（見立てのカードは、会話でプランに触れると「済んだこと」に畳まれる）
+  // 寄り添いの言葉が出るまで待つ（「考えています…」が消えるまで）
+  await expect(page.locator("[data-guide=care]")).not.toContainText("考えています", { timeout: 180_000 });
+  await page.waitForTimeout(3000);
   await page.locator("[data-guide=care]").scrollIntoViewIfNeeded();
   await page.waitForTimeout(3000);
-  await page.locator("[data-guide=proposal]").scrollIntoViewIfNeeded();
+  const proposal = page.locator("[data-guide=proposal]");
+  await proposal.scrollIntoViewIfNeeded();
+  if (!(await proposal.evaluate((el) => (el as HTMLDetailsElement).open ?? true))) await proposal.locator("summary").first().click();
   await page.waitForTimeout(3000);
   await page.getByTestId("oversights").scrollIntoViewIfNeeded();
   await page.waitForTimeout(3000);

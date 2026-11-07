@@ -110,7 +110,7 @@ export function ChatWidget({ token, view }: ChatWidgetProps) {
             </div>
             {view.chat.map((t) => (
               <div key={t.id} className={`${s.msg} ${t.role === "family" ? s.mine : s.guide}`}>
-                <p>{t.text}</p>
+                <p>{plain(t.text)}</p>
                 {t.handedOff && <small>担当者にお伝えしました</small>}
               </div>
             ))}
@@ -198,4 +198,9 @@ function ChatIcon() {
       <path d="M8.5 11h.01M12 11h.01M15.5 11h.01" />
     </svg>
   );
+}
+
+/** 案内役の返事に混ざるマークダウンの記号（**太字** など）を外して、そのまま読める文にする */
+function plain(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^#{1,6}\s+/gm, "").replace(/`([^`]+)`/g, "$1");
 }

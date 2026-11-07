@@ -187,9 +187,9 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
           {care.length === 0 && !rec && state.utterances.length === 0 && <p className={c.quiet}>会話が進むと、かける言葉の例が出ます</p>}
           {!rec && !thinking && state.utterances.length > 0 && (
             <p className={c.quiet}>
-              まだ作っていません。
+              {farewell && !farewell.ok ? "言い回しが守る線にかかったため、今回は出していません（選択肢の事実は「提案」の比較から見られます）。" : "まだ作っていません。"}
               <button type="button" className={c.inlineAction} onClick={onRecommend}>
-                いまの会話から作る
+                {farewell && !farewell.ok ? "もう一度作る" : "いまの会話から作る"}
               </button>
             </p>
           )}

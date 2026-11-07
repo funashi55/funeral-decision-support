@@ -91,12 +91,14 @@ export function buildFarewellContext(state: CaseState, knowledge: Knowledge = wi
     "# 似た家族の選び方（参考値。数字はサーバーが表示するので、あなたは ID だけを選ぶ）",
     ...[...references].map(([id, r]) => `[${id}] ${r.cohort}・${r.measure}`),
   ];
+  const wantsToSave = familyWantsToSave(state);
+  if (wantsToSave) lines.push("", "# 大事な前提", "ご家族は費用を抑えたいと話しています。費用のかからない「通常の納棺」（standard_laying）を必ず「合う」（suits）にしてください。");
   return {
     prompt: lines.join("\n"),
     references,
     rules: new Map(rules.map((r) => [r.id, r])),
     utteranceIds: new Set(state.utterances.map((u) => u.id)),
-    wantsToSave: familyWantsToSave(state),
+    wantsToSave,
   };
 }
 
@@ -113,7 +115,7 @@ export const FAREWELL_SYSTEM = `あなたは葬儀社のベテラン担当者と
 - 金額・割合・件数の数字を文章に書かない（サーバーが正しい値を差し込む）
 - 根拠にした発言と知見の ID を必ず添える。材料にない ID を作らない
 - 選択肢ごとに、この会話の流れで自然に切り出す言い方の例（howToRaise）を添える。ご家族が口にした言葉につなげ、望むかを尋ねる形にする。「今回は合わない」ものは無理に勧めず、軽く触れるか触れずにおく
-- ご遺族への配慮（griefCare）は、材料の「配慮の考え方」から会話に当てはまるものだけを選び、かける言葉の例を書く。悲しみ方に順番はないので、段階に当てはめない。配慮の言葉で選択肢や費用に触れない（気持ちへの配慮を販売の理由にしない）
+- ご遺族への配慮（griefCare）は、材料の「配慮の考え方」から会話に当てはまるものだけを選び、かける言葉の例を書く。悲しみ方に順番はないので、段階に当てはめない。配慮の言葉で選択肢や費用に触れない（気持ちへの配慮を販売の理由にしない）。配慮の言葉は、ご家族のこれまでと今の気持ちを受け止めるところで終える。「〜できるように一緒に考えましょう」のように、これからのお別れの形・お見送りの仕方に話を進めない（あとの提案の前振りになるため）。ご家族が口にしていない気持ち（後悔・安堵など）を決めつけない
 - 言葉はすべて例。使うか、どう言うかは担当者が決める
 - あなたの出力は担当者だけが見る。家族への伝え方は担当者が決める`;
 
