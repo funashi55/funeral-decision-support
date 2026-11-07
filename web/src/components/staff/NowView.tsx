@@ -56,6 +56,7 @@ interface DoneItem {
  * 伝えた提案・確定した項目に関わる提案・会話で触れた提案は、下の「済んだこと」に畳む
  */
 export function NowView({ state, impacted, oversights, farewell, planFit, farewellBasedOn, planFitBasedOn, thinking, extracting, onConfirm, onTodo, onFeedback, children }: NowViewProps) {
+  const [tab, setTab] = useState<NowTab>("proposal");
   const rec = farewell?.ok ? farewell.recommendation : null;
   const done: DoneItem[] = [];
   /** 済んでいれば done に積んで false、まだなら true */
@@ -86,10 +87,47 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
     if (spokenKey) for (const t of spokenKey.split("|")) onFeedback(t, "told");
   }, [spokenKey, onFeedback]);
 
+  const remaining = todoRemaining(state);
+  const tabs: readonly { readonly id: NowTab; readonly label: string; readonly count: number }[] = [
+    { id: "proposal", label: "提案", count: oversights.length },
+    { id: "todo", label: "やること", count: remaining },
+    { id: "info", label: "基本情報", count: state.circumstances.length },
+  ];
+
   return (
-    <div className={`${c.view} ${c.wide} ${c.nowGrid}`}>
-      <div className={c.nowMain}>
-        <Facts state={state} extracting={extracting} />
+    <div className={`${c.view} ${c.wide}`}>
+      <div className={c.nowTabs} role="tablist" aria-label="いまの画面">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            id={`now-tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`now-panel-${t.id}`}
+            className={c.nowTab}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+            {t.count > 0 && <span className={c.nowTabCount}>{t.count}</span>}
+            {t.id === "proposal" && thinking && <span className={c.nowTabDot} aria-label="考えています" />}
+            {t.id === "info" && extracting && <span className={c.nowTabDot} aria-label="整理中" />}
+          </button>
+        ))}
+      </div>
+
+      {tab === "todo" && (
+        <div role="tabpanel" id="now-panel-todo" aria-labelledby="now-tab-todo" className={c.nowPanel}>
+          <TodoList state={state} impacted={impacted} oversights={oversights} onConfirm={onConfirm} onTodo={onTodo} />
+        </div>
+      )}
+      {tab === "info" && (
+        <div role="tabpanel" id="now-panel-info" aria-labelledby="now-tab-info" className={`${c.nowPanel} ${c.nowMain}`}>
+          <Facts state={state} extracting={extracting} />
+          <BasicInfo state={state} />
+        </div>
+      )}
+      <div role="tabpanel" id="now-panel-proposal" aria-labelledby="now-tab-proposal" className={`${c.nowPanel} ${c.nowMain}`} hidden={tab !== "proposal"}>
         <section aria-labelledby="proposal-title" className={c.block}>
           <h2 id="proposal-title" className={c.blockTitle}>
             この流れでの提案
@@ -198,9 +236,71 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
           </details>
         )}
       </div>
-
-      <TodoList state={state} impacted={impacted} oversights={oversights} onConfirm={onConfirm} onTodo={onTodo} />
     </div>
+  );
+}
+
+type NowTab = "proposal" | "todo" | "info";
+
+/** やることの残り（今日決める項目と、自分で足したやること） */
+function todoRemaining(state: CaseState): number {
+  const today = DECISIONS.filter((d) => d.urgency === "today");
+  const customs = todosOf(state);
+  return today.filter((d) => state.decisions[d.id]?.status !== "confirmed").length + customs.filter((t) => !t.done).length;
+}
+
+/** 基本情報：登録で伺ったことと、ここまでに決まったこと */
+function BasicInfo({ state }: { readonly state: CaseState }) {
+  const r = state.registration;
+  const decided = DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed");
+  const rows: readonly (readonly [string, string | undefined])[] = r
+    ? [
+        ["喪主", [r.chiefMourner.relation, r.chiefMourner.name].filter(Boolean).join("・")],
+        ["喪主の電話", r.chiefMourner.phone],
+        ["故人", [r.deceased.name, r.deceased.age !== undefined ? `${r.deceased.age}歳` : undefined, r.deceased.sex !== "答えない" ? r.deceased.sex : undefined].filter(Boolean).join("・")],
+        ["亡くなった日時・場所", [r.deceased.diedAt?.replace("T", " "), r.deceased.diedPlace].filter(Boolean).join("・")],
+        ["互助会", r.membership],
+        ["受付のメモ", r.memo],
+      ]
+    : [["故人", state.profile.deceasedAge ? `${state.profile.deceasedAge}歳` : undefined], ["葬儀の形の希望", state.profile.funeralStyle]];
+  const shown = rows.filter(([, v]) => v);
+  return (
+    <>
+      <section aria-labelledby="registration-title" className={c.block}>
+        <h2 id="registration-title" className={c.blockTitle}>
+          受付で伺ったこと
+        </h2>
+        {shown.length === 0 ? (
+          <p className={c.quiet}>受付で伺ったことはまだありません。</p>
+        ) : (
+          <dl className={c.infoList}>
+            {shown.map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
+      <section aria-labelledby="decided-title" className={c.block}>
+        <h2 id="decided-title" className={c.blockTitle}>
+          決まったこと{decided.length > 0 && <span className={c.factsCount}>{decided.length}</span>}
+        </h2>
+        {decided.length === 0 ? (
+          <p className={c.quiet}>確定した項目がここに並びます。</p>
+        ) : (
+          <dl className={c.infoList}>
+            {decided.map((d) => (
+              <div key={d.id}>
+                <dt>{d.label}</dt>
+                <dd>{state.decisions[d.id]?.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
+    </>
   );
 }
 
@@ -354,8 +454,8 @@ function AddTodo({ onAdd }: { readonly onAdd: (text: string) => void }) {
   );
 }
 
-/** わかったことを最初から見せる数（多いと提案が下に押し出されるため、古いものは畳む） */
-const FACTS_SHOWN = 4;
+/** わかったことを最初から見せる数（多いときは古いものを畳む） */
+const FACTS_SHOWN = 8;
 
 /** わかったこと：ご遺族の言葉から拾い上げた家族の事情。新しいものを先に、文として読める大きさで並べる */
 function Facts({ state, extracting }: { readonly state: CaseState; readonly extracting: boolean }) {
