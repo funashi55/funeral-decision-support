@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { DECISIONS, PHASE_LABEL, type DecisionItem } from "../../domain/decisions";
+import type { DecisionItem } from "../../domain/decisions";
 import type { CaseState } from "../../engine/case";
 import c from "./console.module.css";
 import s from "./staff.module.css";
@@ -81,54 +81,8 @@ export function ManualEntry({ item, onConfirm }: { readonly item: DecisionItem; 
   );
 }
 
-const PHASES = ["trust", "hearing", "farewell", "schedule", "plan", "logistics", "after"] as const;
-
 /**
- * 決めること：全項目を打合せの段階ごとに並べた、シンプルなチェックリスト。
- * ✓ 決まった／● 候補が出ている（確定を待つ）／○ まだ。候補は確定、まだの項目は手で入れられる
+ * 決めること：タスク管理アプリ（Todoist・Things など）の一覧の形にならう。
+ * 左の丸を押すと確定（候補があればその内容で、なければ入力欄が開く）。段階ごとの見出しは畳める。決まったものは下の「完了」へ
  */
-export function DecisionBoard({ state, impacted, onConfirm }: DecisionBoardProps) {
-  const confirmed = DECISIONS.filter((d) => state.decisions[d.id]?.status === "confirmed").length;
-  return (
-    <section aria-labelledby="board-title" className={c.checklist}>
-      <h2 id="board-title" className={c.blockTitle}>
-        決めること
-      </h2>
-      <p className={c.todoCount}>
-        決まった <b>{confirmed}</b> / {DECISIONS.length}
-      </p>
-      <div className={c.todoBar} aria-hidden="true">
-        <i style={{ width: `${(confirmed / DECISIONS.length) * 100}%` }} />
-      </div>
-      {PHASES.map((phase) => {
-        const items = DECISIONS.filter((d) => d.phase === phase);
-        if (items.length === 0) return null;
-        return (
-          <div key={phase}>
-            <h3 className={c.todoGroup}>{PHASE_LABEL[phase]}</h3>
-            <ul className={c.todoList}>
-              {items.map((d) => {
-                const decision = state.decisions[d.id];
-                const done = decision?.status === "confirmed";
-                const waiting = decision?.status === "candidate" || (impacted.has(d.id) && !done);
-                return (
-                  <li key={d.id} className={`${c.todoItem} ${done ? c.todoDone : waiting ? c.todoWaiting : ""}`}>
-                    <span className={c.todoMark} aria-hidden="true">
-                      {done ? "✓" : waiting ? "●" : "○"}
-                    </span>
-                    <span className={c.todoText}>
-                      {d.label}
-                      {d.urgency === "today" && !done && <span className={c.todayTag}>今日</span>}
-                      {decision && <small>{impacted.has(d.id) && !done ? "見直しが必要です" : decision.value}</small>}
-                    </span>
-                    {done ? null : decision ? <ConfirmControl item={d} value={decision.value} onConfirm={onConfirm} /> : <ManualEntry item={d} onConfirm={onConfirm} />}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
-    </section>
-  );
-}
+export { TaskBoard as DecisionBoard } from "./TaskBoard";
