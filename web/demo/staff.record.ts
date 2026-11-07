@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { DEMO_SETTLED } from "../src/engine/fixtures/demoSettled";
 
 /**
  * 担当者の画面（デモ動画 0:30–1:55）：喪家の登録 → 打合せの再生（寄り添い → 見落としの先回り → 提案）→ 手配と発注書
@@ -38,7 +39,10 @@ test("担当者の画面", async ({ page, request }) => {
   await page.waitForTimeout(3000);
 
   // 手配：香典返しの数を確定して、発注書を1件作る
-  await request.post("/api/cases/demo-yamada/decisions", { data: { decisionId: "return_gifts", value: "30個" } });
+  // 担当者がご家族と確かめて確定した、という想定の値（台本に合わせた架空の値）
+  for (const [decisionId, value] of Object.entries(DEMO_SETTLED)) {
+    await request.post("/api/cases/demo-yamada/decisions", { data: { decisionId, value } });
+  }
   await page.getByRole("tab", { name: /決めること/ }).click();
   await page.waitForTimeout(2500);
   await page.getByRole("tab", { name: /手配と書き出し/ }).click();

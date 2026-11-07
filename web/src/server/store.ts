@@ -43,7 +43,9 @@ export const TRIAL_PREFIX = "trial-";
 export const CASE_PREFIX = "case-";
 
 function seedFor(caseId: string, familyToken: string): CaseState {
-  return { ...DEMO_CASE, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 } };
+  // 受付で伺ったこと（架空）は、共用デモの山田家だけに付ける。試用・ロールプレイの案件には付けない
+  const { registration, ...rest } = DEMO_CASE;
+  return { ...rest, caseId, familyToken, utterances: [], circumstances: [], decisions: {}, profile: { deceasedAge: 84 }, ...(caseId === DEMO_CASE.caseId ? { registration } : {}) };
 }
 
 /**
@@ -89,7 +91,7 @@ export function createCaseStore(kv: Kv): CaseStore {
       if (!current && caseId !== DEMO_CASE.caseId) return undefined;
       const token = caseId === DEMO_CASE.caseId ? demoToken() : (current?.familyToken ?? "");
       // 登録した喪家は、登録したときの内容（受付で聞いた事実）に戻す
-      if (current?.registration) return save(caseFromRegistration(caseId, token, current.registration));
+      if (current?.registration && caseId !== DEMO_CASE.caseId) return save(caseFromRegistration(caseId, token, current.registration));
       const seed = seedFor(caseId, token);
       // 試用・ロールプレイの案件は、家族の名前と条件を作ったときのまま残す
       return save(current ? { ...seed, familyName: current.familyName, profile: current.profile } : seed);

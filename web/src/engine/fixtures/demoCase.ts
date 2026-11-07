@@ -5,6 +5,19 @@ export const DEMO_CASE: CaseState = {
   caseId: "demo-yamada",
   familyName: "山田家",
   profile: { daysUntilFuneral: 6, deceasedAge: 84, funeralStyle: "家族葬" },
+  // 受付で伺ったこと（架空）
+  registration: {
+    familyName: "山田",
+    deceased: { name: "山田 ハナ", age: 84, sex: "女性", diedAt: "2026-11-07T05:30", diedPlace: "市内の病院" },
+    chiefMourner: { relation: "長女", name: undefined, phone: undefined },
+    membership: "わからない",
+    funeralStyle: "家族葬",
+    religion: undefined,
+    temple: undefined,
+    restingPlace: "会館",
+    memo: "早朝に病院からお迎え。会館の安置室に安置",
+    registeredAt: 0,
+  },
   utterances: [
     { id: "U1", speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "母は半年くらい入院していて、最後はほとんど話せませんでした。", at: 30 },
     { id: "U2", speaker: "chief_mourner", speakerLabel: "喪主（長女）", text: "お風呂が好きな人だったので、入院中ずっと入りたがっていたんです。", at: 55 },
