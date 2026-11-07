@@ -224,7 +224,6 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
               提案
               {proposals.length + (showPlan ? 1 : 0) > 0 && <span className={c.laneCount}>{proposals.length + (showPlan ? 1 : 0)}</span>}
             </h2>
-            {!proposalsReady && <span className={c.earlyTag}>お気持ちを伺ってから</span>}
           </summary>
           {!rec && <p className={c.quiet}>会話が進むと、ここに提案が出ます</p>}
           {rec && (
@@ -241,7 +240,7 @@ export function NowView({ state, impacted, oversights, farewell, planFit, farewe
                       <small>こう切り出しましょう</small>「{o.howToRaise}」
                     </p>
                     <details className={c.why}>
-                      <summary>なぜ</summary>
+                      <summary>根拠</summary>
                       <p className={c.reason}>{o.reason}</p>
                     </details>
                   </li>
@@ -404,7 +403,6 @@ function TodoList({ state, impacted, oversights, onConfirm, onTodo }: Pick<NowVi
         </p>
       </header>
 
-      {next.length === 0 && stillOpening(state.utterances) && <p className={c.quiet}>いまは、お話を伺うところです。決めることは、亡くなるまでのことや故人のことを伺ってから進めます（「寄り添い・提案」の「まず、お話を伺う」）。</p>}
       {next.length > 0 && (
         <div data-testid="next-steps">
           {section(

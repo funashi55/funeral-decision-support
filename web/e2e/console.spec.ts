@@ -38,7 +38,7 @@ test("字幕を直すと、直した文が残る", async ({ page, request }) => 
 test("信頼関係の段階ではプランの金額を出さず、段階が進むと3つの幅の案が費用を抑える順に出る", async ({ page, request }) => {
   await page.goto(`/demo/${CASE_ID}`);
   await page.getByRole("tab", { name: /プランの案/ }).click();
-  await expect(page.getByText(/費用の話は、ご家族の気持ちとお別れの仕方を伺ってから/)).toBeVisible();
+  await expect(page.getByText("まだ案はありません。")).toBeVisible();
 
   await addUtterance(request, "費用はできるだけ抑えたいです");
   await expect(page.getByTestId("plan-simple")).toBeVisible();

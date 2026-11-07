@@ -14,7 +14,6 @@ export function OpeningCard({ state }: { readonly state: CaseState }) {
     <section className={o.card} aria-labelledby="opening-title" data-testid="opening">
       <h3 id="opening-title" className={o.title}>
         まず、お話を伺う
-        <span className={o.sub}>決めることは、お話が一段落してから</span>
       </h3>
       <ol className={o.steps}>
         {OPENING_STEPS.map((s) => {
@@ -28,17 +27,7 @@ export function OpeningCard({ state }: { readonly state: CaseState }) {
               <div>
                 <b>{s.title}</b>
                 {done && <span className={o.doneLabel}>伺いました</span>}
-                {!done && (
-                  <>
-                    <p className={o.say}>「{s.say}」</p>
-                    {current && (
-                      <details className={o.why}>
-                        <summary>なぜ先に</summary>
-                        <p>{s.why}</p>
-                      </details>
-                    )}
-                  </>
-                )}
+                {!done && <p className={o.say}>「{s.say}」</p>}
               </div>
             </li>
           );

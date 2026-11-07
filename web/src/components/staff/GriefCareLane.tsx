@@ -31,7 +31,7 @@ export function GriefCareLane({ state, items, actions }: GriefCareLaneProps) {
               <small>かける言葉の例</small>「{g.words}」
             </p>
             <details className={c.careMore}>
-              <summary>なぜ・ほかの言い方・避けたい言葉</summary>
+              <summary>根拠・ほかの言い方・避けたい言葉</summary>
               <p className={c.careWhy}>
                 {g.observation}
                 {quote && <span className={c.careQuote}>（「{quote.text.slice(0, 24)}{quote.text.length > 24 ? "…" : ""}」）</span>}

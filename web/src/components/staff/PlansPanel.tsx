@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState } from "react";
-import { PHASE_LABEL, type Phase } from "../../domain/decisions";
+import type { Phase } from "../../domain/decisions";
 import { CATALOG_SOURCE, yen, type Range } from "../../domain/pricing";
 import type { CaseState } from "../../engine/case";
 import { allowsPrices } from "../../engine/phase";
@@ -26,10 +26,10 @@ export function PlansPanel({ state, phase, planFit, onFeedback }: PlansPanelProp
     return (
       <div className={s.scroll}>
         <p className={s.empty}>
-          いまは「{PHASE_LABEL[phase]}」の話をしています。費用の話は、ご家族の気持ちとお別れの仕方を伺ってからにします。
+          まだ案はありません。
         </p>
         <button type="button" className={s.btn} onClick={() => setShowAnyway(true)}>
-          それでも案を見る（担当者の準備用）
+          案を見る（準備用）
         </button>
       </div>
     );
