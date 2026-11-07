@@ -236,6 +236,15 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
     }
   };
 
+  const swapSpeaker = async (utteranceId: string, speaker: "staff" | "family"): Promise<void> => {
+    try {
+      await api.swapSpeaker(caseId, utteranceId, speaker);
+      void listen();
+    } catch (e) {
+      setError(message(e));
+    }
+  };
+
   /** 「いま」から呼ぶ記録。会話で触れた提案を自動で記録するため、描画のたびに変わらない関数にする */
   const recordFeedback = useCallback(
     (target: string, verdict: FeedbackVerdict | "clear"): void => {
@@ -428,7 +437,7 @@ export function StaffConsole({ caseId }: { readonly caseId: string }) {
       </div>
 
       <aside className={c.live} aria-label="会話">
-        <Transcript state={state} extracting={extracting} onAdd={addLine} onEdit={editLine} />
+        <Transcript state={state} extracting={extracting} onAdd={addLine} onEdit={editLine} onSwapSpeaker={swapSpeaker} />
       </aside>
       {inboxOpen && <FamilyInbox state={state} onClose={() => setInboxOpen(false)} onAcknowledge={acknowledge} onLink={familyLink} />}
     </div>

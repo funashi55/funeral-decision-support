@@ -10,20 +10,12 @@ import { useSpeechInput } from "../../client/useSpeechInput";
 import type { Speaker } from "../../engine/case";
 import s from "./staff.module.css";
 
+/** 話した人は送った先で自動で聞き分ける（auto）。デモの台本など、わかっているときは指定してもよい */
 export interface NewLine {
-  readonly speaker: Speaker;
-  readonly speakerLabel: string;
+  readonly speaker: Speaker | "auto";
+  readonly speakerLabel?: string;
   readonly text: string;
 }
-
-/** 喪主とご家族は分けない。メモの多くはご遺族の言葉なので、最初からご遺族を選んでおく */
-const SPEAKERS: readonly {
-  readonly speaker: Speaker;
-  readonly label: string;
-}[] = [
-  { speaker: "family", label: "ご遺族" },
-  { speaker: "staff", label: "担当者" },
-];
 
 const MAX_ROWS_PX = 140;
 
@@ -36,19 +28,13 @@ interface InputDockProps {
  * Enter で送り、Shift+Enter で改行する。マイクはご家族の同意を確かめてから始める。音声は保存しない。
  */
 export function InputDock({ onAdd }: InputDockProps) {
-  const [speakerIdx, setSpeakerIdx] = useState(0);
   const [text, setText] = useState("");
   const [micOpen, setMicOpen] = useState(false);
   const [consented, setConsented] = useState(false);
   const [sending, setSending] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
-  const who = SPEAKERS[speakerIdx] ?? SPEAKERS[0]!;
 
-  const addFinal = useCallback(
-    (t: string) =>
-      void onAdd({ speaker: who.speaker, speakerLabel: who.label, text: t }),
-    [onAdd, who],
-  );
+  const addFinal = useCallback((t: string) => void onAdd({ speaker: "auto", text: t }), [onAdd]);
   const speech = useSpeechInput(addFinal);
 
   // 打った分だけ入力欄を伸ばす（上限を超えたら中でスクロール）
@@ -65,7 +51,7 @@ export function InputDock({ onAdd }: InputDockProps) {
     setSending(true);
     setText("");
     try {
-      await onAdd({ speaker: who.speaker, speakerLabel: who.label, text: t });
+      await onAdd({ speaker: "auto", text: t });
     } finally {
       setSending(false);
       area.current?.focus();
@@ -144,29 +130,13 @@ export function InputDock({ onAdd }: InputDockProps) {
           void submit();
         }}
       >
-        <div className={s.segment} role="radiogroup" aria-label="話した人">
-          {SPEAKERS.map((sp, i) => (
-            <button
-              key={sp.speaker}
-              type="button"
-              role="radio"
-              aria-checked={i === speakerIdx}
-              onClick={() => setSpeakerIdx(i)}
-            >
-              {sp.label}
-            </button>
-          ))}
-        </div>
+        <p className={s.autoSpeaker}>話した人（担当者・ご遺族）は自動で聞き分けます。違っていたら、発言の名前を押すと入れ替わります</p>
         <div className={s.composerRow}>
           <textarea
             ref={area}
             rows={1}
             aria-label="発言の要点"
-            placeholder={
-              who.speaker === "staff"
-                ? "担当者が話したこと（例：明日の朝、火葬場の空きを確かめます）"
-                : "ご遺族が話したこと（例：母はお風呂が好きでした）"
-            }
+            placeholder="話したこと（例：母はお風呂が好きでした）"
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKeyDown}

@@ -4,7 +4,7 @@
  */
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { MODEL_REASONING, ModelOutputError, ModelRefusedError, getClient } from "./client";
+import { MODEL_FAST, MODEL_REASONING, ModelOutputError, ModelRefusedError, getClient } from "./client";
 import type { ChatModel } from "./familyChat";
 import { FarewellDraftSchema, type FarewellDraft, type FarewellRecommendation } from "./farewell";
 import type { GuardRule, GuardViolation } from "./guard";
@@ -19,6 +19,7 @@ import {
 import { PaperworkDraftSchema, type PaperworkDraft } from "./paperwork";
 import { PlanFitDraftSchema, type PlanFitDraft, type PlanFitProposal } from "./planFit";
 import { QuickFitSchema, type QuickFitDraft } from "./quickFit";
+import { SpeakerAnswerSchema, type ClassifySpeaker } from "./speaker";
 
 interface ParsedResponse<T> {
   readonly stop_reason: string | null;
@@ -161,3 +162,15 @@ export async function judgePlanFit(proposal: PlanFitProposal): Promise<GuardViol
   });
   return unwrap(response as ParsedResponse<z.infer<typeof JudgeSchema>>).violations;
 }
+
+/** 話した人の聞き分け（決まりごとで決まらないときだけ）。テンポを優先して Haiku で */
+export const classifySpeaker: ClassifySpeaker = async (system, prompt) => {
+  const response = await getClient().messages.parse({
+    model: MODEL_FAST,
+    max_tokens: 200,
+    system,
+    output_config: { format: zodOutputFormat(SpeakerAnswerSchema) },
+    messages: [{ role: "user", content: prompt }],
+  });
+  return unwrap(response as ParsedResponse<{ speaker: "staff" | "family" }>);
+};

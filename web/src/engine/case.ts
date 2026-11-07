@@ -10,6 +10,8 @@ export interface Utterance {
   readonly text: string;
   /** 打合せ開始からの経過（秒） */
   readonly at: number;
+  /** 話した人をどう決めたか（rule・model・turn は自動、manual は担当者が直した）。ボタンで選んだ発言にはない */
+  readonly speakerBy?: "rule" | "model" | "turn" | "manual";
 }
 
 export type DecisionStatus = "candidate" | "confirmed";

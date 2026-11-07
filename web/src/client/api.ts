@@ -23,7 +23,7 @@ const post = <T,>(path: string, body?: unknown): Promise<T> => call<T>(path, { m
 
 export const api = {
   me: () => call<{ email: string; name: string } | null>("/api/auth/me").catch(() => null),
-  addUtterance: (caseId: string, u: { speaker: string; speakerLabel: string; text: string; at: number }) => post<CaseState>(`/api/cases/${caseId}/utterances`, u),
+  addUtterance: (caseId: string, u: { speaker: string; speakerLabel?: string; text: string; at: number }) => post<CaseState>(`/api/cases/${caseId}/utterances`, u),
   extract: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/extract`),
   farewell: (caseId: string) => post<FarewellResult & { basedOn?: number }>(`/api/cases/${caseId}/farewell`),
   planFit: (caseId: string) => post<PlanFitResult & { basedOn?: number }>(`/api/cases/${caseId}/plan-fit`),
@@ -37,6 +37,8 @@ export const api = {
     post<CaseState>(`/api/cases/${caseId}/todos`, body),
   reset: (caseId: string) => post<CaseState>(`/api/cases/${caseId}/reset`),
   acknowledge: (caseId: string, requestId: string, reply: string | null) => post<CaseState>(`/api/cases/${caseId}/requests/${requestId}`, { reply }),
+  swapSpeaker: (caseId: string, utteranceId: string, speaker: "staff" | "family") =>
+    call<CaseState>(`/api/cases/${caseId}/utterances/${utteranceId}`, { method: "PATCH", body: JSON.stringify({ speaker }) }),
   editUtterance: (caseId: string, utteranceId: string, text: string) =>
     call<CaseState>(`/api/cases/${caseId}/utterances/${utteranceId}`, { method: "PATCH", body: JSON.stringify({ text }) }),
   feedback: (caseId: string, target: string, verdict: "told" | "unused" | "clear") => post<CaseState>(`/api/cases/${caseId}/feedback`, { target, verdict }),

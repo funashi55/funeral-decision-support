@@ -9,18 +9,29 @@ interface TranscriptProps {
   readonly extracting: boolean;
   readonly onAdd: (line: NewLine) => Promise<void>;
   readonly onEdit: (utteranceId: string, text: string) => Promise<void>;
+  /** 自動の聞き分けを直す（担当者 ↔ ご遺族） */
+  readonly onSwapSpeaker: (utteranceId: string, speaker: "staff" | "family") => Promise<void>;
 }
 
 const mmss = (sec: number): string => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
 
-function Line({ u, onEdit }: { readonly u: Utterance; readonly onEdit: TranscriptProps["onEdit"] }) {
+function Line({ u, onEdit, onSwapSpeaker }: { readonly u: Utterance; readonly onEdit: TranscriptProps["onEdit"]; readonly onSwapSpeaker: TranscriptProps["onSwapSpeaker"] }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(u.text);
   const isStaff = u.speaker === "staff";
   return (
     <div className={`${s.utt} ${isStaff ? s.uttStaff : ""}`} data-testid={`utt-${u.id}`}>
       <span className={s.uttWho}>
-        <span>{u.speakerLabel}</span>
+        <button
+          type="button"
+          className={s.uttSpeaker}
+          onClick={() => void onSwapSpeaker(u.id, isStaff ? "family" : "staff")}
+          title={`押すと「${isStaff ? "ご遺族" : "担当者"}」に入れ替わります`}
+          aria-label={`${u.id}の話した人を${isStaff ? "ご遺族" : "担当者"}に入れ替える`}
+        >
+          {u.speakerLabel}
+          {u.speakerBy && u.speakerBy !== "manual" && <small>自動</small>}
+        </button>
         <span>{mmss(u.at)}</span>
         {!editing && (
           <button type="button" className={s.uttEdit} onClick={() => setEditing(true)} aria-label={`${u.id}の字幕を直す`}>
@@ -49,7 +60,7 @@ function Line({ u, onEdit }: { readonly u: Utterance; readonly onEdit: Transcrip
   );
 }
 
-export function Transcript({ state, extracting, onAdd, onEdit }: TranscriptProps) {
+export function Transcript({ state, extracting, onAdd, onEdit, onSwapSpeaker }: TranscriptProps) {
   const end = useRef<HTMLDivElement>(null);
   const count = state.utterances.length;
   // 新しい発言が届いたら、いちばん下まで送る
@@ -90,7 +101,7 @@ export function Transcript({ state, extracting, onAdd, onEdit }: TranscriptProps
           </div>
         )}
         {state.utterances.map((u) => (
-          <Line key={`${u.id}:${u.text}`} u={u} onEdit={onEdit} />
+          <Line key={`${u.id}:${u.text}:${u.speaker}`} u={u} onEdit={onEdit} onSwapSpeaker={onSwapSpeaker} />
         ))}
         <div ref={end} />
       </div>
